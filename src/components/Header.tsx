@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Trophy, MapPin, Swords, Shield } from "lucide-react";
+import { Home, Trophy, MapPin, Swords, Shield, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -7,6 +7,7 @@ const links = [
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/desafios", label: "Desafios", icon: Swords },
+  { to: "/vagas", label: "Vagas", icon: UserPlus },
   { to: "/perfil", label: "Perfil", icon: Shield },
 ] as const;
 
@@ -60,7 +61,7 @@ export function Header() {
       </div>
 
       {/* Mobile nav */}
-      <nav className="grid grid-cols-5 border-t border-border bg-surface md:hidden">
+      <nav className="grid grid-cols-6 border-t border-border bg-surface md:hidden">
         {links.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}

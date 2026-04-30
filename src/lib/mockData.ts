@@ -59,6 +59,36 @@ export type Challenge = {
 
 export const CURRENT_TEAM_ID = "t1";
 
+export type Position = "Goleiro" | "Zagueiro" | "Lateral" | "Volante" | "Meia" | "Atacante";
+export const ALL_POSITIONS: Position[] = ["Goleiro", "Zagueiro", "Lateral", "Volante", "Meia", "Atacante"];
+
+export type OpeningStatus = "open" | "filled" | "closed";
+
+export type PositionOpening = {
+  id: string;
+  teamId: string;
+  position: Position;
+  slots: number; // quantas vagas
+  level: "Iniciante" | "Intermediário" | "Avançado";
+  description: string;
+  createdAt: string;
+  status: OpeningStatus;
+};
+
+export type ApplicationStatus = "pending" | "accepted" | "rejected";
+
+export type PlayerApplication = {
+  id: string;
+  openingId: string;
+  playerName: string;
+  playerAge: number;
+  playerPhone: string;
+  experience: string;
+  message: string;
+  createdAt: string;
+  status: ApplicationStatus;
+};
+
 export const teams: Team[] = [
   { id: "t1", name: "Leões da Vila", shield: "🦁", captain: "Você", city: "São Paulo", founded: 2018, preferredDays: ["Sáb", "Dom"], preferredTimes: ["18:00", "20:00"] },
   { id: "t2", name: "Águias FC", shield: "🦅", captain: "Carlos M.", city: "São Paulo", founded: 2015, preferredDays: ["Sex", "Sáb"], preferredTimes: ["19:00", "21:00"] },
@@ -221,5 +251,94 @@ export const challenges: Challenge[] = [
     time: "17:00",
     message: "Vamos decidir essa parada no gramado.",
     status: "accepted",
+  },
+];
+
+export const positionOpenings: PositionOpening[] = [
+  {
+    id: "po1",
+    teamId: "t1",
+    position: "Goleiro",
+    slots: 1,
+    level: "Intermediário",
+    description: "Precisamos de goleiro reserva para a Liga Central. Treinos quinta 20h.",
+    createdAt: "2026-04-25",
+    status: "open",
+  },
+  {
+    id: "po2",
+    teamId: "t1",
+    position: "Atacante",
+    slots: 2,
+    level: "Avançado",
+    description: "Buscamos atacantes velocistas para reforçar o ataque na reta final do campeonato.",
+    createdAt: "2026-04-27",
+    status: "open",
+  },
+  {
+    id: "po3",
+    teamId: "t2",
+    position: "Volante",
+    slots: 1,
+    level: "Intermediário",
+    description: "Volante marcador, disponibilidade aos sábados.",
+    createdAt: "2026-04-20",
+    status: "open",
+  },
+  {
+    id: "po4",
+    teamId: "t4",
+    position: "Zagueiro",
+    slots: 1,
+    level: "Iniciante",
+    description: "Time amador buscando zagueiro para completar elenco. Bom ambiente!",
+    createdAt: "2026-04-22",
+    status: "open",
+  },
+  {
+    id: "po5",
+    teamId: "t7",
+    position: "Meia",
+    slots: 1,
+    level: "Avançado",
+    description: "Meia armador criativo, joga aos domingos pela manhã.",
+    createdAt: "2026-04-15",
+    status: "open",
+  },
+];
+
+export const playerApplications: PlayerApplication[] = [
+  {
+    id: "pa1",
+    openingId: "po1",
+    playerName: "Bruno Henrique",
+    playerAge: 28,
+    playerPhone: "(11) 98888-1111",
+    experience: "5 anos como goleiro em times amadores da zona leste.",
+    message: "Tenho disponibilidade total nas quintas e finais de semana.",
+    createdAt: "2026-04-26",
+    status: "pending",
+  },
+  {
+    id: "pa2",
+    openingId: "po1",
+    playerName: "Tiago Almeida",
+    playerAge: 31,
+    playerPhone: "(11) 97777-2222",
+    experience: "Ex-goleiro de base do clube local, 10 anos de experiência.",
+    message: "Procuro time competitivo. Posso ajudar.",
+    createdAt: "2026-04-28",
+    status: "pending",
+  },
+  {
+    id: "pa3",
+    openingId: "po2",
+    playerName: "Felipe Costa",
+    playerAge: 24,
+    playerPhone: "(11) 96666-3333",
+    experience: "Atacante rápido, artilheiro da última temporada amadora.",
+    message: "Quero somar! Disponível para treinos.",
+    createdAt: "2026-04-28",
+    status: "pending",
   },
 ];

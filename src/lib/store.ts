@@ -5,12 +5,17 @@ import {
   type League,
   type Match,
   type Team,
+  type PositionOpening,
+  type PlayerApplication,
+  type OpeningStatus,
   CURRENT_TEAM_ID,
   challenges as initialChallenges,
   fields as initialFields,
   leagues as initialLeagues,
   matches as initialMatches,
   teams as initialTeams,
+  positionOpenings as initialOpenings,
+  playerApplications as initialApplications,
 } from "./mockData";
 
 type State = {
@@ -20,6 +25,8 @@ type State = {
   matches: Match[];
   fields: Field[];
   challenges: Challenge[];
+  openings: PositionOpening[];
+  applications: PlayerApplication[];
   // actions
   joinLeague: (leagueId: string, teamId: string) => void;
   leaveLeague: (leagueId: string, teamId: string) => void;
@@ -31,6 +38,12 @@ type State = {
   createChallenge: (c: Omit<Challenge, "id" | "status">) => void;
   reserveSlot: (fieldId: string, date: string, time: string) => void;
   updateTeamPrefs: (teamId: string, days: string[], times: string[]) => void;
+  createOpening: (o: Omit<PositionOpening, "id" | "createdAt" | "status">) => void;
+  setOpeningStatus: (openingId: string, status: OpeningStatus) => void;
+  deleteOpening: (openingId: string) => void;
+  applyToOpening: (a: Omit<PlayerApplication, "id" | "createdAt" | "status">) => void;
+  acceptApplication: (applicationId: string) => void;
+  rejectApplication: (applicationId: string) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -40,6 +53,8 @@ export const useStore = create<State>((set) => ({
   matches: initialMatches,
   fields: initialFields,
   challenges: initialChallenges,
+  openings: initialOpenings,
+  applications: initialApplications,
 
   joinLeague: (leagueId, teamId) =>
     set((s) => ({
@@ -122,6 +137,67 @@ export const useStore = create<State>((set) => ({
     set((s) => ({
       teams: s.teams.map((t) =>
         t.id === teamId ? { ...t, preferredDays: days, preferredTimes: times } : t,
+      ),
+    })),
+
+  createOpening: (o) =>
+    set((s) => ({
+      openings: [
+        {
+          ...o,
+          id: `po${Date.now()}`,
+          createdAt: new Date().toISOString().slice(0, 10),
+          status: "open",
+        },
+        ...s.openings,
+      ],
+    })),
+
+  setOpeningStatus: (openingId, status) =>
+    set((s) => ({
+      openings: s.openings.map((o) => (o.id === openingId ? { ...o, status } : o)),
+    })),
+
+  deleteOpening: (openingId) =>
+    set((s) => ({
+      openings: s.openings.filter((o) => o.id !== openingId),
+      applications: s.applications.filter((a) => a.openingId !== openingId),
+    })),
+
+  applyToOpening: (a) =>
+    set((s) => ({
+      applications: [
+        ...s.applications,
+        {
+          ...a,
+          id: `pa${Date.now()}`,
+          createdAt: new Date().toISOString().slice(0, 10),
+          status: "pending",
+        },
+      ],
+    })),
+
+  acceptApplication: (applicationId) =>
+    set((s) => {
+      const app = s.applications.find((a) => a.id === applicationId);
+      if (!app) return {};
+      const opening = s.openings.find((o) => o.id === app.openingId);
+      const acceptedCount =
+        s.applications.filter((x) => x.openingId === app.openingId && x.status === "accepted").length + 1;
+      const newStatus: OpeningStatus =
+        opening && acceptedCount >= opening.slots ? "filled" : opening?.status ?? "open";
+      return {
+        applications: s.applications.map((x) =>
+          x.id === applicationId ? { ...x, status: "accepted" } : x,
+        ),
+        openings: s.openings.map((o) => (o.id === app.openingId ? { ...o, status: newStatus } : o)),
+      };
+    }),
+
+  rejectApplication: (applicationId) =>
+    set((s) => ({
+      applications: s.applications.map((a) =>
+        a.id === applicationId ? { ...a, status: "rejected" } : a,
       ),
     })),
 }));
