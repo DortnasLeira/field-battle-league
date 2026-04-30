@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as CamposRouteImport } from './routes/campos'
 import { Route as IndexRouteImport } from './routes/index'
 
+const VagasRoute = VagasRouteImport.update({
+  id: '/vagas',
+  path: '/vagas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/perfil': typeof PerfilRoute
+  '/vagas': typeof VagasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/perfil': typeof PerfilRoute
+  '/vagas': typeof VagasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,21 @@ export interface FileRoutesById {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/perfil': typeof PerfilRoute
+  '/vagas': typeof VagasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/campos' | '/desafios' | '/ligas' | '/perfil'
+  fullPaths: '/' | '/campos' | '/desafios' | '/ligas' | '/perfil' | '/vagas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/campos' | '/desafios' | '/ligas' | '/perfil'
-  id: '__root__' | '/' | '/campos' | '/desafios' | '/ligas' | '/perfil'
+  to: '/' | '/campos' | '/desafios' | '/ligas' | '/perfil' | '/vagas'
+  id:
+    | '__root__'
+    | '/'
+    | '/campos'
+    | '/desafios'
+    | '/ligas'
+    | '/perfil'
+    | '/vagas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,10 +93,18 @@ export interface RootRouteChildren {
   DesafiosRoute: typeof DesafiosRoute
   LigasRoute: typeof LigasRoute
   PerfilRoute: typeof PerfilRoute
+  VagasRoute: typeof VagasRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vagas': {
+      id: '/vagas'
+      path: '/vagas'
+      fullPath: '/vagas'
+      preLoaderRoute: typeof VagasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/perfil': {
       id: '/perfil'
       path: '/perfil'
@@ -125,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesafiosRoute: DesafiosRoute,
   LigasRoute: LigasRoute,
   PerfilRoute: PerfilRoute,
+  VagasRoute: VagasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

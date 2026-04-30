@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Trophy, MapPin, Swords, Shield } from "lucide-react";
+import { Home, Trophy, MapPin, Swords, Shield, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -7,6 +7,7 @@ const links = [
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/desafios", label: "Desafios", icon: Swords },
+  { to: "/vagas", label: "Vagas", icon: UserPlus },
   { to: "/perfil", label: "Perfil", icon: Shield },
 ] as const;
 
