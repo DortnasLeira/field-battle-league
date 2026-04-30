@@ -5,12 +5,17 @@ import {
   type League,
   type Match,
   type Team,
+  type PositionOpening,
+  type PlayerApplication,
+  type OpeningStatus,
   CURRENT_TEAM_ID,
   challenges as initialChallenges,
   fields as initialFields,
   leagues as initialLeagues,
   matches as initialMatches,
   teams as initialTeams,
+  positionOpenings as initialOpenings,
+  playerApplications as initialApplications,
 } from "./mockData";
 
 type State = {
