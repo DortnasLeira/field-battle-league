@@ -59,6 +59,36 @@ export type Challenge = {
 
 export const CURRENT_TEAM_ID = "t1";
 
+export type Position = "Goleiro" | "Zagueiro" | "Lateral" | "Volante" | "Meia" | "Atacante";
+export const ALL_POSITIONS: Position[] = ["Goleiro", "Zagueiro", "Lateral", "Volante", "Meia", "Atacante"];
+
+export type OpeningStatus = "open" | "filled" | "closed";
+
+export type PositionOpening = {
+  id: string;
+  teamId: string;
+  position: Position;
+  slots: number; // quantas vagas
+  level: "Iniciante" | "Intermediário" | "Avançado";
+  description: string;
+  createdAt: string;
+  status: OpeningStatus;
+};
+
+export type ApplicationStatus = "pending" | "accepted" | "rejected";
+
+export type PlayerApplication = {
+  id: string;
+  openingId: string;
+  playerName: string;
+  playerAge: number;
+  playerPhone: string;
+  experience: string;
+  message: string;
+  createdAt: string;
+  status: ApplicationStatus;
+};
+
 export const teams: Team[] = [
   { id: "t1", name: "Leões da Vila", shield: "🦁", captain: "Você", city: "São Paulo", founded: 2018, preferredDays: ["Sáb", "Dom"], preferredTimes: ["18:00", "20:00"] },
   { id: "t2", name: "Águias FC", shield: "🦅", captain: "Carlos M.", city: "São Paulo", founded: 2015, preferredDays: ["Sex", "Sáb"], preferredTimes: ["19:00", "21:00"] },
