@@ -25,6 +25,8 @@ type State = {
   matches: Match[];
   fields: Field[];
   challenges: Challenge[];
+  openings: PositionOpening[];
+  applications: PlayerApplication[];
   // actions
   joinLeague: (leagueId: string, teamId: string) => void;
   leaveLeague: (leagueId: string, teamId: string) => void;
@@ -36,6 +38,12 @@ type State = {
   createChallenge: (c: Omit<Challenge, "id" | "status">) => void;
   reserveSlot: (fieldId: string, date: string, time: string) => void;
   updateTeamPrefs: (teamId: string, days: string[], times: string[]) => void;
+  createOpening: (o: Omit<PositionOpening, "id" | "createdAt" | "status">) => void;
+  setOpeningStatus: (openingId: string, status: OpeningStatus) => void;
+  deleteOpening: (openingId: string) => void;
+  applyToOpening: (a: Omit<PlayerApplication, "id" | "createdAt" | "status">) => void;
+  acceptApplication: (applicationId: string) => void;
+  rejectApplication: (applicationId: string) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -45,6 +53,8 @@ export const useStore = create<State>((set) => ({
   matches: initialMatches,
   fields: initialFields,
   challenges: initialChallenges,
+  openings: initialOpenings,
+  applications: initialApplications,
 
   joinLeague: (leagueId, teamId) =>
     set((s) => ({
