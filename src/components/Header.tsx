@@ -61,7 +61,7 @@ export function Header() {
       </div>
 
       {/* Mobile nav */}
-      <nav className="grid grid-cols-5 border-t border-border bg-surface md:hidden">
+      <nav className="grid grid-cols-6 border-t border-border bg-surface md:hidden">
         {links.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
