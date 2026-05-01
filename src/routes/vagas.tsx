@@ -74,10 +74,26 @@ function VagasPage() {
     rejectApplication,
   } = useStore();
 
+  const [fPosition, setFPosition] = useState<string>("all");
+  const [fLevel, setFLevel] = useState<string>("all");
+  const [fCity, setFCity] = useState<string>("");
+  const [fStatus, setFStatus] = useState<string>("all");
+  const [fDateFrom, setFDateFrom] = useState<string>("");
+  const [fDateTo, setFDateTo] = useState<string>("");
+
   const myOpenings = openings.filter((o) => o.teamId === currentTeamId);
-  const otherOpenings = openings.filter(
-    (o) => o.teamId !== currentTeamId && o.status === "open",
-  );
+  const otherOpenings = openings
+    .filter((o) => o.teamId !== currentTeamId)
+    .filter((o) => {
+      const team = teams.find((t) => t.id === o.teamId);
+      if (fPosition !== "all" && o.position !== fPosition) return false;
+      if (fLevel !== "all" && o.level !== fLevel) return false;
+      if (fStatus !== "all" ? o.status !== fStatus : o.status !== "open") return false;
+      if (fCity && !(team?.city ?? "").toLowerCase().includes(fCity.toLowerCase())) return false;
+      if (fDateFrom && o.createdAt < fDateFrom) return false;
+      if (fDateTo && o.createdAt > fDateTo) return false;
+      return true;
+    });
 
   return (
     <div className="space-y-6">
