@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { Swords, Inbox, Send, Check, X, Flame } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
@@ -21,11 +24,24 @@ export const Route = createFileRoute("/desafios")({
 
 function DesafiosPage() {
   const { challenges, currentTeamId } = useStore();
-  const received = challenges.filter((c) => c.toTeamId === currentTeamId && c.status === "pending");
-  const sent = challenges.filter((c) => c.fromTeamId === currentTeamId);
+  const [fStatus, setFStatus] = useState<string>("all");
+  const [fDate, setFDate] = useState("");
+  const [fTimeFrom, setFTimeFrom] = useState("");
+  const [fTimeTo, setFTimeTo] = useState("");
+
+  const apply = (c: Challenge) => {
+    if (fStatus !== "all" && c.status !== fStatus) return false;
+    if (fDate && c.date !== fDate) return false;
+    if (fTimeFrom && c.time < fTimeFrom) return false;
+    if (fTimeTo && c.time > fTimeTo) return false;
+    return true;
+  };
+
+  const received = challenges.filter((c) => c.toTeamId === currentTeamId && c.status === "pending").filter(apply);
+  const sent = challenges.filter((c) => c.fromTeamId === currentTeamId).filter(apply);
   const accepted = challenges.filter((c) =>
     (c.fromTeamId === currentTeamId || c.toTeamId === currentTeamId) && c.status === "accepted",
-  );
+  ).filter(apply);
 
   return (
     <div className="space-y-6">
@@ -37,6 +53,23 @@ function DesafiosPage() {
           <p className="text-sm text-muted-foreground">Desafios pendentes, lançados e confrontos confirmados.</p>
         </div>
       </div>
+
+      <Card className="border-border bg-card p-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Select value={fStatus} onValueChange={setFStatus}>
+            <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos status</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="accepted">Aceito</SelectItem>
+              <SelectItem value="declined">Recusado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} title="Data" />
+          <Input type="time" value={fTimeFrom} onChange={(e) => setFTimeFrom(e.target.value)} title="Horário a partir de" />
+          <Input type="time" value={fTimeTo} onChange={(e) => setFTimeTo(e.target.value)} title="Horário até" />
+        </div>
+      </Card>
 
       <Tabs defaultValue="received">
         <TabsList className="bg-surface">
