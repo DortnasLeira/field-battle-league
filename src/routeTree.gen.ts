@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as CamposRouteImport } from './routes/campos'
@@ -25,6 +26,11 @@ const VagasRoute = VagasRouteImport.update({
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LigasRoute = LigasRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
+  '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
+  '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
+  '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
 }
@@ -89,10 +98,19 @@ export interface FileRouteTypes {
     | '/campos'
     | '/desafios'
     | '/ligas'
+    | '/onboarding'
     | '/perfil'
     | '/vagas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/campos' | '/desafios' | '/ligas' | '/perfil' | '/vagas'
+  to:
+    | '/'
+    | '/auth'
+    | '/campos'
+    | '/desafios'
+    | '/ligas'
+    | '/onboarding'
+    | '/perfil'
+    | '/vagas'
   id:
     | '__root__'
     | '/'
@@ -100,6 +118,7 @@ export interface FileRouteTypes {
     | '/campos'
     | '/desafios'
     | '/ligas'
+    | '/onboarding'
     | '/perfil'
     | '/vagas'
   fileRoutesById: FileRoutesById
@@ -110,6 +129,7 @@ export interface RootRouteChildren {
   CamposRoute: typeof CamposRoute
   DesafiosRoute: typeof DesafiosRoute
   LigasRoute: typeof LigasRoute
+  OnboardingRoute: typeof OnboardingRoute
   PerfilRoute: typeof PerfilRoute
   VagasRoute: typeof VagasRoute
 }
@@ -128,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ligas': {
@@ -174,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   CamposRoute: CamposRoute,
   DesafiosRoute: DesafiosRoute,
   LigasRoute: LigasRoute,
+  OnboardingRoute: OnboardingRoute,
   PerfilRoute: PerfilRoute,
   VagasRoute: VagasRoute,
 }

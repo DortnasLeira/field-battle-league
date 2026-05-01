@@ -1,6 +1,17 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Trophy, MapPin, Swords, Shield, UserPlus } from "lucide-react";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { Home, Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useAuth, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/lib/auth";
+import { toast } from "sonner";
 
 const links = [
   { to: "/", label: "Home", icon: Home },
@@ -13,7 +24,6 @@ const links = [
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-
   const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
 
   return (
@@ -51,16 +61,9 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 md:flex">
-          <span className="text-xl">🦁</span>
-          <div className="leading-tight">
-            <div className="font-display text-xs uppercase text-muted-foreground">Capitão</div>
-            <div className="text-xs font-semibold">Leões da Vila</div>
-          </div>
-        </div>
+        <ProfileSwitcher />
       </div>
 
-      {/* Mobile nav */}
       <nav className="grid grid-cols-6 border-t border-border bg-surface md:hidden">
         {links.map(({ to, label, icon: Icon }) => (
           <Link
@@ -77,5 +80,93 @@ export function Header() {
         ))}
       </nav>
     </header>
+  );
+}
+
+function ProfileSwitcher() {
+  const { session, profiles, activeProfile, setActive, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  if (!session) {
+    return (
+      <Button size="sm" className="bg-gradient-primary text-primary-foreground" onClick={() => navigate({ to: "/auth" })}>
+        <LogIn className="mr-1 h-4 w-4" /> Entrar
+      </Button>
+    );
+  }
+
+  if (!activeProfile) {
+    return (
+      <Button size="sm" variant="outline" onClick={() => navigate({ to: "/onboarding" })}>
+        <Plus className="mr-1 h-4 w-4" /> Criar perfil
+      </Button>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5 transition hover:border-primary/40">
+          <div
+            className={cn("flex h-8 w-8 items-center justify-center rounded-md text-lg", frameClass(activeProfile.frame))}
+            style={{ background: activeProfile.color + "22", color: activeProfile.color }}
+          >
+            {activeProfile.avatar ?? PROFILE_TYPE_EMOJI[activeProfile.type]}
+          </div>
+          <div className="hidden text-left leading-tight sm:block">
+            <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+              {PROFILE_TYPE_LABEL[activeProfile.type]}
+            </div>
+            <div className="text-xs font-semibold">{activeProfile.nickname || activeProfile.name}</div>
+          </div>
+          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          Trocar perfil
+        </DropdownMenuLabel>
+        {profiles.map((p) => (
+          <DropdownMenuItem
+            key={p.id}
+            onClick={() => {
+              setActive(p.id);
+              toast.success(`Perfil ${PROFILE_TYPE_LABEL[p.type]} ativado.`);
+            }}
+            className="gap-3"
+          >
+            <div
+              className={cn("flex h-8 w-8 items-center justify-center rounded-md text-base", frameClass(p.frame))}
+              style={{ background: p.color + "22", color: p.color }}
+            >
+              {p.avatar ?? PROFILE_TYPE_EMOJI[p.type]}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold">{p.nickname || p.name}</div>
+              <div className="font-mono text-[9px] uppercase text-muted-foreground">{PROFILE_TYPE_LABEL[p.type]}</div>
+            </div>
+            {p.id === activeProfile.id && <span className="text-[10px] text-primary">●</span>}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
+          <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
+          <Shield className="mr-2 h-4 w-4" /> Personalizar perfil ativo
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={async () => {
+            await signOut();
+            toast.success("Sessão encerrada.");
+            navigate({ to: "/auth" });
+          }}
+          className="text-destructive focus:text-destructive"
+        >
+          <LogOut className="mr-2 h-4 w-4" /> Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
