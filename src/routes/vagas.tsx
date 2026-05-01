@@ -74,10 +74,26 @@ function VagasPage() {
     rejectApplication,
   } = useStore();
 
+  const [fPosition, setFPosition] = useState<string>("all");
+  const [fLevel, setFLevel] = useState<string>("all");
+  const [fCity, setFCity] = useState<string>("");
+  const [fStatus, setFStatus] = useState<string>("all");
+  const [fDateFrom, setFDateFrom] = useState<string>("");
+  const [fDateTo, setFDateTo] = useState<string>("");
+
   const myOpenings = openings.filter((o) => o.teamId === currentTeamId);
-  const otherOpenings = openings.filter(
-    (o) => o.teamId !== currentTeamId && o.status === "open",
-  );
+  const otherOpenings = openings
+    .filter((o) => o.teamId !== currentTeamId)
+    .filter((o) => {
+      const team = teams.find((t) => t.id === o.teamId);
+      if (fPosition !== "all" && o.position !== fPosition) return false;
+      if (fLevel !== "all" && o.level !== fLevel) return false;
+      if (fStatus !== "all" ? o.status !== fStatus : o.status !== "open") return false;
+      if (fCity && !(team?.city ?? "").toLowerCase().includes(fCity.toLowerCase())) return false;
+      if (fDateFrom && o.createdAt < fDateFrom) return false;
+      if (fDateTo && o.createdAt > fDateTo) return false;
+      return true;
+    });
 
   return (
     <div className="space-y-6">
@@ -112,11 +128,41 @@ function VagasPage() {
 
         {/* MERCADO */}
         <TabsContent value="market" className="mt-6 space-y-4">
+          <Card className="border-border bg-card p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+              <Select value={fPosition} onValueChange={setFPosition}>
+                <SelectTrigger><SelectValue placeholder="Posição" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas posições</SelectItem>
+                  {ALL_POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={fLevel} onValueChange={setFLevel}>
+                <SelectTrigger><SelectValue placeholder="Nível" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos níveis</SelectItem>
+                  {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Input placeholder="Cidade" value={fCity} onChange={(e) => setFCity(e.target.value)} />
+              <Select value={fStatus} onValueChange={setFStatus}>
+                <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Apenas abertas</SelectItem>
+                  <SelectItem value="open">Aberta</SelectItem>
+                  <SelectItem value="filled">Preenchida</SelectItem>
+                  <SelectItem value="closed">Encerrada</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input type="date" value={fDateFrom} onChange={(e) => setFDateFrom(e.target.value)} title="Publicada a partir de" />
+              <Input type="date" value={fDateTo} onChange={(e) => setFDateTo(e.target.value)} title="Publicada até" />
+            </div>
+          </Card>
           {otherOpenings.length === 0 && (
             <EmptyState
               icon={<Inbox className="h-8 w-8" />}
-              title="Nenhuma vaga aberta no momento"
-              hint="Volte mais tarde — novos times anunciam posições toda semana."
+              title="Nenhuma vaga encontrada"
+              hint="Ajuste os filtros ou volte mais tarde."
             />
           )}
           <div className="grid gap-4 md:grid-cols-2">
