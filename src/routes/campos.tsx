@@ -26,11 +26,28 @@ function CamposPage() {
   const { fields } = useStore();
   const [query, setQuery] = useState("");
   const [surface, setSurface] = useState<string>("all");
+  const [city, setCity] = useState("");
+  const [date, setDate] = useState("");
+  const [timeFrom, setTimeFrom] = useState("");
+  const [timeTo, setTimeTo] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [onlyAvail, setOnlyAvail] = useState(false);
 
   const filtered = fields.filter((f) => {
     const matchQ = !query || f.name.toLowerCase().includes(query.toLowerCase()) || f.address.toLowerCase().includes(query.toLowerCase());
     const matchS = surface === "all" || f.surface === surface;
-    return matchQ && matchS;
+    const matchCity = !city || f.address.toLowerCase().includes(city.toLowerCase());
+    const matchPrice = !priceMax || f.pricePerHour <= Number(priceMax);
+    const matchSlots =
+      (!date && !timeFrom && !timeTo && !onlyAvail) ||
+      f.slots.some((s) => {
+        if (date && s.date !== date) return false;
+        if (timeFrom && s.time < timeFrom) return false;
+        if (timeTo && s.time > timeTo) return false;
+        if (onlyAvail && !s.available) return false;
+        return true;
+      });
+    return matchQ && matchS && matchCity && matchPrice && matchSlots;
   });
 
   return (
@@ -40,7 +57,7 @@ function CamposPage() {
         <p className="text-sm text-muted-foreground">Reserve um horário e desafie outros times.</p>
       </div>
 
-      <Card className="border-border bg-card p-4">
+      <Card className="border-border bg-card p-4 space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -56,6 +73,17 @@ function CamposPage() {
             </SelectContent>
           </Select>
         </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <Input placeholder="Cidade / bairro" value={city} onChange={(e) => setCity(e.target.value)} />
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Data" />
+          <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} title="A partir de" />
+          <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} title="Até" />
+          <Input type="number" placeholder="Preço máx (R$)" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
+        </div>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <input type="checkbox" checked={onlyAvail} onChange={(e) => setOnlyAvail(e.target.checked)} />
+          Apenas com horários disponíveis
+        </label>
       </Card>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
