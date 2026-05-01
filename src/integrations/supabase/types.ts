@@ -14,7 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      active_profile: {
+        Row: {
+          profile_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          profile_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          profile_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_profile_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          address: string | null
+          avatar: string | null
+          bio: string | null
+          capacity: number | null
+          city: string | null
+          color: string
+          created_at: string
+          field_type: string | null
+          founded: number | null
+          frame: string
+          id: string
+          level: string | null
+          name: string
+          nickname: string | null
+          position: string | null
+          price_per_hour: number | null
+          type: Database["public"]["Enums"]["profile_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          avatar?: string | null
+          bio?: string | null
+          capacity?: number | null
+          city?: string | null
+          color?: string
+          created_at?: string
+          field_type?: string | null
+          founded?: number | null
+          frame?: string
+          id?: string
+          level?: string | null
+          name: string
+          nickname?: string | null
+          position?: string | null
+          price_per_hour?: number | null
+          type: Database["public"]["Enums"]["profile_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          avatar?: string | null
+          bio?: string | null
+          capacity?: number | null
+          city?: string | null
+          color?: string
+          created_at?: string
+          field_type?: string | null
+          founded?: number | null
+          frame?: string
+          id?: string
+          level?: string | null
+          name?: string
+          nickname?: string | null
+          position?: string | null
+          price_per_hour?: number | null
+          type?: Database["public"]["Enums"]["profile_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +138,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      profile_type: "player" | "team" | "field"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +265,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      profile_type: ["player", "team", "field"],
+    },
   },
 } as const
