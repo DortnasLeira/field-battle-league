@@ -252,6 +252,50 @@ function ProfileEditor({
                 <Label>Nível</Label>
                 <Input value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} placeholder="Iniciante / Intermediário / Avançado" />
               </div>
+              <div>
+                <Label>Idade</Label>
+                <Input type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} placeholder="Ex: 27" />
+              </div>
+              <div>
+                <Label>Gênero</Label>
+                <Input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} placeholder="Masculino / Feminino / Outro" />
+              </div>
+              <div>
+                <Label>Pé preferido</Label>
+                <Input value={form.preferred_foot} onChange={(e) => setForm({ ...form, preferred_foot: e.target.value })} placeholder="Direito / Esquerdo / Ambidestro" />
+              </div>
+              <div>
+                <Label>Tipos de campo</Label>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {["Society", "Futsal", "Campo", "Areia"].map((ft) => {
+                    const on = form.field_types.includes(ft);
+                    return (
+                      <button
+                        key={ft}
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            field_types: on
+                              ? form.field_types.filter((x) => x !== ft)
+                              : [...form.field_types, ft],
+                          })
+                        }
+                        className={cn(
+                          "rounded-md border px-3 py-1 text-xs transition",
+                          on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
+                        )}
+                      >
+                        {ft}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <Label>URL da foto</Label>
+                <Input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} placeholder="https://..." />
+              </div>
             </>
           )}
           {type === "team" && (
