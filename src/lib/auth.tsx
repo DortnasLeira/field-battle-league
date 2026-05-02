@@ -22,6 +22,11 @@ export type UserProfile = {
   field_type: string | null;
   price_per_hour: number | null;
   address: string | null;
+  age: number | null;
+  gender: string | null;
+  preferred_foot: string | null;
+  field_types: string[] | null;
+  photo_url?: string | null;
 };
 
 type AuthContextValue = {
