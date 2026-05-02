@@ -141,6 +141,7 @@ function FieldCard({ fieldId }: { fieldId: string }) {
                 key={slot.date + slot.time}
                 disabled={!slot.available}
                 onClick={() => {
+                  if (!session) return requireLogin();
                   reserveSlot(field.id, slot.date, slot.time);
                   toast.success(`Reserva confirmada em ${field.name} — ${slot.date} ${slot.time}`);
                 }}
