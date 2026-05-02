@@ -180,9 +180,11 @@ function VagasPage() {
                   teamShield={team?.shield ?? "⚽"}
                   teamCity={team?.city ?? ""}
                   onApply={(payload) => {
+                    if (!session) return requireLogin();
                     applyToOpening({ openingId: o.id, ...payload });
                     toast.success("Inscrição enviada! O capitão vai avaliar seu perfil.");
                   }}
+                  requireLogin={!session ? requireLogin : undefined}
                 />
               );
             })}
