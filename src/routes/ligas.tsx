@@ -76,7 +76,11 @@ function LigasPage() {
                       <Badge variant="outline"><Calendar className="mr-1 h-3 w-3" />Início {new Date(league.startDate).toLocaleDateString("pt-BR")}</Badge>
                     </div>
                   </div>
-                  {isJoined ? (
+                  {!session ? (
+                    <Button variant="outline" onClick={() => { toast.error("Faça login para inscrever seu time."); navigate({ to: "/auth" }); }}>
+                      <Plus className="mr-2 h-4 w-4" /> Entrar para inscrever
+                    </Button>
+                  ) : isJoined ? (
                     <Button variant="outline" onClick={() => { leaveLeague(league.id, currentTeamId); toast.success("Time removido da liga."); }}>
                       Sair da liga
                     </Button>
