@@ -116,7 +116,13 @@ function VagasPage() {
               Anuncie posições em aberto no seu time ou inscreva-se para completar um elenco.
             </p>
           </div>
-          <NewOpeningDialog onCreate={createOpening} currentTeamId={currentTeamId} />
+          {session ? (
+            <NewOpeningDialog onCreate={createOpening} currentTeamId={currentTeamId} />
+          ) : (
+            <Button onClick={requireLogin} className="bg-gradient-primary text-primary-foreground shadow-glow">
+              <Plus className="mr-2 h-4 w-4" /> Entrar para anunciar
+            </Button>
+          )}
         </div>
       </Card>
 
