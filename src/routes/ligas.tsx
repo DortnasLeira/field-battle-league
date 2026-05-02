@@ -25,6 +25,8 @@ export const Route = createFileRoute("/ligas")({
 
 function LigasPage() {
   const { leagues, matches, currentTeamId, joinLeague, leaveLeague, teams, submitScore, validateScore } = useStore();
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const [activeLeague, setActiveLeague] = useState(leagues[0]?.id ?? "");
 
   return (
