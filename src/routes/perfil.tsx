@@ -166,7 +166,12 @@ function ProfileEditor({
       field_type: type === "field" ? form.field_type || null : null,
       price_per_hour: type === "field" && form.price_per_hour ? Number(form.price_per_hour) : null,
       address: type === "field" ? form.address || null : null,
-    });
+      age: type === "player" && form.age ? Number(form.age) : null,
+      gender: type === "player" ? form.gender || null : null,
+      preferred_foot: type === "player" ? form.preferred_foot || null : null,
+      field_types: type === "player" ? (form.field_types.length ? form.field_types : null) : null,
+      photo_url: form.photo_url || null,
+    } as Partial<UserProfile> & { name: string });
   };
 
   return (
