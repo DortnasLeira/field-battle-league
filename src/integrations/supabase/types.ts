@@ -67,6 +67,7 @@ export type Database = {
       user_profiles: {
         Row: {
           address: string | null
+          age: number | null
           avatar: string | null
           bio: string | null
           capacity: number | null
@@ -74,13 +75,16 @@ export type Database = {
           color: string
           created_at: string
           field_type: string | null
+          field_types: string[] | null
           founded: number | null
           frame: string
+          gender: string | null
           id: string
           level: string | null
           name: string
           nickname: string | null
           position: string | null
+          preferred_foot: string | null
           price_per_hour: number | null
           type: Database["public"]["Enums"]["profile_type"]
           updated_at: string
@@ -88,6 +92,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          age?: number | null
           avatar?: string | null
           bio?: string | null
           capacity?: number | null
@@ -95,13 +100,16 @@ export type Database = {
           color?: string
           created_at?: string
           field_type?: string | null
+          field_types?: string[] | null
           founded?: number | null
           frame?: string
+          gender?: string | null
           id?: string
           level?: string | null
           name: string
           nickname?: string | null
           position?: string | null
+          preferred_foot?: string | null
           price_per_hour?: number | null
           type: Database["public"]["Enums"]["profile_type"]
           updated_at?: string
@@ -109,6 +117,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          age?: number | null
           avatar?: string | null
           bio?: string | null
           capacity?: number | null
@@ -116,13 +125,16 @@ export type Database = {
           color?: string
           created_at?: string
           field_type?: string | null
+          field_types?: string[] | null
           founded?: number | null
           frame?: string
+          gender?: string | null
           id?: string
           level?: string | null
           name?: string
           nickname?: string | null
           position?: string | null
+          preferred_foot?: string | null
           price_per_hour?: number | null
           type?: Database["public"]["Enums"]["profile_type"]
           updated_at?: string
