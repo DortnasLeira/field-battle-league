@@ -117,41 +117,33 @@ function ProfileEditor({
   onSetActive: (id: string) => Promise<void>;
 }) {
   const isNew = !profile;
-  const [form, setForm] = useState({
-    name: profile?.name ?? "",
-    nickname: profile?.nickname ?? "",
-    bio: profile?.bio ?? "",
-    city: profile?.city ?? "",
-    avatar: profile?.avatar ?? PRESET_AVATARS_BY_TYPE[type][0],
-    color: profile?.color ?? PRESET_COLORS[0],
-    frame: profile?.frame ?? "classic",
-    position: profile?.position ?? "",
-    level: profile?.level ?? "",
-    founded: profile?.founded?.toString() ?? "",
-    capacity: profile?.capacity?.toString() ?? "",
-    field_type: profile?.field_type ?? "",
-    price_per_hour: profile?.price_per_hour?.toString() ?? "",
-    address: profile?.address ?? "",
+  const initialState = (p?: UserProfile) => ({
+    name: p?.name ?? "",
+    nickname: p?.nickname ?? "",
+    bio: p?.bio ?? "",
+    city: p?.city ?? "",
+    avatar: p?.avatar ?? PRESET_AVATARS_BY_TYPE[type][0],
+    color: p?.color ?? PRESET_COLORS[0],
+    frame: p?.frame ?? "classic",
+    position: p?.position ?? "",
+    level: p?.level ?? "",
+    founded: p?.founded?.toString() ?? "",
+    capacity: p?.capacity?.toString() ?? "",
+    field_type: p?.field_type ?? "",
+    price_per_hour: p?.price_per_hour?.toString() ?? "",
+    address: p?.address ?? "",
+    age: (p as UserProfile & { age?: number | null })?.age?.toString() ?? "",
+    gender: (p as UserProfile & { gender?: string | null })?.gender ?? "",
+    preferred_foot: (p as UserProfile & { preferred_foot?: string | null })?.preferred_foot ?? "",
+    field_types: ((p as UserProfile & { field_types?: string[] | null })?.field_types ?? []) as string[],
+    photo_url: (p as UserProfile & { photo_url?: string | null })?.photo_url ?? "",
   });
+  const [form, setForm] = useState(() => initialState(profile));
 
   // reset when profile changes
   useEffect(() => {
-    setForm({
-      name: profile?.name ?? "",
-      nickname: profile?.nickname ?? "",
-      bio: profile?.bio ?? "",
-      city: profile?.city ?? "",
-      avatar: profile?.avatar ?? PRESET_AVATARS_BY_TYPE[type][0],
-      color: profile?.color ?? PRESET_COLORS[0],
-      frame: profile?.frame ?? "classic",
-      position: profile?.position ?? "",
-      level: profile?.level ?? "",
-      founded: profile?.founded?.toString() ?? "",
-      capacity: profile?.capacity?.toString() ?? "",
-      field_type: profile?.field_type ?? "",
-      price_per_hour: profile?.price_per_hour?.toString() ?? "",
-      address: profile?.address ?? "",
-    });
+    setForm(initialState(profile));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id, type]);
 
   const submit = async () => {
