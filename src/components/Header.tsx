@@ -161,7 +161,7 @@ function ProfileSwitcher() {
           <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
-          <Shield className="mr-2 h-4 w-4" /> Personalizar perfil ativo
+          <Settings className="mr-2 h-4 w-4" /> Editar perfis
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
