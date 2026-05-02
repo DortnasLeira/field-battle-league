@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn } from "lucide-react";
+import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -13,13 +13,15 @@ import { Button } from "@/components/ui/button";
 import { useAuth, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/lib/auth";
 import { toast } from "sonner";
 
-const links = [
-  { to: "/", label: "Home", icon: Home },
+const publicLinks = [
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
-  { to: "/desafios", label: "Desafios", icon: Swords },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
-  { to: "/perfil", label: "Perfil", icon: Shield },
+] as const;
+
+const authLinks = [
+  { to: "/", label: "Perfil", icon: User },
+  { to: "/desafios", label: "Desafios", icon: Swords },
 ] as const;
 
 export function Header() {
