@@ -158,7 +158,13 @@ function FieldCard({ fieldId }: { fieldId: string }) {
           </div>
         </div>
 
-        <ChallengeDialog fieldId={field.id} />
+        {session ? (
+          <ChallengeDialog fieldId={field.id} />
+        ) : (
+          <Button onClick={requireLogin} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-90">
+            <Calendar className="mr-2 h-4 w-4" /> Lançar batalha (login)
+          </Button>
+        )}
       </div>
     </Card>
   );
