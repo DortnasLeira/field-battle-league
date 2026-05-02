@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn } from "lucide-react";
+import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -13,23 +13,28 @@ import { Button } from "@/components/ui/button";
 import { useAuth, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/lib/auth";
 import { toast } from "sonner";
 
-const links = [
-  { to: "/", label: "Home", icon: Home },
+const publicLinks = [
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
-  { to: "/desafios", label: "Desafios", icon: Swords },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
-  { to: "/perfil", label: "Perfil", icon: Shield },
+] as const;
+
+const authLinks = [
+  { to: "/", label: "Perfil", icon: User },
+  { to: "/desafios", label: "Desafios", icon: Swords },
 ] as const;
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { session } = useAuth();
   const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
+  const links = session ? [...authLinks, ...publicLinks] : publicLinks;
+  const cols = links.length;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={session ? "/" : "/ligas"} className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-primary shadow-glow">
             <span className="text-lg">⚽</span>
           </div>
@@ -64,7 +69,10 @@ export function Header() {
         <ProfileSwitcher />
       </div>
 
-      <nav className="grid grid-cols-6 border-t border-border bg-surface md:hidden">
+      <nav
+        className="grid border-t border-border bg-surface md:hidden"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
         {links.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
@@ -153,7 +161,7 @@ function ProfileSwitcher() {
           <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
-          <Shield className="mr-2 h-4 w-4" /> Personalizar perfil ativo
+          <Settings className="mr-2 h-4 w-4" /> Editar perfis
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

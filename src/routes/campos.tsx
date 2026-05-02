@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { MapPin, Star, Calendar, Clock, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/campos")({
   head: () => ({
@@ -97,7 +98,13 @@ function CamposPage() {
 
 function FieldCard({ fieldId }: { fieldId: string }) {
   const { fields, reserveSlot } = useStore();
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const field = fields.find((f) => f.id === fieldId)!;
+  const requireLogin = () => {
+    toast.error("Faça login para reservar.");
+    navigate({ to: "/auth" });
+  };
 
   return (
     <Card className="overflow-hidden border-border bg-card p-0">
@@ -134,6 +141,7 @@ function FieldCard({ fieldId }: { fieldId: string }) {
                 key={slot.date + slot.time}
                 disabled={!slot.available}
                 onClick={() => {
+                  if (!session) return requireLogin();
                   reserveSlot(field.id, slot.date, slot.time);
                   toast.success(`Reserva confirmada em ${field.name} — ${slot.date} ${slot.time}`);
                 }}
@@ -150,7 +158,13 @@ function FieldCard({ fieldId }: { fieldId: string }) {
           </div>
         </div>
 
-        <ChallengeDialog fieldId={field.id} />
+        {session ? (
+          <ChallengeDialog fieldId={field.id} />
+        ) : (
+          <Button onClick={requireLogin} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-90">
+            <Calendar className="mr-2 h-4 w-4" /> Lançar batalha (login)
+          </Button>
+        )}
       </div>
     </Card>
   );

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Trophy, Users, Calendar, Plus, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { computeStandings, useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/ligas")({
   head: () => ({
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/ligas")({
 
 function LigasPage() {
   const { leagues, matches, currentTeamId, joinLeague, leaveLeague, teams, submitScore, validateScore } = useStore();
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const [activeLeague, setActiveLeague] = useState(leagues[0]?.id ?? "");
 
   return (
@@ -73,7 +76,11 @@ function LigasPage() {
                       <Badge variant="outline"><Calendar className="mr-1 h-3 w-3" />Início {new Date(league.startDate).toLocaleDateString("pt-BR")}</Badge>
                     </div>
                   </div>
-                  {isJoined ? (
+                  {!session ? (
+                    <Button variant="outline" onClick={() => { toast.error("Faça login para inscrever seu time."); navigate({ to: "/auth" }); }}>
+                      <Plus className="mr-2 h-4 w-4" /> Entrar para inscrever
+                    </Button>
+                  ) : isJoined ? (
                     <Button variant="outline" onClick={() => { leaveLeague(league.id, currentTeamId); toast.success("Time removido da liga."); }}>
                       Sair da liga
                     </Button>

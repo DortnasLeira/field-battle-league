@@ -22,6 +22,11 @@ export type UserProfile = {
   field_type: string | null;
   price_per_hour: number | null;
   address: string | null;
+  age: number | null;
+  gender: string | null;
+  preferred_foot: string | null;
+  field_types: string[] | null;
+  photo_url?: string | null;
 };
 
 type AuthContextValue = {
@@ -103,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const payload = { ...p, user_id: session.user.id };
       const { data, error } = await supabase
         .from("user_profiles")
-        .upsert(payload, { onConflict: "user_id,type" })
+        .upsert(payload as never, { onConflict: "user_id,type" })
         .select()
         .single();
       if (error) throw error;

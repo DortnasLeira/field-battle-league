@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   UserPlus,
@@ -38,6 +38,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import {
   ALL_POSITIONS,
   type Position,
@@ -73,6 +74,9 @@ function VagasPage() {
     acceptApplication,
     rejectApplication,
   } = useStore();
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const requireLogin = () => { toast.error("Faça login para continuar."); navigate({ to: "/auth" }); };
 
   const [fPosition, setFPosition] = useState<string>("all");
   const [fLevel, setFLevel] = useState<string>("all");
@@ -112,7 +116,13 @@ function VagasPage() {
               Anuncie posições em aberto no seu time ou inscreva-se para completar um elenco.
             </p>
           </div>
-          <NewOpeningDialog onCreate={createOpening} currentTeamId={currentTeamId} />
+          {session ? (
+            <NewOpeningDialog onCreate={createOpening} currentTeamId={currentTeamId} />
+          ) : (
+            <Button onClick={requireLogin} className="bg-gradient-primary text-primary-foreground shadow-glow">
+              <Plus className="mr-2 h-4 w-4" /> Entrar para anunciar
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -176,9 +186,11 @@ function VagasPage() {
                   teamShield={team?.shield ?? "⚽"}
                   teamCity={team?.city ?? ""}
                   onApply={(payload) => {
+                    if (!session) return requireLogin();
                     applyToOpening({ openingId: o.id, ...payload });
                     toast.success("Inscrição enviada! O capitão vai avaliar seu perfil.");
                   }}
+                  
                 />
               );
             })}

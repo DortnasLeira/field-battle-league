@@ -117,41 +117,33 @@ function ProfileEditor({
   onSetActive: (id: string) => Promise<void>;
 }) {
   const isNew = !profile;
-  const [form, setForm] = useState({
-    name: profile?.name ?? "",
-    nickname: profile?.nickname ?? "",
-    bio: profile?.bio ?? "",
-    city: profile?.city ?? "",
-    avatar: profile?.avatar ?? PRESET_AVATARS_BY_TYPE[type][0],
-    color: profile?.color ?? PRESET_COLORS[0],
-    frame: profile?.frame ?? "classic",
-    position: profile?.position ?? "",
-    level: profile?.level ?? "",
-    founded: profile?.founded?.toString() ?? "",
-    capacity: profile?.capacity?.toString() ?? "",
-    field_type: profile?.field_type ?? "",
-    price_per_hour: profile?.price_per_hour?.toString() ?? "",
-    address: profile?.address ?? "",
+  const initialState = (p?: UserProfile) => ({
+    name: p?.name ?? "",
+    nickname: p?.nickname ?? "",
+    bio: p?.bio ?? "",
+    city: p?.city ?? "",
+    avatar: p?.avatar ?? PRESET_AVATARS_BY_TYPE[type][0],
+    color: p?.color ?? PRESET_COLORS[0],
+    frame: p?.frame ?? "classic",
+    position: p?.position ?? "",
+    level: p?.level ?? "",
+    founded: p?.founded?.toString() ?? "",
+    capacity: p?.capacity?.toString() ?? "",
+    field_type: p?.field_type ?? "",
+    price_per_hour: p?.price_per_hour?.toString() ?? "",
+    address: p?.address ?? "",
+    age: (p as UserProfile & { age?: number | null })?.age?.toString() ?? "",
+    gender: (p as UserProfile & { gender?: string | null })?.gender ?? "",
+    preferred_foot: (p as UserProfile & { preferred_foot?: string | null })?.preferred_foot ?? "",
+    field_types: ((p as UserProfile & { field_types?: string[] | null })?.field_types ?? []) as string[],
+    photo_url: (p as UserProfile & { photo_url?: string | null })?.photo_url ?? "",
   });
+  const [form, setForm] = useState(() => initialState(profile));
 
   // reset when profile changes
   useEffect(() => {
-    setForm({
-      name: profile?.name ?? "",
-      nickname: profile?.nickname ?? "",
-      bio: profile?.bio ?? "",
-      city: profile?.city ?? "",
-      avatar: profile?.avatar ?? PRESET_AVATARS_BY_TYPE[type][0],
-      color: profile?.color ?? PRESET_COLORS[0],
-      frame: profile?.frame ?? "classic",
-      position: profile?.position ?? "",
-      level: profile?.level ?? "",
-      founded: profile?.founded?.toString() ?? "",
-      capacity: profile?.capacity?.toString() ?? "",
-      field_type: profile?.field_type ?? "",
-      price_per_hour: profile?.price_per_hour?.toString() ?? "",
-      address: profile?.address ?? "",
-    });
+    setForm(initialState(profile));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id, type]);
 
   const submit = async () => {
@@ -174,7 +166,12 @@ function ProfileEditor({
       field_type: type === "field" ? form.field_type || null : null,
       price_per_hour: type === "field" && form.price_per_hour ? Number(form.price_per_hour) : null,
       address: type === "field" ? form.address || null : null,
-    });
+      age: type === "player" && form.age ? Number(form.age) : null,
+      gender: type === "player" ? form.gender || null : null,
+      preferred_foot: type === "player" ? form.preferred_foot || null : null,
+      field_types: type === "player" ? (form.field_types.length ? form.field_types : null) : null,
+      photo_url: form.photo_url || null,
+    } as Partial<UserProfile> & { name: string });
   };
 
   return (
@@ -254,6 +251,50 @@ function ProfileEditor({
               <div>
                 <Label>Nível</Label>
                 <Input value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} placeholder="Iniciante / Intermediário / Avançado" />
+              </div>
+              <div>
+                <Label>Idade</Label>
+                <Input type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} placeholder="Ex: 27" />
+              </div>
+              <div>
+                <Label>Gênero</Label>
+                <Input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} placeholder="Masculino / Feminino / Outro" />
+              </div>
+              <div>
+                <Label>Pé preferido</Label>
+                <Input value={form.preferred_foot} onChange={(e) => setForm({ ...form, preferred_foot: e.target.value })} placeholder="Direito / Esquerdo / Ambidestro" />
+              </div>
+              <div>
+                <Label>Tipos de campo</Label>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {["Society", "Futsal", "Campo", "Areia"].map((ft) => {
+                    const on = form.field_types.includes(ft);
+                    return (
+                      <button
+                        key={ft}
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            field_types: on
+                              ? form.field_types.filter((x) => x !== ft)
+                              : [...form.field_types, ft],
+                          })
+                        }
+                        className={cn(
+                          "rounded-md border px-3 py-1 text-xs transition",
+                          on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
+                        )}
+                      >
+                        {ft}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <Label>URL da foto</Label>
+                <Input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} placeholder="https://..." />
               </div>
             </>
           )}

@@ -1,186 +1,250 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { ArrowRight, Calendar, Flame, MapPin, Swords, Trophy } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Edit, Share2, Trophy, Users, Calendar, MapPin, Shield, Star, Goal, Target, Activity, Footprints, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useAuth, frameClass, PROFILE_TYPE_EMOJI, PROFILE_TYPE_LABEL, type UserProfile, type ProfileType } from "@/lib/auth";
+import { useStore } from "@/lib/store";
 import { TeamBadge } from "@/components/TeamBadge";
-import { computeStandings, useStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PeladaPro — Painel do Capitão" },
-      { name: "description", content: "Resumo do seu time: próximos jogos, desafios pendentes e posição na liga." },
+      { title: "Meu Perfil — PeladaPro" },
+      { name: "description", content: "Resumo do seu perfil de jogador, time ou campo." },
     ],
   }),
-  component: HomePage,
+  component: PerfilHome,
 });
 
-function HomePage() {
-  const { currentTeamId, teams, leagues, matches, challenges, fields } = useStore();
-  const myTeam = teams.find((t) => t.id === currentTeamId)!;
+function PerfilHome() {
+  const { session, loading, activeProfile } = useAuth();
+  const navigate = useNavigate();
 
-  const myLeagues = leagues.filter((l) => l.teamIds.includes(currentTeamId));
-  const myMatches = matches.filter((m) => m.homeId === currentTeamId || m.awayId === currentTeamId);
-  const upcoming = myMatches.filter((m) => m.status === "scheduled" || m.status === "awaiting_score").slice(0, 3);
-  const pendingChallenges = challenges.filter((c) => c.toTeamId === currentTeamId && c.status === "pending");
+  useEffect(() => {
+    if (!loading && !session) navigate({ to: "/ligas" });
+  }, [loading, session, navigate]);
 
-  const myRank = useMemo(() => {
-    const league = myLeagues[0];
-    if (!league) return null;
-    const standings = computeStandings(league.id, matches, league.teamIds);
-    const idx = standings.findIndex((r) => r.teamId === currentTeamId);
-    return idx >= 0 ? { league, position: idx + 1, row: standings[idx], total: standings.length } : null;
-  }, [myLeagues, matches, currentTeamId]);
+  if (loading) return null;
+  if (!session) return null;
 
-  const stats = useMemo(() => {
-    const completed = myMatches.filter((m) => m.status === "completed");
-    let w = 0, d = 0, l = 0, gf = 0, ga = 0;
-    completed.forEach((m) => {
-      const isHome = m.homeId === currentTeamId;
-      const my = isHome ? m.homeScore! : m.awayScore!;
-      const opp = isHome ? m.awayScore! : m.homeScore!;
-      gf += my; ga += opp;
-      if (my > opp) w++; else if (my === opp) d++; else l++;
-    });
-    return { w, d, l, played: completed.length, gf, ga, points: w * 3 + d };
-  }, [myMatches, currentTeamId]);
+  if (!activeProfile) {
+    return (
+      <Card className="border-dashed border-border bg-card p-10 text-center">
+        <p className="text-sm text-muted-foreground">Crie um perfil para começar.</p>
+        <Button asChild className="mt-4 bg-gradient-primary text-primary-foreground">
+          <Link to="/onboarding">Criar perfil</Link>
+        </Button>
+      </Card>
+    );
+  }
+
+  if (activeProfile.type === "player") return <PlayerDashboard profile={activeProfile} />;
+  return <PlaceholderDashboard type={activeProfile.type} />;
+}
+
+/* ========================= PLAYER ========================= */
+
+type PlayerExtras = UserProfile & {
+  age?: number | null;
+  gender?: string | null;
+  preferred_foot?: string | null;
+  field_types?: string[] | null;
+  photo_url?: string | null;
+};
+
+function PlayerDashboard({ profile }: { profile: UserProfile }) {
+  const p = profile as PlayerExtras;
+  const navigate = useNavigate();
+  const { teams, matches, currentTeamId, fields } = useStore();
+
+  // Mock association: jogador participa do "meu" time + 1 secundário
+  const myTeams = useMemo(
+    () => teams.filter((t) => t.id === currentTeamId || t.id === "t4"),
+    [teams, currentTeamId],
+  );
+
+  // Mock confirmados: próximos jogos do time principal
+  const upcoming = useMemo(
+    () =>
+      matches
+        .filter(
+          (m) =>
+            (m.homeId === currentTeamId || m.awayId === currentTeamId) &&
+            (m.status === "scheduled" || m.status === "awaiting_score"),
+        )
+        .slice(0, 4)
+        .map((m) => ({ match: m, teamId: currentTeamId })),
+    [matches, currentTeamId],
+  );
+
+  // Mock stats — em versão futura virão do banco
+  const stats = { jogos: 24, gols: 11, assistencias: 7, aproveitamento: 68, mvp: 3, amarelos: 4 };
+
+  const share = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${profile.name} — PeladaPro`, url });
+      } catch {
+        /* ignore */
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link do perfil copiado!");
+    }
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-hero p-6 sm:p-10">
-        <div className="field-pattern absolute inset-0 opacity-40" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-surface-elevated text-5xl shadow-card ring-1 ring-border">
-              {myTeam.shield}
-            </div>
+    <div className="space-y-6">
+      {/* BLOCO 1 — Informações básicas */}
+      <Card className="overflow-hidden border-border bg-gradient-hero">
+        <div className="field-pattern absolute inset-0 opacity-30" />
+        <div className="relative grid gap-6 p-6 sm:p-8 lg:grid-cols-[auto_1fr]">
+          <PlayerPhoto profile={p} onEdit={() => navigate({ to: "/perfil" })} />
+          <div className="space-y-4">
             <div>
-              <Badge className="mb-2 bg-primary/15 text-primary hover:bg-primary/20">Capitão · {myTeam.captain}</Badge>
-              <h1 className="font-display text-3xl uppercase tracking-wide text-foreground sm:text-5xl">
-                {myTeam.name}
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {myTeam.city} · Fundado em {myTeam.founded} · {myLeagues.length} liga(s) ativa(s)
-              </p>
+              <Badge className="mb-2 bg-primary/15 text-primary hover:bg-primary/20">
+                <Footprints className="mr-1 h-3 w-3" /> Jogador
+              </Badge>
+              <h1 className="font-display text-3xl uppercase tracking-wide sm:text-5xl">{profile.name}</h1>
+              {profile.nickname && (
+                <p className="text-sm text-muted-foreground">"{profile.nickname}"</p>
+              )}
             </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild size="lg" className="bg-gradient-primary text-primary-foreground shadow-glow hover:opacity-90">
-              <Link to="/campos"><MapPin className="mr-2 h-4 w-4" />Reservar campo</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/desafios"><Swords className="mr-2 h-4 w-4" />Lançar batalha</Link>
-            </Button>
-          </div>
-        </div>
 
-        <div className="relative mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Pontos" value={stats.points} accent />
-          <StatTile label="V — E — D" value={`${stats.w}-${stats.d}-${stats.l}`} />
-          <StatTile label="Saldo" value={(stats.gf - stats.ga > 0 ? "+" : "") + (stats.gf - stats.ga)} />
-          <StatTile label="Aproveitam." value={stats.played ? `${Math.round((stats.points / (stats.played * 3)) * 100)}%` : "—"} />
-        </div>
-      </section>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Próximos jogos */}
-        <Card className="lg:col-span-2 border-border bg-card p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="font-display text-xl uppercase tracking-wide">Próximos jogos</h2>
-              <p className="text-xs text-muted-foreground">Confrontos agendados e pendências de placar</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <InfoPill label="Idade" value={p.age ? `${p.age} anos` : "—"} />
+              <InfoPill label="Posição" value={profile.position || "—"} />
+              <InfoPill label="Pé preferido" value={p.preferred_foot || "—"} />
+              <InfoPill label="Gênero" value={p.gender || "—"} />
+              <InfoPill label="Cidade" value={profile.city || "—"} />
+              <InfoPill label="Nível" value={profile.level || "—"} />
             </div>
-            <Calendar className="h-5 w-5 text-primary" />
-          </div>
-          <div className="space-y-3">
-            {upcoming.length === 0 && (
-              <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                Nenhum jogo marcado. Que tal lançar uma batalha?
-              </p>
-            )}
-            {upcoming.map((m) => {
-              const field = fields.find((f) => f.id === m.fieldId);
-              return (
-                <div key={m.id} className="flex items-center justify-between rounded-lg border border-border bg-surface p-4">
-                  <div className="flex items-center gap-4">
-                    <TeamBadge teamId={m.homeId} size="sm" />
-                    <span className="font-mono text-xs text-muted-foreground">VS</span>
-                    <TeamBadge teamId={m.awayId} size="sm" />
-                  </div>
-                  <div className="text-right">
-                    <div className="font-display text-sm uppercase">{new Date(m.date).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}</div>
-                    <div className="font-mono text-xs text-muted-foreground">{new Date(m.date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · {field?.name}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
 
-        {/* Posição na liga */}
-        <Card className="border-border bg-card p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-xl uppercase tracking-wide">Sua posição</h2>
-            <Trophy className="h-5 w-5 text-primary" />
-          </div>
-          {myRank ? (
-            <div className="space-y-4">
-              <div className="rounded-xl bg-gradient-surface p-5 ring-1 ring-border">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">{myRank.league.name}</div>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="stat-num text-5xl font-bold text-gradient-primary">{myRank.position}º</span>
-                  <span className="text-sm text-muted-foreground">de {myRank.total}</span>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                  <MiniStat label="PTS" value={myRank.row.points} />
-                  <MiniStat label="J" value={myRank.row.played} />
-                  <MiniStat label="%" value={`${myRank.row.pct}%`} />
-                </div>
+            {p.field_types && p.field_types.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Joga em:
+                </span>
+                {p.field_types.map((ft) => (
+                  <Badge key={ft} variant="outline" className="border-primary/40 text-primary">
+                    {ft}
+                  </Badge>
+                ))}
               </div>
-              <Button asChild variant="ghost" className="w-full justify-between">
-                <Link to="/ligas">Ver tabela completa <ArrowRight className="h-4 w-4" /></Link>
+            )}
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button onClick={() => navigate({ to: "/perfil" })} className="bg-gradient-primary text-primary-foreground">
+                <Edit className="mr-2 h-4 w-4" /> Editar perfil
+              </Button>
+              <Button variant="outline" onClick={share}>
+                <Share2 className="mr-2 h-4 w-4" /> Compartilhar
               </Button>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Inscreva seu time em uma liga para começar.</p>
-          )}
-        </Card>
-      </div>
-
-      {/* Desafios pendentes */}
-      <Card className="border-border bg-card p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-xl uppercase tracking-wide">Batalhas pendentes</h2>
-            <p className="text-xs text-muted-foreground">Times que querem te enfrentar</p>
           </div>
-          <Flame className="h-5 w-5 text-accent" />
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          {pendingChallenges.length === 0 && (
-            <p className="col-span-full rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              Nenhum desafio aguardando. Suas defesas estão limpas.
+      </Card>
+
+      {/* BLOCO 2 — Estatísticas */}
+      <Card className="border-border bg-card p-6">
+        <SectionTitle icon={<Activity className="h-5 w-5 text-primary" />} title="Estatísticas" hint="Sua temporada em números" />
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <StatBox label="Jogos" value={stats.jogos} />
+          <StatBox label="Gols" value={stats.gols} icon={<Goal className="h-3.5 w-3.5" />} accent />
+          <StatBox label="Assistências" value={stats.assistencias} icon={<Target className="h-3.5 w-3.5" />} />
+          <StatBox label="Aprov." value={`${stats.aproveitamento}%`} />
+          <StatBox label="MVP" value={stats.mvp} icon={<Star className="h-3.5 w-3.5" />} />
+          <StatBox label="Amarelos" value={stats.amarelos} />
+        </div>
+      </Card>
+
+      {/* BLOCO 3 — Conquistas */}
+      <Card className="border-border bg-card p-6">
+        <SectionTitle icon={<Trophy className="h-5 w-5 text-primary" />} title="Conquistas" hint="Em breve" />
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-surface/50 p-4 text-center opacity-60">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-2xl">🏅</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">A definir</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* BLOCO 4 — Meus times */}
+      <Card className="border-border bg-card p-6">
+        <SectionTitle icon={<Users className="h-5 w-5 text-primary" />} title="Meus times" hint={`${myTeams.length} time(s)`} />
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {myTeams.map((t) => (
+            <div key={t.id} className="flex items-center gap-4 rounded-lg border border-border bg-surface p-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-md bg-surface-elevated text-3xl ring-1 ring-border">
+                {t.shield}
+              </div>
+              <div className="flex-1">
+                <div className="font-display text-base uppercase tracking-wide">{t.name}</div>
+                <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t.city} · Capitão {t.captain}
+                </div>
+              </div>
+              <Badge variant="outline" className="border-border">{t.id === currentTeamId ? "Titular" : "Reserva"}</Badge>
+            </div>
+          ))}
+          {myTeams.length === 0 && (
+            <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Você ainda não está em nenhum time. Vá até <Link to="/vagas" className="text-primary underline">Vagas</Link> para se inscrever.
             </p>
           )}
-          {pendingChallenges.map((c) => {
-            const field = fields.find((f) => f.id === c.fieldId);
+        </div>
+      </Card>
+
+      {/* BLOCO 5 — Próximos jogos confirmados */}
+      <Card className="border-border bg-card p-6">
+        <SectionTitle icon={<Calendar className="h-5 w-5 text-primary" />} title="Próximos jogos confirmados" hint="Sua presença marcada" />
+        <div className="mt-4 space-y-3">
+          {upcoming.length === 0 && (
+            <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Nenhum jogo confirmado no momento.
+            </p>
+          )}
+          {upcoming.map(({ match, teamId }) => {
+            const field = fields.find((f) => f.id === match.fieldId);
+            const team = teams.find((t) => t.id === teamId)!;
+            const opponent = match.homeId === teamId ? match.awayId : match.homeId;
             return (
-              <div key={c.id} className="rounded-lg border border-border bg-surface p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <TeamBadge teamId={c.fromTeamId} size="sm" />
-                  <Badge variant="outline" className="border-accent/40 text-accent">desafiou você</Badge>
+              <div
+                key={match.id}
+                className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-primary text-2xl text-primary-foreground shadow-glow">
+                    {team.shield}
+                  </div>
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-primary">
+                      Você joga por
+                    </div>
+                    <div className="font-display text-base uppercase tracking-wide">{team.name}</div>
+                  </div>
                 </div>
-                <p className="mb-3 text-sm italic text-muted-foreground">"{c.message}"</p>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-muted-foreground">{c.date} · {c.time}</span>
-                  <span className="text-muted-foreground">{field?.name}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs text-muted-foreground">VS</span>
+                  <TeamBadge teamId={opponent} size="sm" />
                 </div>
-                <Button asChild className="mt-3 w-full bg-gradient-primary text-primary-foreground hover:opacity-90">
-                  <Link to="/desafios">Responder</Link>
-                </Button>
+                <div className="text-right text-xs">
+                  <div className="font-display text-sm uppercase">
+                    {new Date(match.date).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                  </div>
+                  <div className="font-mono text-muted-foreground">
+                    {new Date(match.date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    {field && <> · <MapPin className="inline h-3 w-3" /> {field.name}</>}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -190,20 +254,126 @@ function HomePage() {
   );
 }
 
-function StatTile({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
+function PlayerPhoto({ profile, onEdit }: { profile: PlayerExtras; onEdit: () => void }) {
+  const [open, setOpen] = useState(false);
+  const initials = profile.name
+    .split(" ")
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
-    <div className={`rounded-xl border p-4 ${accent ? "border-primary/30 bg-primary/5" : "border-border bg-surface"}`}>
-      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
-      <div className={`stat-num mt-1 text-3xl font-bold ${accent ? "text-gradient-primary" : "text-foreground"}`}>{value}</div>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={cn(
+          "relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl text-5xl transition hover:scale-[1.02] sm:h-40 sm:w-40",
+          frameClass(profile.frame),
+        )}
+        style={{ background: profile.color + "22", color: profile.color }}
+        aria-label="Ver foto"
+      >
+        {profile.photo_url ? (
+          <img src={profile.photo_url} alt={profile.name} className="h-full w-full object-cover" />
+        ) : (
+          <span className="font-display">{initials || profile.avatar || "⚽"}</span>
+        )}
+      </button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl overflow-hidden p-0">
+          <button
+            onClick={() => setOpen(false)}
+            className="absolute right-3 top-3 z-10 rounded-md bg-background/80 p-1.5 backdrop-blur"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex aspect-square items-center justify-center bg-surface" style={{ background: profile.color + "11" }}>
+            {profile.photo_url ? (
+              <img src={profile.photo_url} alt={profile.name} className="h-full w-full object-cover" />
+            ) : (
+              <span className="font-display text-[12rem]" style={{ color: profile.color }}>
+                {initials || profile.avatar || "⚽"}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center justify-between border-t border-border p-4">
+            <div>
+              <div className="font-display uppercase tracking-wide">{profile.name}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Foto do perfil
+              </div>
+            </div>
+            <Button onClick={onEdit} className="bg-gradient-primary text-primary-foreground">
+              <Edit className="mr-2 h-4 w-4" /> Substituir foto
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border bg-surface/60 p-2.5 backdrop-blur">
+      <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-sm font-semibold">{value}</div>
     </div>
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string | number }) {
+function SectionTitle({ icon, title, hint }: { icon: React.ReactNode; title: string; hint?: string }) {
   return (
-    <div className="rounded-md bg-surface-elevated px-2 py-2">
-      <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="stat-num text-base font-bold">{value}</div>
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="font-display text-xl uppercase tracking-wide">{title}</h2>
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      </div>
+      {icon}
     </div>
+  );
+}
+
+function StatBox({ label, value, icon, accent }: { label: string; value: string | number; icon?: React.ReactNode; accent?: boolean }) {
+  return (
+    <div className={cn("rounded-xl border p-3", accent ? "border-primary/30 bg-primary/5" : "border-border bg-surface")}>
+      <div className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {label}
+      </div>
+      <div className={cn("stat-num mt-1 text-2xl font-bold", accent ? "text-gradient-primary" : "text-foreground")}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+/* ========================= PLACEHOLDER (Team / Field) ========================= */
+
+function PlaceholderDashboard({ type }: { type: ProfileType }) {
+  return (
+    <Card className="border-dashed border-border bg-card p-12 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-3xl">
+        {PROFILE_TYPE_EMOJI[type]}
+      </div>
+      <h2 className="mt-4 font-display text-2xl uppercase tracking-wide">
+        Perfil de {PROFILE_TYPE_LABEL[type]}
+      </h2>
+      <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+        O painel específico para {PROFILE_TYPE_LABEL[type]} será configurado em breve.
+        Por enquanto, use o menu para navegar pelas demais seções.
+      </p>
+      <div className="mt-6 flex justify-center gap-3">
+        <Button asChild variant="outline">
+          <Link to="/perfil"><Shield className="mr-2 h-4 w-4" /> Editar perfis</Link>
+        </Button>
+        <Button asChild className="bg-gradient-primary text-primary-foreground">
+          <Link to="/ligas"><Trophy className="mr-2 h-4 w-4" /> Ver ligas</Link>
+        </Button>
+      </div>
+    </Card>
   );
 }
