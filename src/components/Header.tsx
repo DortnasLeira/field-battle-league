@@ -26,12 +26,15 @@ const authLinks = [
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { session } = useAuth();
   const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
+  const links = session ? [...authLinks, ...publicLinks] : publicLinks;
+  const cols = links.length;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={session ? "/" : "/ligas"} className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-primary shadow-glow">
             <span className="text-lg">⚽</span>
           </div>
@@ -66,7 +69,10 @@ export function Header() {
         <ProfileSwitcher />
       </div>
 
-      <nav className="grid grid-cols-6 border-t border-border bg-surface md:hidden">
+      <nav
+        className="grid border-t border-border bg-surface md:hidden"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
         {links.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
