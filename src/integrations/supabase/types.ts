@@ -83,6 +83,7 @@ export type Database = {
           level: string | null
           name: string
           nickname: string | null
+          photo_url: string | null
           position: string | null
           preferred_foot: string | null
           price_per_hour: number | null
@@ -108,6 +109,7 @@ export type Database = {
           level?: string | null
           name: string
           nickname?: string | null
+          photo_url?: string | null
           position?: string | null
           preferred_foot?: string | null
           price_per_hour?: number | null
@@ -133,6 +135,7 @@ export type Database = {
           level?: string | null
           name?: string
           nickname?: string | null
+          photo_url?: string | null
           position?: string | null
           preferred_foot?: string | null
           price_per_hour?: number | null
