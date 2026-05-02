@@ -98,7 +98,13 @@ function CamposPage() {
 
 function FieldCard({ fieldId }: { fieldId: string }) {
   const { fields, reserveSlot } = useStore();
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const field = fields.find((f) => f.id === fieldId)!;
+  const requireLogin = () => {
+    toast.error("Faça login para reservar.");
+    navigate({ to: "/auth" });
+  };
 
   return (
     <Card className="overflow-hidden border-border bg-card p-0">
