@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const payload = { ...p, user_id: session.user.id };
       const { data, error } = await supabase
         .from("user_profiles")
-        .upsert(payload, { onConflict: "user_id,type" })
+        .upsert(payload as never, { onConflict: "user_id,type" })
         .select()
         .single();
       if (error) throw error;
