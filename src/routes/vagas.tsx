@@ -184,7 +184,7 @@ function VagasPage() {
                     applyToOpening({ openingId: o.id, ...payload });
                     toast.success("Inscrição enviada! O capitão vai avaliar seu perfil.");
                   }}
-                  requireLogin={!session ? requireLogin : undefined}
+                  
                 />
               );
             })}
