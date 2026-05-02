@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { computeStandings, useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/ligas")({
   head: () => ({
