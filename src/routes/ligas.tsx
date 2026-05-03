@@ -262,10 +262,12 @@ function PendingMatchRow({ matchId, onSubmit, onValidate }: {
   );
 }
 
-function CreateLeagueDialog() {
+function CreateLeagueDialog({ onCreate }: { onCreate: (d: { name: string; region: string; season: string; startDate: string }) => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [region, setRegion] = useState("");
+  const [season, setSeason] = useState(new Date().getFullYear().toString());
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -276,9 +278,13 @@ function CreateLeagueDialog() {
         <div className="space-y-3">
           <div><Label>Nome</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Liga Sul 2026" /></div>
           <div><Label>Região</Label><Input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Ex: Zona Sul — SP" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Temporada</Label><Input value={season} onChange={(e) => setSeason(e.target.value)} /></div>
+            <div><Label>Início</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
+          </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => { toast.success(`Liga "${name}" criada (demo).`); setOpen(false); setName(""); setRegion(""); }}
+          <Button onClick={() => { onCreate({ name, region, season, startDate }); setOpen(false); setName(""); setRegion(""); }}
             className="bg-gradient-primary text-primary-foreground" disabled={!name || !region}>
             Criar liga
           </Button>
