@@ -8,6 +8,7 @@ import {
   type PositionOpening,
   type PlayerApplication,
   type OpeningStatus,
+  type FieldRental,
   CURRENT_TEAM_ID,
   challenges as initialChallenges,
   fields as initialFields,
@@ -27,6 +28,7 @@ type State = {
   challenges: Challenge[];
   openings: PositionOpening[];
   applications: PlayerApplication[];
+  rentals: FieldRental[];
   // actions
   joinLeague: (leagueId: string, teamId: string) => void;
   leaveLeague: (leagueId: string, teamId: string) => void;
@@ -44,6 +46,11 @@ type State = {
   applyToOpening: (a: Omit<PlayerApplication, "id" | "createdAt" | "status">) => void;
   acceptApplication: (applicationId: string) => void;
   rejectApplication: (applicationId: string) => void;
+  createLeague: (l: { name: string; region: string; season: string; startDate: string }) => void;
+  requestRental: (r: Omit<FieldRental, "id" | "createdAt" | "expiresAt" | "status">) => void;
+  approveRental: (id: string) => void;
+  declineRental: (id: string) => void;
+  expireOldRentals: () => void;
 };
 
 export const useStore = create<State>((set) => ({
