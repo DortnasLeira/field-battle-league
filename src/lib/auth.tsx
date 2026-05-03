@@ -119,6 +119,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session, refreshProfiles],
   );
 
+  const updateProfile = useCallback(
+    async (id: string, patch: Partial<UserProfile>) => {
+      const { error } = await supabase.from("user_profiles").update(patch as never).eq("id", id);
+      if (error) throw error;
+      await refreshProfiles();
+    },
+    [refreshProfiles],
+  );
+
   const deleteProfile = useCallback(
     async (id: string) => {
       await supabase.from("user_profiles").delete().eq("id", id);
@@ -141,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setActive,
     signOut,
     upsertProfile,
+    updateProfile,
     deleteProfile,
   };
 
