@@ -38,6 +38,7 @@ type AuthContextValue = {
   setActive: (profileId: string) => Promise<void>;
   signOut: () => Promise<void>;
   upsertProfile: (p: Partial<UserProfile> & { type: ProfileType; name: string }) => Promise<UserProfile | null>;
+  updateProfile: (id: string, patch: Partial<UserProfile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
 };
 
