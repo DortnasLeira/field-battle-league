@@ -89,6 +89,22 @@ export type PlayerApplication = {
   status: ApplicationStatus;
 };
 
+export type RentalStatus = "pending" | "approved" | "declined" | "expired";
+
+export type FieldRental = {
+  id: string;
+  fieldId: string;
+  requesterType: "player" | "team";
+  requesterId: string; // profile id
+  requesterName: string;
+  date: string;
+  time: string;
+  message: string;
+  createdAt: string; // ISO
+  expiresAt: string; // ISO (createdAt + 48h)
+  status: RentalStatus;
+};
+
 export const teams: Team[] = [
   { id: "t1", name: "Leões da Vila", shield: "🦁", captain: "Você", city: "São Paulo", founded: 2018, preferredDays: ["Sáb", "Dom"], preferredTimes: ["18:00", "20:00"] },
   { id: "t2", name: "Águias FC", shield: "🦅", captain: "Carlos M.", city: "São Paulo", founded: 2015, preferredDays: ["Sex", "Sáb"], preferredTimes: ["19:00", "21:00"] },
