@@ -24,10 +24,11 @@ export const Route = createFileRoute("/ligas")({
 });
 
 function LigasPage() {
-  const { leagues, matches, currentTeamId, joinLeague, leaveLeague, teams, submitScore, validateScore } = useStore();
-  const { session } = useAuth();
+  const { leagues, matches, currentTeamId, joinLeague, leaveLeague, teams, submitScore, validateScore, createLeague } = useStore();
+  const { session, activeProfile } = useAuth();
   const navigate = useNavigate();
   const [activeLeague, setActiveLeague] = useState(leagues[0]?.id ?? "");
+  const canCreate = !!activeProfile && (activeProfile.type === "team" || activeProfile.type === "field");
 
   return (
     <div className="space-y-6">
@@ -36,7 +37,17 @@ function LigasPage() {
           <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">Ligas & Ranking</h1>
           <p className="text-sm text-muted-foreground">Inscreva seu time, acompanhe a tabela e valide resultados.</p>
         </div>
-        <CreateLeagueDialog />
+        {!session ? (
+          <Button variant="outline" onClick={() => { toast.error("Faça login com perfil de Time ou Campo para criar uma liga."); navigate({ to: "/auth" }); }}>
+            <Plus className="mr-2 h-4 w-4" /> Entrar para criar
+          </Button>
+        ) : canCreate ? (
+          <CreateLeagueDialog onCreate={(d) => { createLeague(d); toast.success(`Liga "${d.name}" criada!`); }} />
+        ) : (
+          <Button variant="outline" disabled title="Apenas perfis de Time ou Campo podem criar ligas">
+            <Plus className="mr-2 h-4 w-4" /> Apenas Time/Campo cria liga
+          </Button>
+        )}
       </div>
 
       <Tabs value={activeLeague} onValueChange={setActiveLeague}>
