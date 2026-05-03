@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
+import { FiltersPanel } from "@/components/FiltersPanel";
 import type { Challenge } from "@/lib/mockData";
 
 export const Route = createFileRoute("/desafios")({
@@ -54,7 +55,10 @@ function DesafiosPage() {
         </div>
       </div>
 
-      <Card className="border-border bg-card p-4">
+      <FiltersPanel
+        count={[fStatus !== "all", fDate, fTimeFrom, fTimeTo].filter(Boolean).length}
+        onClear={() => { setFStatus("all"); setFDate(""); setFTimeFrom(""); setFTimeTo(""); }}
+      >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Select value={fStatus} onValueChange={setFStatus}>
             <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
@@ -69,7 +73,7 @@ function DesafiosPage() {
           <Input type="time" value={fTimeFrom} onChange={(e) => setFTimeFrom(e.target.value)} title="Horário a partir de" />
           <Input type="time" value={fTimeTo} onChange={(e) => setFTimeTo(e.target.value)} title="Horário até" />
         </div>
-      </Card>
+      </FiltersPanel>
 
       <Tabs defaultValue="received">
         <TabsList className="bg-surface">

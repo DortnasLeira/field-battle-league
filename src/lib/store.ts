@@ -8,6 +8,7 @@ import {
   type PositionOpening,
   type PlayerApplication,
   type OpeningStatus,
+  type FieldRental,
   CURRENT_TEAM_ID,
   challenges as initialChallenges,
   fields as initialFields,
@@ -27,6 +28,7 @@ type State = {
   challenges: Challenge[];
   openings: PositionOpening[];
   applications: PlayerApplication[];
+  rentals: FieldRental[];
   // actions
   joinLeague: (leagueId: string, teamId: string) => void;
   leaveLeague: (leagueId: string, teamId: string) => void;
@@ -44,6 +46,11 @@ type State = {
   applyToOpening: (a: Omit<PlayerApplication, "id" | "createdAt" | "status">) => void;
   acceptApplication: (applicationId: string) => void;
   rejectApplication: (applicationId: string) => void;
+  createLeague: (l: { name: string; region: string; season: string; startDate: string }) => void;
+  requestRental: (r: Omit<FieldRental, "id" | "createdAt" | "expiresAt" | "status">) => void;
+  approveRental: (id: string) => void;
+  declineRental: (id: string) => void;
+  expireOldRentals: () => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -55,6 +62,7 @@ export const useStore = create<State>((set) => ({
   challenges: initialChallenges,
   openings: initialOpenings,
   applications: initialApplications,
+  rentals: [],
 
   joinLeague: (leagueId, teamId) =>
     set((s) => ({
@@ -200,6 +208,68 @@ export const useStore = create<State>((set) => ({
         a.id === applicationId ? { ...a, status: "rejected" } : a,
       ),
     })),
+
+  createLeague: (l) =>
+    set((s) => ({
+      leagues: [
+        ...s.leagues,
+        { id: `l${Date.now()}`, name: l.name, region: l.region, season: l.season, startDate: l.startDate, teamIds: [] },
+      ],
+    })),
+
+  requestRental: (r) => {
+    const now = new Date();
+    const exp = new Date(now.getTime() + 48 * 3600 * 1000);
+    set((s) => ({
+      rentals: [
+        {
+          ...r,
+          id: `r${Date.now()}`,
+          createdAt: now.toISOString(),
+          expiresAt: exp.toISOString(),
+          status: "pending",
+        },
+        ...s.rentals,
+      ],
+    }));
+  },
+
+  approveRental: (id) =>
+    set((s) => {
+      const r = s.rentals.find((x) => x.id === id);
+      if (!r) return {};
+      return {
+        rentals: s.rentals.map((x) => (x.id === id ? { ...x, status: "approved" } : x)),
+        fields: s.fields.map((f) =>
+          f.id === r.fieldId
+            ? {
+                ...f,
+                slots: f.slots.map((sl) =>
+                  sl.date === r.date && sl.time === r.time
+                    ? { ...sl, available: false, reservedBy: r.requesterId }
+                    : sl,
+                ),
+              }
+            : f,
+        ),
+      };
+    }),
+
+  declineRental: (id) =>
+    set((s) => ({
+      rentals: s.rentals.map((x) => (x.id === id ? { ...x, status: "declined" } : x)),
+    })),
+
+  expireOldRentals: () => {
+    const now = Date.now();
+    set((s) => ({
+      rentals: s.rentals.map((r) =>
+        r.status === "pending" && new Date(r.expiresAt).getTime() < now
+          ? { ...r, status: "expired" }
+          : r,
+      ),
+    }));
+  },
 }));
 
 export type StandingRow = {

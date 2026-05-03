@@ -39,6 +39,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
+import { FiltersPanel } from "@/components/FiltersPanel";
 import {
   ALL_POSITIONS,
   type Position,
@@ -138,7 +139,10 @@ function VagasPage() {
 
         {/* MERCADO */}
         <TabsContent value="market" className="mt-6 space-y-4">
-          <Card className="border-border bg-card p-4">
+          <FiltersPanel
+            count={[fPosition !== "all", fLevel !== "all", fCity, fStatus !== "all", fDateFrom, fDateTo].filter(Boolean).length}
+            onClear={() => { setFPosition("all"); setFLevel("all"); setFCity(""); setFStatus("all"); setFDateFrom(""); setFDateTo(""); }}
+          >
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
               <Select value={fPosition} onValueChange={setFPosition}>
                 <SelectTrigger><SelectValue placeholder="Posição" /></SelectTrigger>
@@ -167,7 +171,7 @@ function VagasPage() {
               <Input type="date" value={fDateFrom} onChange={(e) => setFDateFrom(e.target.value)} title="Publicada a partir de" />
               <Input type="date" value={fDateTo} onChange={(e) => setFDateTo(e.target.value)} title="Publicada até" />
             </div>
-          </Card>
+          </FiltersPanel>
           {otherOpenings.length === 0 && (
             <EmptyState
               icon={<Inbox className="h-8 w-8" />}
