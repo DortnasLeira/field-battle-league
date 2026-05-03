@@ -62,6 +62,7 @@ export const useStore = create<State>((set) => ({
   challenges: initialChallenges,
   openings: initialOpenings,
   applications: initialApplications,
+  rentals: [],
 
   joinLeague: (leagueId, teamId) =>
     set((s) => ({
