@@ -54,7 +54,10 @@ function DesafiosPage() {
         </div>
       </div>
 
-      <Card className="border-border bg-card p-4">
+      <FiltersPanel
+        count={[fStatus !== "all", fDate, fTimeFrom, fTimeTo].filter(Boolean).length}
+        onClear={() => { setFStatus("all"); setFDate(""); setFTimeFrom(""); setFTimeTo(""); }}
+      >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Select value={fStatus} onValueChange={setFStatus}>
             <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
@@ -69,7 +72,7 @@ function DesafiosPage() {
           <Input type="time" value={fTimeFrom} onChange={(e) => setFTimeFrom(e.target.value)} title="Horário a partir de" />
           <Input type="time" value={fTimeTo} onChange={(e) => setFTimeTo(e.target.value)} title="Horário até" />
         </div>
-      </Card>
+      </FiltersPanel>
 
       <Tabs defaultValue="received">
         <TabsList className="bg-surface">
