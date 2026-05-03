@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
+import { FiltersPanel } from "@/components/FiltersPanel";
 import type { Challenge } from "@/lib/mockData";
 
 export const Route = createFileRoute("/desafios")({
