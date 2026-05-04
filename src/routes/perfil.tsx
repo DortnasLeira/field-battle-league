@@ -21,6 +21,9 @@ import {
 } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FRAME_UNLOCK, isFrameUnlocked } from "@/lib/achievements";
+import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/perfil")({
   head: () => ({ meta: [{ title: "Editar perfil — PeladaPro" }] }),
@@ -307,29 +310,36 @@ function ProfileEditor({
           {type === "player" && (
             <>
               <div>
-                <Label>Posição</Label>
-                <Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder="Ex: Atacante" />
-              </div>
-              <div>
-                <Label>Nível</Label>
-                <Input value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} placeholder="Iniciante / Intermediário / Avançado" />
-              </div>
-              <div>
                 <Label>Idade</Label>
-                <Input type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} placeholder="Ex: 27" />
-              </div>
-              <div>
-                <Label>Gênero</Label>
-                <Input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} placeholder="Masculino / Feminino / Outro" />
+                <Input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={form.age}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") return setForm({ ...form, age: "" });
+                    const n = Math.max(1, Math.min(99, Number(v)));
+                    setForm({ ...form, age: String(n) });
+                  }}
+                  placeholder="1 a 99"
+                />
               </div>
               <div>
                 <Label>Pé preferido</Label>
-                <Input value={form.preferred_foot} onChange={(e) => setForm({ ...form, preferred_foot: e.target.value })} placeholder="Direito / Esquerdo / Ambidestro" />
+                <Select value={form.preferred_foot} onValueChange={(v) => setForm({ ...form, preferred_foot: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Destro">Destro</SelectItem>
+                    <SelectItem value="Canhoto">Canhoto</SelectItem>
+                    <SelectItem value="Ambidestro">Ambidestro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Label>Tipos de campo</Label>
                 <div className="mt-1 flex flex-wrap gap-1.5">
-                  {["Society", "Futsal", "Campo", "Areia"].map((ft) => {
+                  {["Society", "Areia", "Sintético", "Campo"].map((ft) => {
                     const on = form.field_types.includes(ft);
                     return (
                       <button
@@ -430,21 +440,34 @@ function ProfileEditor({
           <div>
             <Label className="mb-2 block">Moldura</Label>
             <div className="flex flex-wrap gap-2">
-              {FRAMES.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setForm({ ...form, frame: f.id })}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition",
-                    form.frame === f.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
-                  )}
-                >
-                  <span className={cn("inline-block h-5 w-5 rounded-full", f.ring)} style={{ background: form.color + "44" }} />
-                  {f.label}
-                </button>
-              ))}
+              {FRAMES.map((f) => {
+                const unlocked = type === "player" ? isFrameUnlocked(f.id) : true;
+                const reqLabel = FRAME_UNLOCK[f.id]?.label;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    disabled={!unlocked}
+                    onClick={() => setForm({ ...form, frame: f.id })}
+                    title={unlocked ? f.label : reqLabel}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition",
+                      form.frame === f.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
+                      !unlocked && "cursor-not-allowed opacity-50",
+                    )}
+                  >
+                    <span className={cn("inline-block h-5 w-5 rounded-full", f.ring)} style={{ background: form.color + "44" }} />
+                    {f.label}
+                    {!unlocked && <Lock className="ml-1 h-3 w-3" />}
+                  </button>
+                );
+              })}
             </div>
+            {type === "player" && (
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Molduras são desbloqueadas conforme suas conquistas.
+              </p>
+            )}
           </div>
         </div>
 
