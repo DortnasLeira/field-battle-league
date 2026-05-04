@@ -15,6 +15,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as CamposRouteImport } from './routes/campos'
+import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -48,6 +49,11 @@ const CamposRoute = CamposRouteImport.update({
   path: '/campos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BuscarRoute = BuscarRouteImport.update({
+  id: '/buscar',
+  path: '/buscar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -62,6 +68,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/buscar'
     | '/campos'
     | '/desafios'
     | '/ligas'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/buscar'
     | '/campos'
     | '/desafios'
     | '/ligas'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/buscar'
     | '/campos'
     | '/desafios'
     | '/ligas'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  BuscarRoute: typeof BuscarRoute
   CamposRoute: typeof CamposRoute
   DesafiosRoute: typeof DesafiosRoute
   LigasRoute: typeof LigasRoute
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CamposRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/buscar': {
+      id: '/buscar'
+      path: '/buscar'
+      fullPath: '/buscar'
+      preLoaderRoute: typeof BuscarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  BuscarRoute: BuscarRoute,
   CamposRoute: CamposRoute,
   DesafiosRoute: DesafiosRoute,
   LigasRoute: LigasRoute,

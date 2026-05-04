@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings } from "lucide-react";
+import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ const publicLinks = [
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
+  { to: "/buscar", label: "Buscar", icon: Search },
 ] as const;
 
 const authLinks = [
