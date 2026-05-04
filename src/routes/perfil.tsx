@@ -310,29 +310,36 @@ function ProfileEditor({
           {type === "player" && (
             <>
               <div>
-                <Label>Posição</Label>
-                <Input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder="Ex: Atacante" />
-              </div>
-              <div>
-                <Label>Nível</Label>
-                <Input value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} placeholder="Iniciante / Intermediário / Avançado" />
-              </div>
-              <div>
                 <Label>Idade</Label>
-                <Input type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} placeholder="Ex: 27" />
-              </div>
-              <div>
-                <Label>Gênero</Label>
-                <Input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} placeholder="Masculino / Feminino / Outro" />
+                <Input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={form.age}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") return setForm({ ...form, age: "" });
+                    const n = Math.max(1, Math.min(99, Number(v)));
+                    setForm({ ...form, age: String(n) });
+                  }}
+                  placeholder="1 a 99"
+                />
               </div>
               <div>
                 <Label>Pé preferido</Label>
-                <Input value={form.preferred_foot} onChange={(e) => setForm({ ...form, preferred_foot: e.target.value })} placeholder="Direito / Esquerdo / Ambidestro" />
+                <Select value={form.preferred_foot} onValueChange={(v) => setForm({ ...form, preferred_foot: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Destro">Destro</SelectItem>
+                    <SelectItem value="Canhoto">Canhoto</SelectItem>
+                    <SelectItem value="Ambidestro">Ambidestro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Label>Tipos de campo</Label>
                 <div className="mt-1 flex flex-wrap gap-1.5">
-                  {["Society", "Futsal", "Campo", "Areia"].map((ft) => {
+                  {["Society", "Areia", "Sintético", "Campo"].map((ft) => {
                     const on = form.field_types.includes(ft);
                     return (
                       <button
