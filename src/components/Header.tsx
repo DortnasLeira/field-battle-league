@@ -17,6 +17,7 @@ const publicLinks = [
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
+  { to: "/buscar", label: "Buscar", icon: Search },
 ] as const;
 
 const authLinks = [
