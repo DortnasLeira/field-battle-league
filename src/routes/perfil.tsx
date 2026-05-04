@@ -440,21 +440,34 @@ function ProfileEditor({
           <div>
             <Label className="mb-2 block">Moldura</Label>
             <div className="flex flex-wrap gap-2">
-              {FRAMES.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setForm({ ...form, frame: f.id })}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition",
-                    form.frame === f.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
-                  )}
-                >
-                  <span className={cn("inline-block h-5 w-5 rounded-full", f.ring)} style={{ background: form.color + "44" }} />
-                  {f.label}
-                </button>
-              ))}
+              {FRAMES.map((f) => {
+                const unlocked = type === "player" ? isFrameUnlocked(f.id) : true;
+                const reqLabel = FRAME_UNLOCK[f.id]?.label;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    disabled={!unlocked}
+                    onClick={() => setForm({ ...form, frame: f.id })}
+                    title={unlocked ? f.label : reqLabel}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition",
+                      form.frame === f.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
+                      !unlocked && "cursor-not-allowed opacity-50",
+                    )}
+                  >
+                    <span className={cn("inline-block h-5 w-5 rounded-full", f.ring)} style={{ background: form.color + "44" }} />
+                    {f.label}
+                    {!unlocked && <Lock className="ml-1 h-3 w-3" />}
+                  </button>
+                );
+              })}
             </div>
+            {type === "player" && (
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Molduras são desbloqueadas conforme suas conquistas.
+              </p>
+            )}
           </div>
         </div>
 
