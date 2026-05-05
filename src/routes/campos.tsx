@@ -113,13 +113,18 @@ function CamposPage() {
         </TabsList>
 
         <TabsContent value="search" className="mt-6 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-10"
+              placeholder="Digite o nome do campo ou endereço..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
           <FiltersPanel count={filterCount} onClear={clear}>
             <div className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input className="pl-10" placeholder="Nome do campo ou endereço..." value={query} onChange={(e) => setQuery(e.target.value)} />
-                </div>
                 <Select value={surface} onValueChange={setSurface}>
                   <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
