@@ -192,12 +192,17 @@ export const useStore = create<State>((set) => ({
       const opening = s.openings.find((o) => o.id === app.openingId);
       const acceptedCount =
         s.applications.filter((x) => x.openingId === app.openingId && x.status === "accepted").length + 1;
-      const newStatus: OpeningStatus =
-        opening && acceptedCount >= opening.slots ? "filled" : opening?.status ?? "open";
+      const filled = !!opening && acceptedCount >= opening.slots;
+      const newStatus: OpeningStatus = filled ? "filled" : opening?.status ?? "open";
       return {
-        applications: s.applications.map((x) =>
-          x.id === applicationId ? { ...x, status: "accepted" } : x,
-        ),
+        applications: s.applications.map((x) => {
+          if (x.id === applicationId) return { ...x, status: "accepted" };
+          // Quando a vaga é preenchida, recusa automaticamente os demais pendentes
+          if (filled && x.openingId === app.openingId && x.status === "pending") {
+            return { ...x, status: "rejected" };
+          }
+          return x;
+        }),
         openings: s.openings.map((o) => (o.id === app.openingId ? { ...o, status: newStatus } : o)),
       };
     }),
