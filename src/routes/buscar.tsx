@@ -39,6 +39,14 @@ function BuscarPage() {
   const [level, setLevel] = useState<string>("");
 
   const [players, setPlayers] = useState<UserProfile[]>([]);
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const [viewPlayer, setViewPlayer] = useState<UserProfile | null>(null);
+  const [viewTeam, setViewTeam] = useState<Team | null>(null);
+  const requireLogin = () => {
+    toast.error("Faça login para ver o perfil.");
+    navigate({ to: "/auth" });
+  };
 
   useEffect(() => {
     supabase
