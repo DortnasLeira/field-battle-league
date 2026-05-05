@@ -56,7 +56,7 @@ function LigasPage() {
             <TabsTrigger
               key={l.id}
               value={l.id}
-              className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-glow"
+              className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-glow"
             >
               <Trophy className="mr-2 h-3.5 w-3.5" />
               {l.name}
