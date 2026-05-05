@@ -1,17 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Users, User, MapPin, Star } from "lucide-react";
+import { Search, Users, User, MapPin, Star, Eye, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { TeamBadge } from "@/components/TeamBadge";
-import { teams as mockTeams } from "@/lib/mockData";
+import { teams as mockTeams, type Team } from "@/lib/mockData";
 import { supabase } from "@/integrations/supabase/client";
-import { frameClass, type UserProfile } from "@/lib/auth";
+import { useAuth, frameClass, type UserProfile } from "@/lib/auth";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/buscar")({
