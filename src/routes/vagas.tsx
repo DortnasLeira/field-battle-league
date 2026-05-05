@@ -132,8 +132,13 @@ function VagasPage() {
           <TabsTrigger value="market" className="font-display uppercase tracking-wide">
             <Users className="mr-2 h-4 w-4" /> Mercado ({otherOpenings.length})
           </TabsTrigger>
-          <TabsTrigger value="manage" className="font-display uppercase tracking-wide">
-            <Shield className="mr-2 h-4 w-4" /> Minhas Vagas ({myOpenings.length})
+          <TabsTrigger
+            value="manage"
+            className="font-display uppercase tracking-wide"
+            disabled={!session}
+            title={!session ? "Faça login para gerenciar suas vagas" : undefined}
+          >
+            <Shield className="mr-2 h-4 w-4" /> Minhas Vagas {session ? `(${myOpenings.length})` : "🔒"}
           </TabsTrigger>
         </TabsList>
 
