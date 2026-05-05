@@ -273,7 +273,7 @@ function TeamProfileDialog({ team, onClose }: { team: Team | null; onClose: () =
   );
 }
 
-function PlayerCard({ p }: { p: UserProfile }) {
+function PlayerCard({ p, onView, locked }: { p: UserProfile; onView: () => void; locked: boolean }) {
   const initials = (p.name || "?").split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
   return (
     <Card className="flex items-center gap-3 border-border bg-card p-4">
