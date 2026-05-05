@@ -52,7 +52,7 @@ function CamposPage() {
   }, [expireOldRentals]);
 
   const filterCount = [
-    query, surface !== "all", city, date, timeFrom, timeTo, priceMax, onlyAvail,
+    surface !== "all", city, date, timeFrom, timeTo, priceMax, onlyAvail,
   ].filter(Boolean).length;
 
   const clear = () => {
