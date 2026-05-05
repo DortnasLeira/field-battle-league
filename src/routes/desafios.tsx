@@ -77,14 +77,14 @@ function DesafiosPage() {
 
       <Tabs defaultValue="received">
         <TabsList className="bg-surface">
-          <TabsTrigger value="received" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger value="received" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-glow">
             <Inbox className="mr-2 h-4 w-4" /> Recebidos
-            {received.length > 0 && <span className="ml-2 rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">{received.length}</span>}
+            {received.length > 0 && <span className="ml-2 rounded-full bg-background/20 px-1.5 text-[10px] font-bold">{received.length}</span>}
           </TabsTrigger>
-          <TabsTrigger value="sent" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger value="sent" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-glow">
             <Send className="mr-2 h-4 w-4" /> Enviados
           </TabsTrigger>
-          <TabsTrigger value="accepted" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger value="accepted" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-glow">
             <Flame className="mr-2 h-4 w-4" /> Confirmados
           </TabsTrigger>
         </TabsList>
