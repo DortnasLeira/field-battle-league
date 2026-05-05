@@ -300,6 +300,10 @@ function PlayerCard({ p, onView, locked }: { p: UserProfile; onView: () => void;
           </div>
         )}
       </div>
+      <Button size="sm" variant="outline" onClick={onView} title={locked ? "Faça login para ver o perfil" : "Ver perfil"}>
+        {locked ? <Lock className="mr-1 h-3.5 w-3.5" /> : <Eye className="mr-1 h-3.5 w-3.5" />}
+        Perfil
+      </Button>
     </Card>
   );
 }
