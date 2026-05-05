@@ -105,7 +105,7 @@ function LigasPage() {
               </Card>
 
               {/* Pending placar */}
-              {pending.length > 0 && (
+              {session && pending.length > 0 && (
                 <Card className="border-accent/40 bg-accent/5 p-6">
                   <h3 className="mb-4 font-display text-lg uppercase tracking-wide text-accent">⚠ Placares pendentes</h3>
                   <div className="space-y-3">
