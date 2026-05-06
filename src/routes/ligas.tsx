@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { computeStandings, useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
+import { submitScoreFn } from "@/server/scores.functions";
 
 export const Route = createFileRoute("/ligas")({
   head: () => ({
@@ -236,9 +237,14 @@ function PendingMatchRow({ matchId, onSubmit, onValidate }: {
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
         {m.status === "awaiting_score" && (
           <Button size="sm" className="bg-gradient-primary text-primary-foreground"
-            onClick={() => {
+            onClick={async () => {
               const h = parseInt(home), a = parseInt(away);
               if (isNaN(h) || isNaN(a)) return toast.error("Informe o placar.");
+              try {
+                await submitScoreFn({ data: { matchId, home: h, away: a, byTeamId: currentTeamId } });
+              } catch {
+                return toast.error("Faça login para enviar o placar.");
+              }
               onSubmit(matchId, h, a, currentTeamId);
               toast.success("Placar enviado. Aguardando validação do adversário.");
             }}>

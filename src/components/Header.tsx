@@ -25,12 +25,23 @@ const authLinks = [
   { to: "/desafios", label: "Desafios", icon: Swords },
 ] as const;
 
+const PROTECTED = new Set<string>(["/", "/perfil", "/vagas", "/desafios"]);
+
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { session } = useAuth();
+  const navigate = useNavigate();
   const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
-  const links = session ? [...authLinks, ...publicLinks] : publicLinks;
+  const links = session ? [...authLinks, ...publicLinks] : [{ to: "/", label: "Perfil", icon: User }, ...publicLinks];
   const cols = links.length;
+
+  const handleNav = (to: string) => (e: React.MouseEvent) => {
+    if (!session && PROTECTED.has(to)) {
+      e.preventDefault();
+      toast.error("Faça login para acessar.");
+      navigate({ to: "/auth", search: { redirect: to } });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
@@ -54,6 +65,7 @@ export function Header() {
             <Link
               key={to}
               to={to}
+              onClick={handleNav(to)}
               className={cn(
                 "group inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive(to)
@@ -78,6 +90,7 @@ export function Header() {
           <Link
             key={to}
             to={to}
+            onClick={handleNav(to)}
             className={cn(
               "flex flex-col items-center gap-1 py-2 text-[10px] uppercase tracking-wide",
               isActive(to) ? "text-primary" : "text-muted-foreground",

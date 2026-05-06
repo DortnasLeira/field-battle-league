@@ -18,6 +18,8 @@ import { Route as CamposRouteImport } from './routes/campos'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TimeIdRouteImport } from './routes/time.$id'
+import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 
 const VagasRoute = VagasRouteImport.update({
   id: '/vagas',
@@ -64,6 +66,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TimeIdRoute = TimeIdRouteImport.update({
+  id: '/time/$id',
+  path: '/time/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JogadorIdRoute = JogadorIdRouteImport.update({
+  id: '/jogador/$id',
+  path: '/jogador/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +87,8 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
+  '/jogador/$id': typeof JogadorIdRoute
+  '/time/$id': typeof TimeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +100,8 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
+  '/jogador/$id': typeof JogadorIdRoute
+  '/time/$id': typeof TimeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +114,8 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
+  '/jogador/$id': typeof JogadorIdRoute
+  '/time/$id': typeof TimeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +129,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/perfil'
     | '/vagas'
+    | '/jogador/$id'
+    | '/time/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +142,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/perfil'
     | '/vagas'
+    | '/jogador/$id'
+    | '/time/$id'
   id:
     | '__root__'
     | '/'
@@ -133,6 +155,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/perfil'
     | '/vagas'
+    | '/jogador/$id'
+    | '/time/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +169,8 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PerfilRoute: typeof PerfilRoute
   VagasRoute: typeof VagasRoute
+  JogadorIdRoute: typeof JogadorIdRoute
+  TimeIdRoute: typeof TimeIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +238,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/time/$id': {
+      id: '/time/$id'
+      path: '/time/$id'
+      fullPath: '/time/$id'
+      preLoaderRoute: typeof TimeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jogador/$id': {
+      id: '/jogador/$id'
+      path: '/jogador/$id'
+      fullPath: '/jogador/$id'
+      preLoaderRoute: typeof JogadorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +265,8 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PerfilRoute: PerfilRoute,
   VagasRoute: VagasRoute,
+  JogadorIdRoute: JogadorIdRoute,
+  TimeIdRoute: TimeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

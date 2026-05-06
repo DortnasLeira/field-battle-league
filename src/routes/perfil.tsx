@@ -35,7 +35,7 @@ function PerfilPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth" });
+    if (!loading && !session) navigate({ to: "/auth", search: { redirect: "/perfil" } });
     else if (!loading && session && profiles.length === 0) navigate({ to: "/onboarding" });
   }, [loading, session, profiles, navigate]);
 

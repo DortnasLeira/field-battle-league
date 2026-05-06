@@ -18,20 +18,25 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Acesse sua conta PeladaPro com Google ou e-mail." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+  }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const { session, profiles, loading } = useAuth();
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
 
   useEffect(() => {
     if (loading) return;
     if (session) {
       if (profiles.length === 0) navigate({ to: "/onboarding" });
+      else if (redirect && redirect.startsWith("/")) window.location.replace(redirect);
       else navigate({ to: "/" });
     }
-  }, [session, profiles, loading, navigate]);
+  }, [session, profiles, loading, navigate, redirect]);
 
   return (
     <div className="mx-auto max-w-md py-10">

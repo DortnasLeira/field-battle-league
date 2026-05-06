@@ -77,7 +77,7 @@ function VagasPage() {
   } = useStore();
   const { session } = useAuth();
   const navigate = useNavigate();
-  const requireLogin = () => { toast.error("Faça login para continuar."); navigate({ to: "/auth" }); };
+  const requireLogin = () => { toast.error("Faça login para continuar."); navigate({ to: "/auth", search: { redirect: "/vagas" } }); };
 
   const [fPosition, setFPosition] = useState<string>("all");
   const [fLevel, setFLevel] = useState<string>("all");
