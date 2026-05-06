@@ -210,65 +210,6 @@ function BuscarPage() {
   );
 }
 
-function PlayerProfileDialog({ player, onClose }: { player: UserProfile | null; onClose: () => void }) {
-  return (
-    <Dialog open={!!player} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        {player && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display uppercase tracking-wide">{player.name}</DialogTitle>
-            </DialogHeader>
-            <div className="flex items-center gap-4">
-              <div
-                className={cn("flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl text-2xl", frameClass(player.frame))}
-                style={{ background: player.color + "22", color: player.color }}
-              >
-                {player.photo_url ? (
-                  <img src={player.photo_url} alt={player.name} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="font-display">{player.avatar || "⚽"}</span>
-                )}
-              </div>
-              <div className="space-y-1 text-sm">
-                {player.nickname && <div className="text-muted-foreground">"{player.nickname}"</div>}
-                {player.position && <div><strong>Posição:</strong> {player.position}</div>}
-                {player.level && <div><strong>Nível:</strong> {player.level}</div>}
-                {player.city && <div><MapPin className="inline h-3 w-3" /> {player.city}</div>}
-                {player.preferred_foot && <div><strong>Pé:</strong> {player.preferred_foot}</div>}
-              </div>
-            </div>
-            {player.bio && <p className="text-sm text-muted-foreground">{player.bio}</p>}
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function TeamProfileDialog({ team, onClose }: { team: Team | null; onClose: () => void }) {
-  return (
-    <Dialog open={!!team} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        {team && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="font-display uppercase tracking-wide">{team.name}</DialogTitle>
-            </DialogHeader>
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-surface text-3xl">{team.shield}</div>
-              <div className="space-y-1 text-sm">
-                <div><strong>Capitão:</strong> {team.captain}</div>
-                <div><MapPin className="inline h-3 w-3" /> {team.city}</div>
-                <div><Star className="inline h-3 w-3 text-primary" /> Fundado em {team.founded}</div>
-              </div>
-            </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function PlayerCard({ p, onView, locked }: { p: UserProfile; onView: () => void; locked: boolean }) {
   const initials = (p.name || "?").split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
