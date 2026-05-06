@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { computeStandings, useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
+import { submitScoreFn } from "@/server/scores.functions";
 
 export const Route = createFileRoute("/ligas")({
   head: () => ({
