@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { TeamBadge } from "@/components/TeamBadge";
 import { teams as mockTeams, type Team } from "@/lib/mockData";
