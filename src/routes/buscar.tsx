@@ -41,11 +41,9 @@ function BuscarPage() {
   const [players, setPlayers] = useState<UserProfile[]>([]);
   const { session } = useAuth();
   const navigate = useNavigate();
-  const [viewPlayer, setViewPlayer] = useState<UserProfile | null>(null);
-  const [viewTeam, setViewTeam] = useState<Team | null>(null);
   const requireLogin = () => {
     toast.error("Faça login para ver o perfil.");
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", search: { redirect: window.location.pathname } });
   };
 
   useEffect(() => {
