@@ -163,7 +163,7 @@ function BuscarPage() {
                 <PlayerCard
                   key={p.id}
                   p={p}
-                  onView={() => (session ? setViewPlayer(p) : requireLogin())}
+                  onView={() => (session ? navigate({ to: "/jogador/$id", params: { id: p.id } }) : requireLogin())}
                   locked={!session}
                 />
               ))}
@@ -194,7 +194,7 @@ function BuscarPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => (session ? setViewTeam(t) : requireLogin())}
+                    onClick={() => (session ? navigate({ to: "/time/$id", params: { id: t.id } }) : requireLogin())}
                     title={!session ? "Faça login para ver o perfil" : "Ver perfil"}
                   >
                     {session ? <Eye className="mr-1 h-3.5 w-3.5" /> : <Lock className="mr-1 h-3.5 w-3.5" />}
@@ -206,9 +206,6 @@ function BuscarPage() {
           )}
         </section>
       )}
-
-      <PlayerProfileDialog player={viewPlayer} onClose={() => setViewPlayer(null)} />
-      <TeamProfileDialog team={viewTeam} onClose={() => setViewTeam(null)} />
     </div>
   );
 }
