@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { TeamBadge } from "@/components/TeamBadge";
-import { teams as mockTeams, type Team } from "@/lib/mockData";
+import { teams as mockTeams } from "@/lib/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, frameClass, type UserProfile } from "@/lib/auth";
 import { toast } from "sonner";
