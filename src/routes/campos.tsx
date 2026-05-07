@@ -53,7 +53,9 @@ function CamposPage() {
   }, [expireOldRentals]);
 
   const filterCount = [
-    surface !== "all", city, date, timeFrom, timeTo, priceMax, onlyAvail,
+    surface !== "all", city,
+    searchBy === "date" ? date : (timeFrom || timeTo),
+    priceMax, onlyAvail,
   ].filter(Boolean).length;
 
   const clear = () => {
@@ -61,20 +63,23 @@ function CamposPage() {
     setTimeFrom(""); setTimeTo(""); setPriceMax(""); setOnlyAvail(false);
   };
 
+  const slotMatches = (s: { date: string; time: string; available: boolean }) => {
+    if (searchBy === "date" && date && s.date !== date) return false;
+    if (searchBy === "time") {
+      if (timeFrom && s.time < timeFrom) return false;
+      if (timeTo && s.time > timeTo) return false;
+    }
+    if (onlyAvail && !s.available) return false;
+    return true;
+  };
+
   const filtered = fields.filter((f) => {
     const matchQ = !query || f.name.toLowerCase().includes(query.toLowerCase()) || f.address.toLowerCase().includes(query.toLowerCase());
     const matchS = surface === "all" || f.surface === surface;
     const matchCity = !city || f.address.toLowerCase().includes(city.toLowerCase());
     const matchPrice = !priceMax || f.pricePerHour <= Number(priceMax);
-    const matchSlots =
-      (!date && !timeFrom && !timeTo && !onlyAvail) ||
-      f.slots.some((s) => {
-        if (date && s.date !== date) return false;
-        if (timeFrom && s.time < timeFrom) return false;
-        if (timeTo && s.time > timeTo) return false;
-        if (onlyAvail && !s.available) return false;
-        return true;
-      });
+    const hasFilter = (searchBy === "date" && date) || (searchBy === "time" && (timeFrom || timeTo)) || onlyAvail;
+    const matchSlots = !hasFilter || f.slots.some(slotMatches);
     return matchQ && matchS && matchCity && matchPrice && matchSlots;
   });
 
