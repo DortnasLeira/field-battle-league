@@ -1,17 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Swords, Inbox, Send, Check, X, Flame } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { Swords, Inbox, Send, Check, X, Flame, Whistle, Award } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
 import { FiltersPanel } from "@/components/FiltersPanel";
-import type { Challenge } from "@/lib/mockData";
+import type { Challenge, Referee } from "@/lib/mockData";
+import { REFEREE_TIER_INFO } from "@/lib/mockData";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/desafios")({
   head: () => ({
