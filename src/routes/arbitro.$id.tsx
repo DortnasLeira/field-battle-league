@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, MapPin, Star, DollarSign, Award, Calendar, Clock, Flag as Whistle, History, Trophy, Lock as LockIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, MapPin, Star, DollarSign, Award, Calendar, Clock, Flag as Whistle, History, Trophy, Lock as LockIcon, X, CheckCircle2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { referees, REFEREE_TIER_INFO } from "@/lib/mockData";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+type HireRow = {
+  id: string;
+  referee_id: string;
+  hire_date: string;
+  hire_time: string;
+  message: string | null;
+  status: "pending" | "confirmed" | "cancelled";
+  created_at: string;
+};
 
 export const Route = createFileRoute("/arbitro/$id")({
   head: () => ({ meta: [{ title: "Perfil do Árbitro — PeladaPro" }] }),
@@ -23,6 +34,32 @@ function RefereeProfilePage() {
   const { session, activeProfile } = useAuth();
   const referee = referees.find((r) => r.id === id);
   const [hireOpen, setHireOpen] = useState(false);
+  const [hireDate, setHireDate] = useState<string>("");
+  const [hireTime, setHireTime] = useState<string>("");
+  const [hireMsg, setHireMsg] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+  const [myHires, setMyHires] = useState<HireRow[]>([]);
+
+  useEffect(() => {
+    if (referee) {
+      setHireDate(referee.availableDays[0] ?? "");
+      setHireTime(referee.availableTimes[0] ?? "");
+    }
+  }, [referee?.id]);
+
+  const loadHires = async () => {
+    if (!session || !referee) return;
+    const { data } = await supabase
+      .from("referee_hires")
+      .select("id, referee_id, hire_date, hire_time, message, status, created_at")
+      .eq("referee_id", referee.id)
+      .eq("requester_user_id", session.user.id)
+      .order("created_at", { ascending: false });
+    setMyHires((data ?? []) as HireRow[]);
+  };
+
+  useEffect(() => { loadHires(); }, [session?.user.id, referee?.id]);
+
 
   if (!referee) {
     return (
@@ -46,6 +83,53 @@ function RefereeProfilePage() {
       return;
     }
     setHireOpen(true);
+  };
+
+  const submitHire = async () => {
+    if (!session || !referee || !activeProfile) return;
+    if (activeProfile.type !== "team" && activeProfile.type !== "field") {
+      toast.error("Apenas perfis TIME ou CAMPO podem contratar árbitros.");
+      return;
+    }
+    if (!hireDate || !hireTime) {
+      toast.error("Selecione data e horário.");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("referee_hires").insert({
+      referee_id: referee.id,
+      referee_name: referee.name,
+      requester_user_id: session.user.id,
+      requester_profile_type: activeProfile.type,
+      requester_name: activeProfile.name,
+      hire_date: hireDate,
+      hire_time: hireTime,
+      price: referee.pricePerGame,
+      message: hireMsg || null,
+      status: "pending",
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Não foi possível enviar a solicitação.", { description: error.message });
+      return;
+    }
+    toast.success("Solicitação enviada! Aguardando confirmação do árbitro.");
+    setHireOpen(false);
+    setHireMsg("");
+    loadHires();
+  };
+
+  const cancelHire = async (hireId: string) => {
+    const { error } = await supabase
+      .from("referee_hires")
+      .update({ status: "cancelled" })
+      .eq("id", hireId);
+    if (error) {
+      toast.error("Não foi possível cancelar.", { description: error.message });
+      return;
+    }
+    toast.success("Solicitação cancelada.");
+    loadHires();
   };
 
   const completed = referee.hireHistory.filter((h) => h.status === "completed");
@@ -204,6 +288,46 @@ function RefereeProfilePage() {
         )}
       </Card>
 
+      {/* My hire requests */}
+      {session && (
+        <Card className="border-border bg-card p-5">
+          <div className="flex items-center gap-2">
+            <Whistle className="h-4 w-4 text-referee" />
+            <h2 className="font-display text-lg uppercase tracking-wide">Minhas Solicitações</h2>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">({myHires.length})</span>
+          </div>
+          {myHires.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">Você ainda não enviou solicitações para este árbitro.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-border">
+              {myHires.map((h) => (
+                <li key={h.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="font-display text-sm uppercase tracking-wide">
+                      {new Date(h.hire_date).toLocaleDateString("pt-BR")} · {h.hire_time}
+                    </div>
+                    {h.message && (
+                      <div className="text-xs text-muted-foreground truncate">"{h.message}"</div>
+                    )}
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Enviada em {new Date(h.created_at).toLocaleDateString("pt-BR")}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={h.status} />
+                    {h.status === "pending" && (
+                      <Button size="sm" variant="ghost" onClick={() => cancelHire(h.id)} title="Cancelar solicitação">
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
+
       {/* Hire dialog */}
       <Dialog open={hireOpen} onOpenChange={setHireOpen}>
         <DialogContent>
@@ -211,32 +335,66 @@ function RefereeProfilePage() {
             <DialogTitle className="font-display uppercase tracking-wide">Contratar árbitro</DialogTitle>
             <DialogDescription>
               Solicitação para <strong>{referee.name}</strong> · R$ {referee.pricePerGame}/jogo.
+              {activeProfile && (
+                <span className="mt-1 block text-[11px] text-muted-foreground">
+                  Como <strong>{activeProfile.name}</strong> ({activeProfile.type === "team" ? "Time" : "Campo"})
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Data</Label>
-                <Input type="date" defaultValue={referee.availableDays[0]} />
+          {!canHire ? (
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              Apenas perfis <strong>TIME</strong> ou <strong>CAMPO</strong> podem contratar árbitros.
+              Troque seu perfil ativo no header.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Data</Label>
+                  <Input
+                    type="date"
+                    value={hireDate}
+                    onChange={(e) => setHireDate(e.target.value)}
+                    min={referee.availableDays[0]}
+                    list={`avail-${referee.id}`}
+                  />
+                  <datalist id={`avail-${referee.id}`}>
+                    {referee.availableDays.map((d) => <option key={d} value={d} />)}
+                  </datalist>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Disp.: {referee.availableDays.map((d) => new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })).join(", ")}
+                  </p>
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Horário</Label>
+                  <select
+                    className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                    value={hireTime}
+                    onChange={(e) => setHireTime(e.target.value)}
+                  >
+                    {referee.availableTimes.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
-                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Horário</Label>
-                <select className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
-                  {referee.availableTimes.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Mensagem (opcional)</Label>
+                <Input
+                  placeholder="Local, formato do jogo, observações..."
+                  value={hireMsg}
+                  onChange={(e) => setHireMsg(e.target.value)}
+                />
               </div>
             </div>
-            <div>
-              <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Mensagem (opcional)</Label>
-              <Input placeholder="Local, formato do jogo, observações..." />
-            </div>
-          </div>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setHireOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setHireOpen(false)} disabled={submitting}>Cancelar</Button>
             <Button
               className="bg-referee text-referee-foreground hover:bg-referee/90"
-              onClick={() => { toast.success("Solicitação enviada ao árbitro!"); setHireOpen(false); }}
+              onClick={submitHire}
+              disabled={!canHire || submitting}
             >
+              {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
               Enviar solicitação
             </Button>
           </DialogFooter>
@@ -245,3 +403,14 @@ function RefereeProfilePage() {
     </div>
   );
 }
+
+function StatusBadge({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
+  const map = {
+    pending: { label: "Pendente", cls: "border-warning/50 text-warning" },
+    confirmed: { label: "Confirmada", cls: "border-success/50 text-success" },
+    cancelled: { label: "Cancelada", cls: "border-destructive/50 text-destructive" },
+  } as const;
+  const it = map[status];
+  return <Badge variant="outline" className={cn("text-[10px]", it.cls)}>{it.label}</Badge>;
+}
+
