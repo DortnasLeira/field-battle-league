@@ -572,7 +572,7 @@ function ApplyDialog({
 
 function NewOpeningDialog({
   onCreate,
-  currentTeamId,
+  managedTeams,
 }: {
   onCreate: (o: {
     teamId: string;
@@ -581,15 +581,17 @@ function NewOpeningDialog({
     level: "Iniciante" | "Intermediário" | "Avançado";
     description: string;
   }) => void;
-  currentTeamId: string;
+  managedTeams: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
+  const [teamId, setTeamId] = useState<string>(managedTeams[0]?.id ?? "");
   const [position, setPosition] = useState<Position>("Atacante");
   const [slots, setSlots] = useState("1");
   const [level, setLevel] = useState<(typeof LEVELS)[number]>("Intermediário");
   const [desc, setDesc] = useState("");
 
   const reset = () => {
+    setTeamId(managedTeams[0]?.id ?? "");
     setPosition("Atacante"); setSlots("1"); setLevel("Intermediário"); setDesc("");
   };
 
