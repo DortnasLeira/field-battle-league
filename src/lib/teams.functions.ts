@@ -21,13 +21,16 @@ export const transferTeamOwnershipFn = createServerFn({ method: "POST" })
     // Confirm caller is current owner
     const { data: ownerRow, error: ownerErr } = await supabase
       .from("team_members")
-      .select("id, role")
+      .select("id, role, user_id")
       .eq("team_id", teamId)
       .eq("user_id", userId)
       .maybeSingle();
     if (ownerErr) throw new Error("Falha ao validar permissão.");
     if (!ownerRow || ownerRow.role !== "owner") {
       throw new Response("Apenas o dono atual pode transferir a gestão.", { status: 403 });
+    }
+    if (ownerRow.user_id === newOwnerUserId) {
+      throw new Response("Este usuário já é o dono atual do time.", { status: 400 });
     }
 
     // New owner must have a profile
