@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FRAME_UNLOCK, isFrameUnlocked } from "@/lib/achievements";
 import { Lock } from "lucide-react";
 
-export const Route = createFileRoute("/perfil_/editar")({
+export const Route = createFileRoute("/editar-perfil")({
   head: () => ({ meta: [{ title: "Editar perfil — PeladaPro" }] }),
   component: PerfilPage,
 });
