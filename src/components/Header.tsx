@@ -125,24 +125,34 @@ function ProfileSwitcher() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5 transition hover:border-primary/40">
-          <div
-            className={cn("flex h-8 w-8 items-center justify-center rounded-md text-lg", frameClass(activeProfile.frame))}
-            style={{ background: activeProfile.color + "22", color: activeProfile.color }}
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => navigate({ to: "/perfil" })}
+        className="flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5 transition hover:border-primary/40"
+        title="Ver meu perfil"
+      >
+        <div
+          className={cn("flex h-8 w-8 items-center justify-center rounded-md text-lg", frameClass(activeProfile.frame))}
+          style={{ background: activeProfile.color + "22", color: activeProfile.color }}
+        >
+          {activeProfile.avatar ?? PROFILE_TYPE_EMOJI[activeProfile.type]}
+        </div>
+        <div className="hidden text-left leading-tight sm:block">
+          <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+            {PROFILE_TYPE_LABEL[activeProfile.type]}
+          </div>
+          <div className="text-xs font-semibold">{activeProfile.nickname || activeProfile.name}</div>
+        </div>
+      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="flex h-9 items-center justify-center rounded-md border border-border bg-surface px-2 transition hover:border-primary/40"
+            title="Trocar perfil"
           >
-            {activeProfile.avatar ?? PROFILE_TYPE_EMOJI[activeProfile.type]}
-          </div>
-          <div className="hidden text-left leading-tight sm:block">
-            <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-              {PROFILE_TYPE_LABEL[activeProfile.type]}
-            </div>
-            <div className="text-xs font-semibold">{activeProfile.nickname || activeProfile.name}</div>
-          </div>
-          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-        </button>
-      </DropdownMenuTrigger>
+            <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           Trocar perfil
