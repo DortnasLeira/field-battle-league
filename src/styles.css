@@ -46,6 +46,11 @@
   --color-ring: var(--ring);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
+  --color-referee: var(--referee);
+  --color-referee-foreground: var(--referee-foreground);
+  --color-tier-bronze: var(--tier-bronze);
+  --color-tier-silver: var(--tier-silver);
+  --color-tier-gold: var(--tier-gold);
 
   --shadow-glow: 0 0 30px -8px var(--primary);
   --shadow-card: 0 8px 24px -12px oklch(0 0 0 / 0.6);
