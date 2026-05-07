@@ -261,9 +261,6 @@ function VagasPage() {
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">{o.description}</p>
                       <div className="mt-2 flex items-center gap-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                        <span className="stat-num text-primary">
-                          {accepted}/{o.slots} preenchida{o.slots > 1 ? "s" : ""}
-                        </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" /> {o.createdAt}
                         </span>
