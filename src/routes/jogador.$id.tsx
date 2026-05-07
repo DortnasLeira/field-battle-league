@@ -1,12 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Lock } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, frameClass, type UserProfile } from "@/lib/auth";
-import { cn } from "@/lib/utils";
+import { useAuth, type UserProfile } from "@/lib/auth";
+import { PlayerDashboard } from "@/components/PlayerDashboard";
 
 export const Route = createFileRoute("/jogador/$id")({
   head: () => ({ meta: [{ title: "Perfil do Jogador — PeladaPro" }] }),
@@ -50,42 +49,12 @@ function PlayerPublicPage() {
   if (fetching) return <p className="text-sm text-muted-foreground">Carregando...</p>;
   if (!player) return <p className="text-sm text-muted-foreground">Jogador não encontrado.</p>;
 
-  const initials = (player.name || "?").split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar</Link>
+        <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar para a busca</Link>
       </Button>
-      <Card className="border-border bg-card p-6">
-        <div className="flex items-center gap-4">
-          <div
-            className={cn("flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl text-2xl", frameClass(player.frame))}
-            style={{ background: player.color + "22", color: player.color }}
-          >
-            {player.photo_url ? (
-              <img src={player.photo_url} alt={player.name} className="h-full w-full object-cover" />
-            ) : (
-              <span className="font-display">{initials || player.avatar || "⚽"}</span>
-            )}
-          </div>
-          <div className="flex-1">
-            <h1 className="font-display text-3xl uppercase tracking-wide">{player.name}</h1>
-            {player.nickname && <p className="text-sm text-muted-foreground">"{player.nickname}"</p>}
-            <div className="mt-2 flex flex-wrap gap-1">
-              {player.position && <Badge variant="outline" className="border-primary/40 text-primary">{player.position}</Badge>}
-              {player.level && <Badge variant="outline">{player.level}</Badge>}
-              {player.preferred_foot && <Badge variant="outline">Pé {player.preferred_foot}</Badge>}
-            </div>
-            {player.city && (
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                <MapPin className="mr-0.5 inline h-3 w-3" /> {player.city}
-              </p>
-            )}
-          </div>
-        </div>
-        {player.bio && <p className="mt-4 text-sm text-muted-foreground">{player.bio}</p>}
-      </Card>
+      <PlayerDashboard profile={player} isOwner={false} />
     </div>
   );
 }

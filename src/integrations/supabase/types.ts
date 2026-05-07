@@ -40,6 +40,72 @@ export type Database = {
           },
         ]
       }
+      matches: {
+        Row: {
+          away_score: number | null
+          away_team_id: string | null
+          challenge_id: string | null
+          created_at: string
+          home_score: number | null
+          home_team_id: string | null
+          id: string
+          league_id: string | null
+          location: string | null
+          played_at: string | null
+          reported_by: string | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          away_score?: number | null
+          away_team_id?: string | null
+          challenge_id?: string | null
+          created_at?: string
+          home_score?: number | null
+          home_team_id?: string | null
+          id?: string
+          league_id?: string | null
+          location?: string | null
+          played_at?: string | null
+          reported_by?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          away_score?: number | null
+          away_team_id?: string | null
+          challenge_id?: string | null
+          created_at?: string
+          home_score?: number | null
+          home_team_id?: string | null
+          id?: string
+          league_id?: string | null
+          location?: string | null
+          played_at?: string | null
+          reported_by?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -60,6 +126,83 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["team_role"]
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          bio: string | null
+          captain: string | null
+          city: string | null
+          color: string | null
+          created_at: string
+          founded: number | null
+          id: string
+          name: string
+          preferred_days: string[] | null
+          preferred_times: string[] | null
+          shield: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          captain?: string | null
+          city?: string | null
+          color?: string | null
+          created_at?: string
+          founded?: number | null
+          id?: string
+          name: string
+          preferred_days?: string[] | null
+          preferred_times?: string[] | null
+          shield?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          captain?: string | null
+          city?: string | null
+          color?: string | null
+          created_at?: string
+          founded?: number | null
+          id?: string
+          name?: string
+          preferred_days?: string[] | null
+          preferred_times?: string[] | null
+          shield?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -150,10 +293,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_team_member: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_owner: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      team_admin_count: { Args: { _team_id: string }; Returns: number }
     }
     Enums: {
       profile_type: "player" | "team" | "field"
+      team_role: "owner" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -282,6 +434,7 @@ export const Constants = {
   public: {
     Enums: {
       profile_type: ["player", "team", "field"],
+      team_role: ["owner", "admin"],
     },
   },
 } as const
