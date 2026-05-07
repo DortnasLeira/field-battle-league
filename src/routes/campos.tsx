@@ -141,13 +141,34 @@ function CamposPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <Input placeholder="Cidade / bairro" value={city} onChange={(e) => setCity(e.target.value)} />
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Data" />
-                <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} title="A partir de" />
-                <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} title="Até" />
                 <Input type="number" placeholder="Preço máx (R$)" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
+                <Select value={searchBy} onValueChange={(v) => setSearchBy(v as "date" | "time")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Buscar por data</SelectItem>
+                    <SelectItem value="time">Buscar por horário</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              {searchBy === "date" ? (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Data desejada</Label>
+                  <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="sm:w-60" />
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 sm:max-w-md">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">A partir de</Label>
+                    <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Até</Label>
+                    <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} />
+                  </div>
+                </div>
+              )}
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 <input type="checkbox" checked={onlyAvail} onChange={(e) => setOnlyAvail(e.target.checked)} />
                 Apenas com horários disponíveis
