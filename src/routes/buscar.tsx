@@ -1,16 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Users, User, MapPin, Star, Eye, Lock } from "lucide-react";
+import { Search, Users, User, MapPin, Star, Eye, Lock, Flag as Whistle, Calendar, Clock, DollarSign, Award, Lock as LockIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { TeamBadge } from "@/components/TeamBadge";
-import { teams as mockTeams } from "@/lib/mockData";
+import { teams as mockTeams, referees as mockReferees, type Referee } from "@/lib/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, frameClass, type UserProfile } from "@/lib/auth";
 import { toast } from "sonner";
@@ -20,13 +21,13 @@ export const Route = createFileRoute("/buscar")({
   head: () => ({
     meta: [
       { title: "Buscar — PeladaPro" },
-      { name: "description", content: "Procure times e jogadores na sua região." },
+      { name: "description", content: "Procure times, jogadores e árbitros na sua região." },
     ],
   }),
   component: BuscarPage,
 });
 
-type Kind = "all" | "players" | "teams";
+type Kind = "all" | "players" | "teams" | "referees";
 
 const ALL_POSITIONS = ["Goleiro", "Zagueiro", "Lateral", "Volante", "Meia", "Atacante"];
 const ALL_LEVELS = ["Iniciante", "Intermediário", "Avançado"];
@@ -38,8 +39,14 @@ function BuscarPage() {
   const [position, setPosition] = useState<string>("");
   const [level, setLevel] = useState<string>("");
 
+  // Referee filters
+  const [refMaxPrice, setRefMaxPrice] = useState<string>("");
+  const [refMinScore, setRefMinScore] = useState<string>("");
+  const [refDate, setRefDate] = useState<string>("");
+  const [refTime, setRefTime] = useState<string>("");
+
   const [players, setPlayers] = useState<UserProfile[]>([]);
-  const { session } = useAuth();
+  const { session, activeProfile } = useAuth();
   const navigate = useNavigate();
   const requireLogin = () => {
     toast.error("Faça login para ver o perfil.");
@@ -53,6 +60,11 @@ function BuscarPage() {
       .eq("type", "player")
       .then(({ data }) => setPlayers((data ?? []) as UserProfile[]));
   }, []);
+
+  // Auto-geolocation: prefill city from active profile
+  useEffect(() => {
+    if (!city && activeProfile?.city) setCity(activeProfile.city);
+  }, [activeProfile]);
 
   const q = query.trim().toLowerCase();
 
@@ -76,21 +88,55 @@ function BuscarPage() {
     });
   }, [players, q, city, position, level]);
 
-  const filterCount = [city, position, level].filter(Boolean).length;
+  const filteredReferees = useMemo(() => {
+    return mockReferees.filter((r) => {
+      if (q && !r.name.toLowerCase().includes(q)) return false;
+      if (city && !r.city.toLowerCase().includes(city.toLowerCase())) return false;
+      if (refMaxPrice && r.pricePerGame > Number(refMaxPrice)) return false;
+      if (refMinScore && r.score < Number(refMinScore)) return false;
+      if (refDate && !r.availableDays.includes(refDate)) return false;
+      if (refTime && !r.availableTimes.includes(refTime)) return false;
+      return true;
+    });
+  }, [q, city, refMaxPrice, refMinScore, refDate, refTime]);
+
+  const isReferees = kind === "referees";
+  const filterCount = isReferees
+    ? [city, refMaxPrice, refMinScore, refDate, refTime].filter(Boolean).length
+    : [city, position, level].filter(Boolean).length;
+
   const clear = () => {
     setCity("");
     setPosition("");
     setLevel("");
+    setRefMaxPrice("");
+    setRefMinScore("");
+    setRefDate("");
+    setRefTime("");
   };
 
   const showTeams = kind === "all" || kind === "teams";
   const showPlayers = kind === "all" || kind === "players";
+  const showReferees = kind === "all" || kind === "referees";
+
+  // Hire dialog
+  const [hireRef, setHireRef] = useState<Referee | null>(null);
+  const canHire = activeProfile?.type === "team" || activeProfile?.type === "field";
+
+  const onHireClick = (r: Referee) => {
+    if (!session) return requireLogin();
+    if (!canHire) {
+      toast.error("Apenas perfis TIME ou CAMPO podem contratar árbitros.");
+      return;
+    }
+    setHireRef(r);
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">Buscar</h1>
-        <p className="text-sm text-muted-foreground">Encontre times e jogadores pelo nome.</p>
+        <p className="text-sm text-muted-foreground">Encontre times, jogadores e árbitros pelo nome.</p>
       </div>
 
       <Card className="border-border bg-card p-4">
@@ -100,7 +146,7 @@ function BuscarPage() {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Digite o nome do jogador ou time..."
+              placeholder="Digite o nome do jogador, time ou árbitro..."
               className="pl-9"
             />
           </div>
@@ -109,43 +155,74 @@ function BuscarPage() {
               <TabsTrigger value="all">Tudo</TabsTrigger>
               <TabsTrigger value="players"><User className="mr-1 h-3.5 w-3.5" /> Jogadores</TabsTrigger>
               <TabsTrigger value="teams"><Users className="mr-1 h-3.5 w-3.5" /> Times</TabsTrigger>
+              <TabsTrigger value="referees"><Whistle className="mr-1 h-3.5 w-3.5" /> Árbitros</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
         <div className="mt-3">
           <FiltersPanel count={filterCount} onClear={clear}>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex: São Paulo" className="mt-1" />
+            {isReferees ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <MapPin className="mr-0.5 inline h-3 w-3" /> Cidade {activeProfile?.city && city === activeProfile.city && <span className="text-primary">(auto)</span>}
+                  </Label>
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Sua cidade" className="mt-1" />
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <DollarSign className="mr-0.5 inline h-3 w-3" /> Preço máx. por jogo
+                  </Label>
+                  <Input type="number" value={refMaxPrice} onChange={(e) => setRefMaxPrice(e.target.value)} placeholder="R$ 200" className="mt-1" />
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Star className="mr-0.5 inline h-3 w-3" /> Score mínimo
+                  </Label>
+                  <select value={refMinScore} onChange={(e) => setRefMinScore(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                    <option value="">Qualquer</option>
+                    <option value="3">3.0+</option>
+                    <option value="4">4.0+</option>
+                    <option value="4.5">4.5+</option>
+                    <option value="4.8">4.8+</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Calendar className="mr-0.5 inline h-3 w-3" /> Data
+                  </Label>
+                  <Input type="date" value={refDate} onChange={(e) => setRefDate(e.target.value)} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Clock className="mr-0.5 inline h-3 w-3" /> Horário
+                  </Label>
+                  <Input type="time" value={refTime} onChange={(e) => setRefTime(e.target.value)} className="mt-1" />
+                </div>
               </div>
-              <div>
-                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Posição</Label>
-                <select
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-                >
-                  <option value="">Todas</option>
-                  {ALL_POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex: São Paulo" className="mt-1" />
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Posição</Label>
+                  <select value={position} onChange={(e) => setPosition(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                    <option value="">Todas</option>
+                    {ALL_POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
+                  <select value={level} onChange={(e) => setLevel(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                    <option value="">Todos</option>
+                    {ALL_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
               </div>
-              <div>
-                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
-                <select
-                  value={level}
-                  onChange={(e) => setLevel(e.target.value)}
-                  className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-                >
-                  <option value="">Todos</option>
-                  {ALL_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-                </select>
-              </div>
-            </div>
-            <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Posição e nível aplicam-se apenas a jogadores.
-            </p>
+            )}
           </FiltersPanel>
         </div>
       </Card>
@@ -204,6 +281,62 @@ function BuscarPage() {
           )}
         </section>
       )}
+
+      {showReferees && (
+        <section>
+          <SectionHeader icon={<Whistle className="h-4 w-4" />} title="Árbitros" count={filteredReferees.length} />
+          {filteredReferees.length === 0 ? (
+            <EmptyState text="Nenhum árbitro encontrado com esses filtros." />
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredReferees.map((r) => (
+                <RefereeCard
+                  key={r.id}
+                  r={r}
+                  canHire={!!canHire}
+                  authed={!!session}
+                  onHire={() => onHireClick(r)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <Dialog open={!!hireRef} onOpenChange={(o) => !o && setHireRef(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase tracking-wide">Contratar árbitro</DialogTitle>
+            <DialogDescription>
+              Inicie o agendamento com <strong>{hireRef?.name}</strong> ({hireRef?.city}). Valor: R$ {hireRef?.pricePerGame} / jogo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Data</Label>
+                <Input type="date" defaultValue={refDate || hireRef?.availableDays[0]} />
+              </div>
+              <div>
+                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Horário</Label>
+                <select className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" defaultValue={refTime}>
+                  {hireRef?.availableTimes.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Mensagem (opcional)</Label>
+              <Input placeholder="Local, formato do jogo, etc." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHireRef(null)}>Cancelar</Button>
+            <Button onClick={() => { toast.success("Solicitação enviada ao árbitro!"); setHireRef(null); }}>
+              Enviar solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -240,6 +373,67 @@ function PlayerCard({ p, onView, locked }: { p: UserProfile; onView: () => void;
         {locked ? <Lock className="mr-1 h-3.5 w-3.5" /> : <Eye className="mr-1 h-3.5 w-3.5" />}
         Perfil
       </Button>
+    </Card>
+  );
+}
+
+function RefereeCard({ r, canHire, authed, onHire }: { r: Referee; canHire: boolean; authed: boolean; onHire: () => void }) {
+  return (
+    <Card className="flex flex-col gap-3 border-border bg-card p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-2xl">
+          {r.avatar}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-base uppercase tracking-wide truncate">{r.name}</div>
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground truncate">
+            <MapPin className="mr-0.5 inline h-3 w-3" /> {r.city} · {r.experienceYears}a exp.
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-0.5 text-primary">
+              <Star className="h-3 w-3 fill-current" /> {r.score.toFixed(1)}
+              <span className="text-muted-foreground">({r.reviews})</span>
+            </span>
+            <span className="inline-flex items-center gap-0.5 font-mono text-[11px]">
+              <DollarSign className="h-3 w-3" />R$ {r.pricePerGame}/jogo
+            </span>
+          </div>
+          {r.certifications.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {r.certifications.map((c) => (
+                <Badge key={c} variant="outline" className="border-primary/40 text-primary text-[10px]">
+                  <Award className="mr-0.5 h-2.5 w-2.5" />{c}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1"
+          onClick={() => toast.info(r.bio)}
+        >
+          <Eye className="mr-1 h-3.5 w-3.5" /> Perfil
+        </Button>
+        <Button
+          size="sm"
+          className="flex-1"
+          disabled={authed && !canHire}
+          onClick={onHire}
+          title={!authed ? "Faça login" : !canHire ? "Apenas perfis TIME ou CAMPO podem contratar" : "Solicitar contratação"}
+        >
+          {!canHire && authed ? <LockIcon className="mr-1 h-3.5 w-3.5" /> : <Whistle className="mr-1 h-3.5 w-3.5" />}
+          Contratar
+        </Button>
+      </div>
+      {authed && !canHire && (
+        <p className="text-[10px] text-muted-foreground">
+          Troque para um perfil de <strong>Time</strong> ou <strong>Campo</strong> para contratar.
+        </p>
+      )}
     </Card>
   );
 }

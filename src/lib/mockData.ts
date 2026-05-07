@@ -358,3 +358,27 @@ export const playerApplications: PlayerApplication[] = [
     status: "pending",
   },
 ];
+
+export type Referee = {
+  id: string;
+  name: string;
+  avatar: string;
+  city: string;
+  pricePerGame: number;
+  score: number; // 0-5
+  reviews: number;
+  experienceYears: number;
+  certifications: string[];
+  availableDays: string[]; // YYYY-MM-DD
+  availableTimes: string[]; // HH:mm
+  bio: string;
+};
+
+export const referees: Referee[] = [
+  { id: "r1", name: "Marcos Pereira", avatar: "🧑‍⚖️", city: "São Paulo", pricePerGame: 150, score: 4.9, reviews: 87, experienceYears: 12, certifications: ["CBF", "FPF"], availableDays: ["2026-05-09","2026-05-10","2026-05-16"], availableTimes: ["18:00","20:00"], bio: "Árbitro federado, especialista em campeonatos amadores." },
+  { id: "r2", name: "Júlia Santos", avatar: "👩‍⚖️", city: "São Paulo", pricePerGame: 180, score: 4.8, reviews: 64, experienceYears: 8, certifications: ["FPF"], availableDays: ["2026-05-08","2026-05-09","2026-05-15"], availableTimes: ["19:00","21:00"], bio: "Apito firme, foco em fair-play e ritmo de jogo." },
+  { id: "r3", name: "Ricardo Alves", avatar: "🧑‍⚖️", city: "Guarulhos", pricePerGame: 120, score: 4.6, reviews: 42, experienceYears: 6, certifications: ["FPF"], availableDays: ["2026-05-10","2026-05-11"], availableTimes: ["10:00","16:00"], bio: "Disponível para finais de semana e ligas regionais." },
+  { id: "r4", name: "Bruno Lima", avatar: "🧑‍⚖️", city: "Osasco", pricePerGame: 100, score: 4.3, reviews: 21, experienceYears: 3, certifications: [], availableDays: ["2026-05-09","2026-05-12"], availableTimes: ["20:00","22:00"], bio: "Árbitro iniciante, peladas e amistosos." },
+  { id: "r5", name: "Patrícia Rocha", avatar: "👩‍⚖️", city: "São Paulo", pricePerGame: 200, score: 5.0, reviews: 132, experienceYears: 15, certifications: ["CBF","FIFA"], availableDays: ["2026-05-15","2026-05-16","2026-05-17"], availableTimes: ["15:00","17:00","19:00"], bio: "Quadro CBF, experiência em torneios oficiais." },
+  { id: "r6", name: "Felipe Andrade", avatar: "🧑‍⚖️", city: "São Bernardo", pricePerGame: 130, score: 4.4, reviews: 28, experienceYears: 5, certifications: ["FPF"], availableDays: ["2026-05-09","2026-05-10"], availableTimes: ["18:00","21:00"], bio: "Atende region ABC, society e campo." },
+];
