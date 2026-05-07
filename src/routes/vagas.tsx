@@ -75,9 +75,13 @@ function VagasPage() {
     acceptApplication,
     rejectApplication,
   } = useStore();
-  const { session } = useAuth();
+  const { session, activeProfile } = useAuth();
   const navigate = useNavigate();
   const requireLogin = () => { toast.error("Faça login para continuar."); navigate({ to: "/auth", search: { redirect: "/vagas" } }); };
+  const isTeamProfile = activeProfile?.type === "team";
+  // Times que o usuário gerencia (mock: apenas o time atual quando perfil é TIME)
+  const managedTeams = isTeamProfile ? teams.filter((t) => t.id === currentTeamId) : [];
+  const canCreateOpening = isTeamProfile && managedTeams.length > 0;
 
   const [fPosition, setFPosition] = useState<string>("all");
   const [fLevel, setFLevel] = useState<string>("all");
@@ -86,9 +90,10 @@ function VagasPage() {
   const [fDateFrom, setFDateFrom] = useState<string>("");
   const [fDateTo, setFDateTo] = useState<string>("");
 
-  const myOpenings = openings.filter((o) => o.teamId === currentTeamId);
+  const managedTeamIds = new Set(managedTeams.map((t) => t.id));
+  const myOpenings = openings.filter((o) => managedTeamIds.has(o.teamId));
   const otherOpenings = openings
-    .filter((o) => o.teamId !== currentTeamId)
+    .filter((o) => !managedTeamIds.has(o.teamId))
     .filter((o) => {
       const team = teams.find((t) => t.id === o.teamId);
       if (fPosition !== "all" && o.position !== fPosition) return false;
@@ -117,12 +122,16 @@ function VagasPage() {
               Anuncie posições em aberto no seu time ou inscreva-se para completar um elenco.
             </p>
           </div>
-          {session ? (
-            <NewOpeningDialog onCreate={createOpening} currentTeamId={currentTeamId} />
-          ) : (
+          {!session ? (
             <Button onClick={requireLogin} className="bg-gradient-primary text-primary-foreground shadow-glow">
               <Plus className="mr-2 h-4 w-4" /> Entrar para anunciar
             </Button>
+          ) : canCreateOpening ? (
+            <NewOpeningDialog onCreate={createOpening} managedTeams={managedTeams} />
+          ) : (
+            <Badge variant="outline" className="border-border text-muted-foreground">
+              Apenas perfis de Time podem anunciar vagas
+            </Badge>
           )}
         </div>
       </Card>
@@ -135,10 +144,10 @@ function VagasPage() {
           <TabsTrigger
             value="manage"
             className="font-display uppercase tracking-wide"
-            disabled={!session}
-            title={!session ? "Faça login para gerenciar suas vagas" : undefined}
+            disabled={!canCreateOpening}
+            title={!canCreateOpening ? "Apenas perfis de Time gerenciam vagas" : undefined}
           >
-            <Shield className="mr-2 h-4 w-4" /> Minhas Vagas {session ? `(${myOpenings.length})` : "🔒"}
+            <Shield className="mr-2 h-4 w-4" /> Minhas Vagas {canCreateOpening ? `(${myOpenings.length})` : "🔒"}
           </TabsTrigger>
         </TabsList>
 
@@ -318,9 +327,20 @@ function VagasPage() {
                           <Button
                             size="sm"
                             className="bg-success text-success-foreground hover:bg-success/90"
+                            disabled={accepted >= o.slots}
+                            title={accepted >= o.slots ? "Vaga já preenchida" : undefined}
                             onClick={() => {
+                              if (accepted >= o.slots) {
+                                toast.error("Limite de vagas atingido.");
+                                return;
+                              }
                               acceptApplication(a.id);
-                              toast.success(`${a.playerName} aceito no time!`);
+                              const willFill = accepted + 1 >= o.slots;
+                              toast.success(
+                                willFill
+                                  ? `${a.playerName} aceito! Vaga preenchida — demais inscrições recusadas.`
+                                  : `${a.playerName} aceito no time!`,
+                              );
                             }}
                           >
                             <Check className="mr-1 h-4 w-4" /> Aceitar
@@ -552,7 +572,7 @@ function ApplyDialog({
 
 function NewOpeningDialog({
   onCreate,
-  currentTeamId,
+  managedTeams,
 }: {
   onCreate: (o: {
     teamId: string;
@@ -561,15 +581,17 @@ function NewOpeningDialog({
     level: "Iniciante" | "Intermediário" | "Avançado";
     description: string;
   }) => void;
-  currentTeamId: string;
+  managedTeams: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
+  const [teamId, setTeamId] = useState<string>(managedTeams[0]?.id ?? "");
   const [position, setPosition] = useState<Position>("Atacante");
   const [slots, setSlots] = useState("1");
   const [level, setLevel] = useState<(typeof LEVELS)[number]>("Intermediário");
   const [desc, setDesc] = useState("");
 
   const reset = () => {
+    setTeamId(managedTeams[0]?.id ?? "");
     setPosition("Atacante"); setSlots("1"); setLevel("Intermediário"); setDesc("");
   };
 
@@ -590,6 +612,27 @@ function NewOpeningDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
+          {managedTeams.length > 1 && (
+            <div className="grid gap-2">
+              <Label>Time</Label>
+              <Select value={teamId} onValueChange={setTeamId}>
+                <SelectTrigger><SelectValue placeholder="Selecione o time" /></SelectTrigger>
+                <SelectContent>
+                  {managedTeams.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {managedTeams.length === 1 && (
+            <div className="grid gap-2">
+              <Label>Time</Label>
+              <div className="rounded-md border border-border bg-surface px-3 py-2 text-sm">
+                {managedTeams[0].name}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label>Posição</Label>
@@ -628,10 +671,14 @@ function NewOpeningDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
             className="bg-gradient-primary text-primary-foreground"
-            disabled={!desc || Number(slots) < 1}
+            disabled={!teamId || !desc || Number(slots) < 1}
             onClick={() => {
+              if (!teamId) {
+                toast.error("Selecione um time.");
+                return;
+              }
               onCreate({
-                teamId: currentTeamId,
+                teamId,
                 position,
                 slots: Number(slots),
                 level,
