@@ -30,9 +30,14 @@ export function FiltersPanel({
             </span>
           )}
         </Button>
-        {open && onClear && count > 0 && (
-          <Button size="sm" variant="ghost" onClick={onClear}>
-            <X className="mr-1 h-3 w-3" /> Limpar
+        {onClear && count > 0 && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onClear}
+            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <X className="mr-1 h-3 w-3" /> Limpar filtros ({count})
           </Button>
         )}
       </div>
