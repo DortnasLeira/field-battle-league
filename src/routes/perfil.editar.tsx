@@ -35,7 +35,7 @@ function PerfilPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth", search: { redirect: "/perfil" } });
+    if (!loading && !session) navigate({ to: "/auth", search: { redirect: "/perfil/editar" } });
     else if (!loading && session && profiles.length === 0) navigate({ to: "/onboarding" });
   }, [loading, session, profiles, navigate]);
 
@@ -46,7 +46,7 @@ function PerfilPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
-            <Link to="/"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar ao perfil</Link>
+            <Link to="/perfil"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar ao perfil</Link>
           </Button>
           <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">Editar perfil</h1>
           <p className="text-sm text-muted-foreground">
