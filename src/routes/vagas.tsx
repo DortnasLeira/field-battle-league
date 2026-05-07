@@ -505,9 +505,6 @@ function OpeningCard({
               ? "Sem vagas"
               : `${remaining} de ${opening.slots} disponível${remaining > 1 ? "s" : ""}`}
           </Badge>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            {acceptedCount}/{opening.slots} preenchida{opening.slots > 1 ? "s" : ""}
-          </span>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">{opening.description}</p>
       </div>
