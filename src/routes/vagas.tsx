@@ -204,12 +204,14 @@ function VagasPage() {
                   teamName={team?.name ?? "Time"}
                   teamShield={team?.shield ?? "⚽"}
                   teamCity={team?.city ?? ""}
+                  isAuthenticated={!!session}
+                  isPlayer={isPlayerProfile}
+                  playerProfile={isPlayerProfile ? activeProfile : null}
+                  onRequireLogin={requireLogin}
                   onApply={(payload) => {
-                    if (!session) return requireLogin();
                     applyToOpening({ openingId: o.id, ...payload });
                     toast.success("Inscrição enviada! O capitão vai avaliar seu perfil.");
                   }}
-                  
                 />
               );
             })}
