@@ -388,6 +388,17 @@ function VagasPage() {
             );
           })}
         </TabsContent>
+
+        {/* CANDIDATURAS — visão consolidada do capitão */}
+        <TabsContent value="applications" className="mt-6 space-y-6">
+          <ApplicationsInbox
+            openings={myOpenings}
+            applications={applications}
+            currentUserId={session?.user?.id}
+            onAccept={(id) => acceptApplication(id, session?.user?.id)}
+            onReject={(id) => rejectApplication(id, session?.user?.id)}
+          />
+        </TabsContent>
       </Tabs>
     </div>
   );
