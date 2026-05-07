@@ -113,6 +113,8 @@ export type PlayerApplication = {
   message: string;
   createdAt: string;
   status: ApplicationStatus;
+  decidedAt?: string;
+  decidedBy?: string;
 };
 
 export type RentalStatus = "pending" | "approved" | "declined" | "expired";
