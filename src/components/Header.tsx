@@ -183,7 +183,7 @@ function ProfileSwitcher() {
         <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
           <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
+        <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
           <Settings className="mr-2 h-4 w-4" /> Editar perfis
         </DropdownMenuItem>
         <DropdownMenuSeparator />

@@ -83,7 +83,7 @@ function OnboardingPage() {
 
       {profiles.length > 0 && (
         <Card className="mb-4 border-primary/40 bg-primary/5 p-4 text-sm">
-          Você já tem {profiles.length} perfil(is). <Link to="/perfil" className="font-semibold text-primary underline underline-offset-4">Gerenciar</Link>
+          Você já tem {profiles.length} perfil(is). <Link to="/perfil/editar" className="font-semibold text-primary underline underline-offset-4">Gerenciar</Link>
         </Card>
       )}
 

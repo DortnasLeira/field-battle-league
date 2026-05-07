@@ -13,13 +13,13 @@ import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
-import { Route as EditarPerfilRouteImport } from './routes/editar-perfil'
 import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as CamposRouteImport } from './routes/campos'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeIdRouteImport } from './routes/time.$id'
+import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 
 const VagasRoute = VagasRouteImport.update({
@@ -40,11 +40,6 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const LigasRoute = LigasRouteImport.update({
   id: '/ligas',
   path: '/ligas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EditarPerfilRoute = EditarPerfilRouteImport.update({
-  id: '/editar-perfil',
-  path: '/editar-perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesafiosRoute = DesafiosRouteImport.update({
@@ -77,6 +72,11 @@ const TimeIdRoute = TimeIdRouteImport.update({
   path: '/time/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilEditarRoute = PerfilEditarRouteImport.update({
+  id: '/perfil_/editar',
+  path: '/perfil/editar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JogadorIdRoute = JogadorIdRouteImport.update({
   id: '/jogador/$id',
   path: '/jogador/$id',
@@ -89,12 +89,12 @@ export interface FileRoutesByFullPath {
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
-  '/editar-perfil': typeof EditarPerfilRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
 }
 export interface FileRoutesByTo {
@@ -103,12 +103,12 @@ export interface FileRoutesByTo {
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
-  '/editar-perfil': typeof EditarPerfilRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
 }
 export interface FileRoutesById {
@@ -118,12 +118,12 @@ export interface FileRoutesById {
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
   '/desafios': typeof DesafiosRoute
-  '/editar-perfil': typeof EditarPerfilRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil_/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
 }
 export interface FileRouteTypes {
@@ -134,12 +134,12 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/campos'
     | '/desafios'
-    | '/editar-perfil'
     | '/ligas'
     | '/onboarding'
     | '/perfil'
     | '/vagas'
     | '/jogador/$id'
+    | '/perfil/editar'
     | '/time/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -148,12 +148,12 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/campos'
     | '/desafios'
-    | '/editar-perfil'
     | '/ligas'
     | '/onboarding'
     | '/perfil'
     | '/vagas'
     | '/jogador/$id'
+    | '/perfil/editar'
     | '/time/$id'
   id:
     | '__root__'
@@ -162,12 +162,12 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/campos'
     | '/desafios'
-    | '/editar-perfil'
     | '/ligas'
     | '/onboarding'
     | '/perfil'
     | '/vagas'
     | '/jogador/$id'
+    | '/perfil_/editar'
     | '/time/$id'
   fileRoutesById: FileRoutesById
 }
@@ -177,12 +177,12 @@ export interface RootRouteChildren {
   BuscarRoute: typeof BuscarRoute
   CamposRoute: typeof CamposRoute
   DesafiosRoute: typeof DesafiosRoute
-  EditarPerfilRoute: typeof EditarPerfilRoute
   LigasRoute: typeof LigasRoute
   OnboardingRoute: typeof OnboardingRoute
   PerfilRoute: typeof PerfilRoute
   VagasRoute: typeof VagasRoute
   JogadorIdRoute: typeof JogadorIdRoute
+  PerfilEditarRoute: typeof PerfilEditarRoute
   TimeIdRoute: typeof TimeIdRoute
 }
 
@@ -214,13 +214,6 @@ declare module '@tanstack/react-router' {
       path: '/ligas'
       fullPath: '/ligas'
       preLoaderRoute: typeof LigasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/editar-perfil': {
-      id: '/editar-perfil'
-      path: '/editar-perfil'
-      fullPath: '/editar-perfil'
-      preLoaderRoute: typeof EditarPerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/desafios': {
@@ -265,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil_/editar': {
+      id: '/perfil_/editar'
+      path: '/perfil/editar'
+      fullPath: '/perfil/editar'
+      preLoaderRoute: typeof PerfilEditarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jogador/$id': {
       id: '/jogador/$id'
       path: '/jogador/$id'
@@ -281,12 +281,12 @@ const rootRouteChildren: RootRouteChildren = {
   BuscarRoute: BuscarRoute,
   CamposRoute: CamposRoute,
   DesafiosRoute: DesafiosRoute,
-  EditarPerfilRoute: EditarPerfilRoute,
   LigasRoute: LigasRoute,
   OnboardingRoute: OnboardingRoute,
   PerfilRoute: PerfilRoute,
   VagasRoute: VagasRoute,
   JogadorIdRoute: JogadorIdRoute,
+  PerfilEditarRoute: PerfilEditarRoute,
   TimeIdRoute: TimeIdRoute,
 }
 export const routeTree = rootRouteImport

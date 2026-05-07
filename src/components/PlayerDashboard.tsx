@@ -141,7 +141,7 @@ export function PlayerDashboard({ profile, isOwner }: { profile: UserProfile; is
 
             <div className="flex flex-wrap gap-2 pt-1">
               {isOwner && (
-                <Button size="sm" onClick={() => navigate({ to: "/perfil" })} className="bg-gradient-primary text-primary-foreground">
+                <Button size="sm" onClick={() => navigate({ to: "/perfil/editar" })} className="bg-gradient-primary text-primary-foreground">
                   <Edit className="mr-2 h-4 w-4" /> Editar perfil
                 </Button>
               )}
