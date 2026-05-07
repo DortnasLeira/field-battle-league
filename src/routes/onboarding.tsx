@@ -42,12 +42,25 @@ function OnboardingPage() {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
-  const toggleType = (t: ProfileType) =>
+  const existingTypes = new Set(profiles.map((p) => p.type));
+
+  const toggleType = (t: ProfileType) => {
+    if (existingTypes.has(t)) {
+      toast.error(
+        `Você já possui um perfil de ${PROFILE_TYPE_LABEL[t]}. Edite o perfil existente em vez de criar outro.`,
+      );
+      return;
+    }
     setSelected((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
+  };
 
   const submitAll = async () => {
     try {
       for (const t of selected) {
+        if (existingTypes.has(t)) {
+          toast.error(`Já existe um perfil de ${PROFILE_TYPE_LABEL[t]}. Edite o existente.`);
+          return;
+        }
         const f = forms[t];
         if (!f.name) {
           toast.error(`Informe um nome para o perfil de ${PROFILE_TYPE_LABEL[t]}.`);
