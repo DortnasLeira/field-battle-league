@@ -14,25 +14,24 @@ import { useAuth, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/l
 import { toast } from "sonner";
 
 const publicLinks = [
+  { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
-  { to: "/buscar", label: "Buscar", icon: Search },
 ] as const;
 
 const authLinks = [
-  { to: "/", label: "Perfil", icon: User },
   { to: "/desafios", label: "Desafios", icon: Swords },
 ] as const;
 
-const PROTECTED = new Set<string>(["/", "/perfil", "/vagas", "/desafios"]);
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { session } = useAuth();
   const navigate = useNavigate();
-  const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
-  const links = session ? [...authLinks, ...publicLinks] : [{ to: "/", label: "Perfil", icon: User }, ...publicLinks];
+  const isActive = (to: string) => pathname.startsWith(to);
+  const links = session ? [...publicLinks, ...authLinks] : publicLinks;
   const cols = links.length;
 
   const handleNav = (to: string) => (e: React.MouseEvent) => {
