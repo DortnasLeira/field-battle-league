@@ -296,14 +296,14 @@ function FieldCard({
   const navigate = useNavigate();
   const field = fields.find((f) => f.id === fieldId)!;
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [allOpen, setAllOpen] = useState(false);
   const [preset, setPreset] = useState<Slot | null>(null);
 
   const matchingSlots = useMemo(
     () => field.slots.filter((s) => s.available && slotFilter(s)),
     [field.slots, slotFilter],
   );
-  const visible = showAll ? matchingSlots : matchingSlots.slice(0, 3);
+  const visible = matchingSlots.slice(0, 3);
   const canRent = !!session && !!activeProfile && activeProfile.type !== "field";
 
   const handleSlot = (slot: Slot) => {
@@ -346,8 +346,19 @@ function FieldCard({
         </div>
 
         <div>
-          <div className="mb-1.5 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            <Clock className="h-3 w-3" /> Horários disponíveis
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              <Clock className="h-3 w-3" /> Horários disponíveis
+            </div>
+            {matchingSlots.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setAllOpen(true)}
+                className="text-[10px] font-medium text-primary hover:underline"
+              >
+                Ver mais ({matchingSlots.length})
+              </button>
+            )}
           </div>
           {visible.length === 0 ? (
             <div className="rounded-md border border-dashed border-border bg-surface/30 px-2 py-2 text-center text-[11px] text-muted-foreground">
@@ -368,17 +379,34 @@ function FieldCard({
               ))}
             </div>
           )}
-          {matchingSlots.length > 3 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-1.5 h-7 w-full text-[11px]"
-              onClick={() => setShowAll((v) => !v)}
-            >
-              {showAll ? "Ver menos" : `Ver mais horários (${matchingSlots.length - 3})`}
-            </Button>
-          )}
         </div>
+
+        <Dialog open={allOpen} onOpenChange={setAllOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-display uppercase">Horários · {field.name}</DialogTitle>
+            </DialogHeader>
+            {matchingSlots.length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Nenhum horário disponível para o filtro selecionado.
+              </div>
+            ) : (
+              <div className="grid max-h-[60vh] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+                {matchingSlots.map((slot) => (
+                  <button
+                    key={slot.date + slot.time}
+                    type="button"
+                    onClick={() => { setAllOpen(false); handleSlot(slot); }}
+                    className="rounded-md border border-border bg-surface px-2 py-2 text-xs font-medium transition hover:border-primary hover:bg-primary/10"
+                  >
+                    <div className="font-mono">{formatDateLong(slot.date)}</div>
+                    <div className="text-sm font-bold">{slot.time}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {!session && (
           <Button onClick={() => { toast.error("Faça login para alugar."); navigate({ to: "/auth" }); }} variant="outline" size="sm" className="w-full">
