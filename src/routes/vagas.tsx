@@ -612,6 +612,27 @@ function NewOpeningDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
+          {managedTeams.length > 1 && (
+            <div className="grid gap-2">
+              <Label>Time</Label>
+              <Select value={teamId} onValueChange={setTeamId}>
+                <SelectTrigger><SelectValue placeholder="Selecione o time" /></SelectTrigger>
+                <SelectContent>
+                  {managedTeams.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {managedTeams.length === 1 && (
+            <div className="grid gap-2">
+              <Label>Time</Label>
+              <div className="rounded-md border border-border bg-surface px-3 py-2 text-sm">
+                {managedTeams[0].name}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label>Posição</Label>
