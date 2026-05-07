@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VagasRouteImport } from './routes/vagas'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as DesafiosRouteImport } from './routes/desafios'
@@ -24,6 +25,11 @@ import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 const VagasRoute = VagasRouteImport.update({
   id: '/vagas',
   path: '/vagas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -67,9 +73,9 @@ const TimeIdRoute = TimeIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const PerfilEditarRoute = PerfilEditarRouteImport.update({
-  id: '/perfil/editar',
-  path: '/perfil/editar',
-  getParentRoute: () => rootRouteImport,
+  id: '/editar',
+  path: '/editar',
+  getParentRoute: () => PerfilRoute,
 } as any)
 const JogadorIdRoute = JogadorIdRouteImport.update({
   id: '/jogador/$id',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/perfil': typeof PerfilRouteWithChildren
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/perfil': typeof PerfilRouteWithChildren
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/perfil': typeof PerfilRouteWithChildren
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/ligas'
     | '/onboarding'
+    | '/perfil'
     | '/vagas'
     | '/jogador/$id'
     | '/perfil/editar'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/ligas'
     | '/onboarding'
+    | '/perfil'
     | '/vagas'
     | '/jogador/$id'
     | '/perfil/editar'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/ligas'
     | '/onboarding'
+    | '/perfil'
     | '/vagas'
     | '/jogador/$id'
     | '/perfil/editar'
@@ -167,9 +179,9 @@ export interface RootRouteChildren {
   DesafiosRoute: typeof DesafiosRoute
   LigasRoute: typeof LigasRoute
   OnboardingRoute: typeof OnboardingRoute
+  PerfilRoute: typeof PerfilRouteWithChildren
   VagasRoute: typeof VagasRoute
   JogadorIdRoute: typeof JogadorIdRoute
-  PerfilEditarRoute: typeof PerfilEditarRoute
   TimeIdRoute: typeof TimeIdRoute
 }
 
@@ -180,6 +192,13 @@ declare module '@tanstack/react-router' {
       path: '/vagas'
       fullPath: '/vagas'
       preLoaderRoute: typeof VagasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -240,10 +259,10 @@ declare module '@tanstack/react-router' {
     }
     '/perfil/editar': {
       id: '/perfil/editar'
-      path: '/perfil/editar'
+      path: '/editar'
       fullPath: '/perfil/editar'
       preLoaderRoute: typeof PerfilEditarRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof PerfilRoute
     }
     '/jogador/$id': {
       id: '/jogador/$id'
@@ -255,6 +274,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PerfilRouteChildren {
+  PerfilEditarRoute: typeof PerfilEditarRoute
+}
+
+const PerfilRouteChildren: PerfilRouteChildren = {
+  PerfilEditarRoute: PerfilEditarRoute,
+}
+
+const PerfilRouteWithChildren =
+  PerfilRoute._addFileChildren(PerfilRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -263,9 +293,9 @@ const rootRouteChildren: RootRouteChildren = {
   DesafiosRoute: DesafiosRoute,
   LigasRoute: LigasRoute,
   OnboardingRoute: OnboardingRoute,
+  PerfilRoute: PerfilRouteWithChildren,
   VagasRoute: VagasRoute,
   JogadorIdRoute: JogadorIdRoute,
-  PerfilEditarRoute: PerfilEditarRoute,
   TimeIdRoute: TimeIdRoute,
 }
 export const routeTree = rootRouteImport
