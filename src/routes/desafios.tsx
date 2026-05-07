@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Swords, Inbox, Send, Check, X, Flame, Whistle, Award } from "lucide-react";
+import { Swords, Inbox, Send, Check, X, Flame, Award, Gavel } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
