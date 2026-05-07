@@ -197,6 +197,11 @@ function VagasPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {otherOpenings.map((o) => {
               const team = teams.find((t) => t.id === o.teamId);
+              const acceptedCount = applications.filter(
+                (a) => a.openingId === o.id && a.status === "accepted",
+              ).length;
+              const remaining = Math.max(0, o.slots - acceptedCount);
+              const isFull = remaining === 0 || o.status !== "open";
               return (
                 <OpeningCard
                   key={o.id}
@@ -204,11 +209,18 @@ function VagasPage() {
                   teamName={team?.name ?? "Time"}
                   teamShield={team?.shield ?? "⚽"}
                   teamCity={team?.city ?? ""}
+                  acceptedCount={acceptedCount}
+                  remaining={remaining}
+                  isFull={isFull}
                   isAuthenticated={!!session}
                   isPlayer={isPlayerProfile}
                   playerProfile={isPlayerProfile ? activeProfile : null}
                   onRequireLogin={requireLogin}
                   onApply={(payload) => {
+                    if (isFull) {
+                      toast.error("Vaga já preenchida.");
+                      return;
+                    }
                     applyToOpening({ openingId: o.id, ...payload });
                     toast.success("Inscrição enviada! O capitão vai avaliar seu perfil.");
                   }}
@@ -428,6 +440,9 @@ function OpeningCard({
   teamName,
   teamShield,
   teamCity,
+  acceptedCount,
+  remaining,
+  isFull,
   isAuthenticated,
   isPlayer,
   playerProfile,
@@ -438,6 +453,9 @@ function OpeningCard({
   teamName: string;
   teamShield: string;
   teamCity: string;
+  acceptedCount: number;
+  remaining: number;
+  isFull: boolean;
   isAuthenticated: boolean;
   isPlayer: boolean;
   playerProfile: import("@/lib/auth").UserProfile | null;
@@ -474,8 +492,21 @@ function OpeningCard({
           <Badge variant="outline" className="border-border text-muted-foreground">
             {opening.level}
           </Badge>
-          <span className="stat-num text-sm font-bold text-primary">
-            {opening.slots} vaga{opening.slots > 1 ? "s" : ""}
+          <Badge
+            className={
+              remaining === 0
+                ? "bg-muted text-muted-foreground"
+                : remaining === 1
+                  ? "bg-warning/15 text-warning hover:bg-warning/20"
+                  : "bg-success/15 text-success hover:bg-success/20"
+            }
+          >
+            {remaining === 0
+              ? "Sem vagas"
+              : `${remaining} de ${opening.slots} disponível${remaining > 1 ? "s" : ""}`}
+          </Badge>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            {acceptedCount}/{opening.slots} preenchida{opening.slots > 1 ? "s" : ""}
           </span>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">{opening.description}</p>
@@ -492,6 +523,10 @@ function OpeningCard({
           <Badge variant="outline" className="border-border text-muted-foreground">
             Apenas perfis de Jogador podem se inscrever
           </Badge>
+        ) : isFull ? (
+          <Button size="sm" disabled variant="outline">
+            Vaga preenchida
+          </Button>
         ) : (
           <ApplyDialog opening={opening} playerProfile={playerProfile} onApply={onApply} />
         )}
