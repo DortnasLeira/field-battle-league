@@ -415,7 +415,7 @@ function RefereeCard({ r, canHire, authed, onHire, onView }: { r: Referee; canHi
           size="sm"
           variant="outline"
           className="flex-1"
-          onClick={() => toast.info(r.bio)}
+          onClick={onView}
         >
           <Eye className="mr-1 h-3.5 w-3.5" /> Perfil
         </Button>
