@@ -18,7 +18,12 @@ export type League = {
   startDate: string;
 };
 
-export type MatchStatus = "scheduled" | "awaiting_score" | "awaiting_validation" | "completed";
+export type MatchStatus =
+  | "scheduled"
+  | "awaiting_score"
+  | "awaiting_validation"
+  | "awaiting_referee_signature"
+  | "completed";
 
 export type MatchGoal = { teamId: string; player: string; minute: number };
 export type MatchCard = { teamId: string; player: string; type: "yellow" | "red"; minute: number };
