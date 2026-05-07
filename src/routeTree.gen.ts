@@ -19,6 +19,7 @@ import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeIdRouteImport } from './routes/time.$id'
+import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 
 const VagasRoute = VagasRouteImport.update({
@@ -71,6 +72,11 @@ const TimeIdRoute = TimeIdRouteImport.update({
   path: '/time/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilEditarRoute = PerfilEditarRouteImport.update({
+  id: '/perfil_/editar',
+  path: '/perfil/editar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JogadorIdRoute = JogadorIdRouteImport.update({
   id: '/jogador/$id',
   path: '/jogador/$id',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil_/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/vagas'
     | '/jogador/$id'
+    | '/perfil/editar'
     | '/time/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/vagas'
     | '/jogador/$id'
+    | '/perfil/editar'
     | '/time/$id'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/vagas'
     | '/jogador/$id'
+    | '/perfil_/editar'
     | '/time/$id'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   PerfilRoute: typeof PerfilRoute
   VagasRoute: typeof VagasRoute
   JogadorIdRoute: typeof JogadorIdRoute
+  PerfilEditarRoute: typeof PerfilEditarRoute
   TimeIdRoute: typeof TimeIdRoute
 }
 
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil_/editar': {
+      id: '/perfil_/editar'
+      path: '/perfil/editar'
+      fullPath: '/perfil/editar'
+      preLoaderRoute: typeof PerfilEditarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jogador/$id': {
       id: '/jogador/$id'
       path: '/jogador/$id'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   PerfilRoute: PerfilRoute,
   VagasRoute: VagasRoute,
   JogadorIdRoute: JogadorIdRoute,
+  PerfilEditarRoute: PerfilEditarRoute,
   TimeIdRoute: TimeIdRoute,
 }
 export const routeTree = rootRouteImport

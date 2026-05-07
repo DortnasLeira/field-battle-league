@@ -14,25 +14,24 @@ import { useAuth, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/l
 import { toast } from "sonner";
 
 const publicLinks = [
+  { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
-  { to: "/buscar", label: "Buscar", icon: Search },
 ] as const;
 
 const authLinks = [
-  { to: "/", label: "Perfil", icon: User },
   { to: "/desafios", label: "Desafios", icon: Swords },
 ] as const;
 
-const PROTECTED = new Set<string>(["/", "/perfil", "/vagas", "/desafios"]);
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { session } = useAuth();
   const navigate = useNavigate();
-  const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
-  const links = session ? [...authLinks, ...publicLinks] : [{ to: "/", label: "Perfil", icon: User }, ...publicLinks];
+  const isActive = (to: string) => pathname.startsWith(to);
+  const links = session ? [...publicLinks, ...authLinks] : publicLinks;
   const cols = links.length;
 
   const handleNav = (to: string) => (e: React.MouseEvent) => {
@@ -46,7 +45,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link to={session ? "/" : "/ligas"} className="flex items-center gap-2">
+        <Link to="/buscar" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-primary shadow-glow">
             <span className="text-lg">⚽</span>
           </div>
@@ -126,24 +125,34 @@ function ProfileSwitcher() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5 transition hover:border-primary/40">
-          <div
-            className={cn("flex h-8 w-8 items-center justify-center rounded-md text-lg", frameClass(activeProfile.frame))}
-            style={{ background: activeProfile.color + "22", color: activeProfile.color }}
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => navigate({ to: "/perfil" })}
+        className="flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5 transition hover:border-primary/40"
+        title="Ver meu perfil"
+      >
+        <div
+          className={cn("flex h-8 w-8 items-center justify-center rounded-md text-lg", frameClass(activeProfile.frame))}
+          style={{ background: activeProfile.color + "22", color: activeProfile.color }}
+        >
+          {activeProfile.avatar ?? PROFILE_TYPE_EMOJI[activeProfile.type]}
+        </div>
+        <div className="hidden text-left leading-tight sm:block">
+          <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+            {PROFILE_TYPE_LABEL[activeProfile.type]}
+          </div>
+          <div className="text-xs font-semibold">{activeProfile.nickname || activeProfile.name}</div>
+        </div>
+      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="flex h-9 items-center justify-center rounded-md border border-border bg-surface px-2 transition hover:border-primary/40"
+            title="Trocar perfil"
           >
-            {activeProfile.avatar ?? PROFILE_TYPE_EMOJI[activeProfile.type]}
-          </div>
-          <div className="hidden text-left leading-tight sm:block">
-            <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-              {PROFILE_TYPE_LABEL[activeProfile.type]}
-            </div>
-            <div className="text-xs font-semibold">{activeProfile.nickname || activeProfile.name}</div>
-          </div>
-          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-        </button>
-      </DropdownMenuTrigger>
+            <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           Trocar perfil
@@ -174,7 +183,7 @@ function ProfileSwitcher() {
         <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
           <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
+        <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
           <Settings className="mr-2 h-4 w-4" /> Editar perfis
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -190,5 +199,6 @@ function ProfileSwitcher() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 }

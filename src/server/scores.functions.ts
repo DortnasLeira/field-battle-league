@@ -41,7 +41,7 @@ export const submitScoreFn = createServerFn({ method: "POST" })
       // Confirm the match exists and that byTeamId is one of the two participating teams.
       const { data: match, error: matchErr } = await supabase
         .from("matches")
-        .select("id, home_team_id, away_team_id, challenge_id")
+        .select("id, home_team_id, away_team_id, challenge_id, status")
         .eq("id", matchId)
         .maybeSingle();
       if (matchErr) throw new Error("Falha ao validar partida.");
@@ -50,6 +50,12 @@ export const submitScoreFn = createServerFn({ method: "POST" })
       }
       if (teamIsUuid && match.home_team_id !== byTeamId && match.away_team_id !== byTeamId) {
         throw new Response("Time informado não participa desta partida.", { status: 403 });
+      }
+      if (match.status === "completed") {
+        throw new Response("Partida já concluída — placar não pode ser alterado.", { status: 409 });
+      }
+      if (match.status !== "awaiting_score" && match.status !== "awaiting_validation") {
+        throw new Response("Placar só pode ser enviado quando a partida estiver aguardando validação.", { status: 409 });
       }
 
       // Persist the submitted score. RLS additionally ensures the user is a member
@@ -63,7 +69,8 @@ export const submitScoreFn = createServerFn({ method: "POST" })
           played_at: new Date().toISOString(),
           reported_by: userId,
         })
-        .eq("id", matchId);
+        .eq("id", matchId)
+        .neq("status", "completed");
       if (upErr) throw new Error("Falha ao registrar placar.");
     }
 
