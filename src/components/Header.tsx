@@ -199,5 +199,6 @@ function ProfileSwitcher() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 }
