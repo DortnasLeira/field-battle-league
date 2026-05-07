@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ShieldCheck, Search, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Search, AlertTriangle, Crown, CheckCircle2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ function TransferPage() {
 
   const [team, setTeam] = useState<{ id: string; name: string } | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [currentOwner, setCurrentOwner] = useState<ProfileRow | null>(null);
   const [checking, setChecking] = useState(true);
 
   const [query, setQuery] = useState("");
@@ -36,28 +37,45 @@ function TransferPage() {
   const [selected, setSelected] = useState<ProfileRow | null>(null);
   const [confirmText, setConfirmText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [transferred, setTransferred] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth", search: { redirect: `/time/${teamId}/transferir` } });
   }, [loading, session, teamId, navigate]);
 
+  const loadOwner = async () => {
+    const { data: ownerRow } = await supabase
+      .from("team_members")
+      .select("user_id")
+      .eq("team_id", teamId)
+      .eq("role", "owner")
+      .maybeSingle();
+    if (!ownerRow?.user_id) {
+      setCurrentOwner(null);
+      return null;
+    }
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("id, display_name, email")
+      .eq("id", ownerRow.user_id)
+      .maybeSingle();
+    setCurrentOwner(prof ?? null);
+    return ownerRow.user_id;
+  };
+
   useEffect(() => {
     if (!session) return;
     (async () => {
       setChecking(true);
-      const [{ data: t }, { data: m }] = await Promise.all([
+      const [{ data: t }, ownerUserId] = await Promise.all([
         supabase.from("teams").select("id,name").eq("id", teamId).maybeSingle(),
-        supabase
-          .from("team_members")
-          .select("role")
-          .eq("team_id", teamId)
-          .eq("user_id", session.user.id)
-          .maybeSingle(),
+        loadOwner(),
       ]);
       setTeam(t ?? null);
-      setIsOwner(m?.role === "owner");
+      setIsOwner(ownerUserId === session.user.id);
       setChecking(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, teamId]);
 
   useEffect(() => {
@@ -85,18 +103,43 @@ function TransferPage() {
     };
   }, [query, session]);
 
+  const sameAsCurrent = !!selected && !!currentOwner && selected.id === currentOwner.id;
+  const isSelf = !!selected && selected.id === session?.user.id;
+
   const canSubmit = useMemo(
-    () => !!selected && confirmText.trim().toUpperCase() === "TRANSFERIR" && !submitting,
-    [selected, confirmText, submitting],
+    () =>
+      !!selected &&
+      !sameAsCurrent &&
+      !isSelf &&
+      confirmText.trim().toUpperCase() === "TRANSFERIR" &&
+      !submitting,
+    [selected, sameAsCurrent, isSelf, confirmText, submitting],
   );
 
   const handleSubmit = async () => {
     if (!selected) return;
+    if (sameAsCurrent) {
+      toast.error("Este usuário já é o dono atual do time.");
+      return;
+    }
+    if (isSelf) {
+      toast.error("Você já é o dono deste time.");
+      return;
+    }
     setSubmitting(true);
     try {
       await transferFn({ data: { teamId, newOwnerUserId: selected.id } });
       toast.success(`Gestão transferida para ${selected.display_name ?? selected.email}.`);
-      navigate({ to: "/time/$id", params: { id: teamId } });
+      // Reflect immediately in UI
+      setCurrentOwner(selected);
+      setIsOwner(false);
+      setTransferred(true);
+      setSelected(null);
+      setQuery("");
+      setConfirmText("");
+      setResults([]);
+      // Re-fetch authoritative owner from backend
+      await loadOwner();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao transferir gestão.";
       toast.error(msg);
@@ -122,20 +165,41 @@ function TransferPage() {
 
   if (!isOwner) {
     return (
-      <Card className="border-destructive/40 bg-destructive/5 p-6">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
-          <div>
-            <h2 className="font-display text-lg uppercase">Apenas o dono pode transferir</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Você não é o dono atual de <strong>{team.name}</strong>.
-            </p>
-            <Button asChild size="sm" variant="outline" className="mt-3">
-              <Link to="/time/$id" params={{ id: teamId }}>Voltar ao time</Link>
-            </Button>
+      <div className="mx-auto max-w-2xl space-y-4">
+        {transferred && (
+          <Card className="border-emerald-500/40 bg-emerald-500/5 p-5">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-500" />
+              <div>
+                <h2 className="font-display uppercase">Transferência concluída</h2>
+                <p className="text-sm text-muted-foreground">
+                  Novo dono: <strong>{currentOwner?.display_name ?? currentOwner?.email}</strong>
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+        <Card className="border-destructive/40 bg-destructive/5 p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+            <div>
+              <h2 className="font-display text-lg uppercase">
+                {transferred ? "Você não é mais o dono" : "Apenas o dono pode transferir"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {transferred ? (
+                  <>Sua função em <strong>{team.name}</strong> agora é administrador.</>
+                ) : (
+                  <>Você não é o dono atual de <strong>{team.name}</strong>.</>
+                )}
+              </p>
+              <Button asChild size="sm" variant="outline" className="mt-3">
+                <Link to="/time/$id" params={{ id: teamId }}>Voltar ao time</Link>
+              </Button>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     );
   }
 
@@ -153,6 +217,19 @@ function TransferPage() {
           a ser administrador e o novo dono terá controle total.
         </p>
       </div>
+
+      {currentOwner && (
+        <Card className="border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center gap-3">
+            <Crown className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-primary">Dono atual</div>
+              <div className="text-sm font-semibold">{currentOwner.display_name ?? "Sem nome"}</div>
+              <div className="text-xs text-muted-foreground">{currentOwner.email}</div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card className="space-y-4 p-5">
         <div>
@@ -175,20 +252,27 @@ function TransferPage() {
 
         {results.length > 0 && !selected && (
           <div className="divide-y divide-border rounded-md border border-border">
-            {results.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setSelected(r)}
-                className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-accent/40"
-              >
-                <div>
-                  <div className="text-sm font-medium">{r.display_name ?? "Sem nome"}</div>
-                  <div className="text-xs text-muted-foreground">{r.email}</div>
-                </div>
-                <Badge variant="outline">Selecionar</Badge>
-              </button>
-            ))}
+            {results.map((r) => {
+              const isCurrent = currentOwner?.id === r.id;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setSelected(r)}
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-accent/40"
+                >
+                  <div>
+                    <div className="text-sm font-medium">{r.display_name ?? "Sem nome"}</div>
+                    <div className="text-xs text-muted-foreground">{r.email}</div>
+                  </div>
+                  {isCurrent ? (
+                    <Badge variant="outline" className="border-primary/40 text-primary">Dono atual</Badge>
+                  ) : (
+                    <Badge variant="outline">Selecionar</Badge>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -201,6 +285,16 @@ function TransferPage() {
             <div className="font-mono text-[10px] uppercase tracking-wider text-primary">Novo dono</div>
             <div className="mt-1 text-sm font-medium">{selected.display_name ?? "Sem nome"}</div>
             <div className="text-xs text-muted-foreground">{selected.email}</div>
+            {(sameAsCurrent || isSelf) && (
+              <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>
+                  {isSelf
+                    ? "Você não pode transferir a gestão para si mesmo."
+                    : "Este usuário já é o dono atual. Selecione outro membro."}
+                </span>
+              </div>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -213,7 +307,7 @@ function TransferPage() {
         )}
       </Card>
 
-      <Card className={cn("border-destructive/30 bg-destructive/5 p-5", !selected && "opacity-60")}>
+      <Card className={cn("border-destructive/30 bg-destructive/5 p-5", (!selected || sameAsCurrent || isSelf) && "opacity-60")}>
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 text-destructive" />
           <div className="flex-1 space-y-3">
@@ -228,7 +322,7 @@ function TransferPage() {
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="TRANSFERIR"
-              disabled={!selected}
+              disabled={!selected || sameAsCurrent || isSelf}
             />
             <div className="flex justify-end gap-2">
               <Button asChild variant="outline" size="sm" disabled={submitting}>
