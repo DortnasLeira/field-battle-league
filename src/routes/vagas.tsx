@@ -362,7 +362,7 @@ function VagasPage() {
                             variant="outline"
                             className="border-destructive/40 text-destructive hover:bg-destructive/10"
                             onClick={() => {
-                              rejectApplication(a.id);
+                              rejectApplication(a.id, session?.user?.id);
                               toast.info("Inscrição recusada.");
                             }}
                           >
