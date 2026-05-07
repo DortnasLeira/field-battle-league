@@ -296,14 +296,14 @@ function FieldCard({
   const navigate = useNavigate();
   const field = fields.find((f) => f.id === fieldId)!;
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [allOpen, setAllOpen] = useState(false);
   const [preset, setPreset] = useState<Slot | null>(null);
 
   const matchingSlots = useMemo(
     () => field.slots.filter((s) => s.available && slotFilter(s)),
     [field.slots, slotFilter],
   );
-  const visible = showAll ? matchingSlots : matchingSlots.slice(0, 3);
+  const visible = matchingSlots.slice(0, 3);
   const canRent = !!session && !!activeProfile && activeProfile.type !== "field";
 
   const handleSlot = (slot: Slot) => {
