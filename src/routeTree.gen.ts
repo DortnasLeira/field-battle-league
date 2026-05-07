@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeIdRouteImport } from './routes/time.$id'
 import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
+import { Route as TimeIdTransferirRouteImport } from './routes/time_.$id.transferir'
 
 const VagasRoute = VagasRouteImport.update({
   id: '/vagas',
@@ -82,6 +83,11 @@ const JogadorIdRoute = JogadorIdRouteImport.update({
   path: '/jogador/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TimeIdTransferirRoute = TimeIdTransferirRouteImport.update({
+  id: '/time_/$id/transferir',
+  path: '/time/$id/transferir',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
+  '/time/$id/transferir': typeof TimeIdTransferirRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
+  '/time/$id/transferir': typeof TimeIdTransferirRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil_/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
+  '/time_/$id/transferir': typeof TimeIdTransferirRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/jogador/$id'
     | '/perfil/editar'
     | '/time/$id'
+    | '/time/$id/transferir'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/jogador/$id'
     | '/perfil/editar'
     | '/time/$id'
+    | '/time/$id/transferir'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/jogador/$id'
     | '/perfil_/editar'
     | '/time/$id'
+    | '/time_/$id/transferir'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   JogadorIdRoute: typeof JogadorIdRoute
   PerfilEditarRoute: typeof PerfilEditarRoute
   TimeIdRoute: typeof TimeIdRoute
+  TimeIdTransferirRoute: typeof TimeIdTransferirRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JogadorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/time_/$id/transferir': {
+      id: '/time_/$id/transferir'
+      path: '/time/$id/transferir'
+      fullPath: '/time/$id/transferir'
+      preLoaderRoute: typeof TimeIdTransferirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -288,16 +308,8 @@ const rootRouteChildren: RootRouteChildren = {
   JogadorIdRoute: JogadorIdRoute,
   PerfilEditarRoute: PerfilEditarRoute,
   TimeIdRoute: TimeIdRoute,
+  TimeIdTransferirRoute: TimeIdTransferirRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
