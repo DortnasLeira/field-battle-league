@@ -346,7 +346,7 @@ function VagasPage() {
                                 toast.error("Limite de vagas atingido.");
                                 return;
                               }
-                              acceptApplication(a.id);
+                              acceptApplication(a.id, session?.user?.id);
                               const willFill = accepted + 1 >= o.slots;
                               toast.success(
                                 willFill
