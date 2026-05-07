@@ -386,7 +386,18 @@ function RefereeCard({ r, canHire, authed, onHire, onView }: { r: Referee; canHi
           {r.avatar}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-display text-base uppercase tracking-wide truncate">{r.name}</div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="font-display text-base uppercase tracking-wide truncate">{r.name}</div>
+            {r.certifications.length > 0 && (
+              <div className="flex flex-wrap justify-end gap-1 shrink-0">
+                {r.certifications.map((c) => (
+                  <Badge key={c} variant="outline" className="border-primary/40 text-primary text-[10px]">
+                    <Award className="mr-0.5 h-2.5 w-2.5" />{c}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground truncate">
             <MapPin className="mr-0.5 inline h-3 w-3" /> {r.city} · {r.experienceYears}a exp.
           </div>
@@ -399,16 +410,8 @@ function RefereeCard({ r, canHire, authed, onHire, onView }: { r: Referee; canHi
               <DollarSign className="h-3 w-3" />R$ {r.pricePerGame}/jogo
             </span>
           </div>
-          {r.certifications.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {r.certifications.map((c) => (
-                <Badge key={c} variant="outline" className="border-primary/40 text-primary text-[10px]">
-                  <Award className="mr-0.5 h-2.5 w-2.5" />{c}
-                </Badge>
-              ))}
-            </div>
-          )}
         </div>
+
       </div>
       <div className="flex gap-2">
         <Button
