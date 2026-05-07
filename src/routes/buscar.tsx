@@ -296,6 +296,7 @@ function BuscarPage() {
                   canHire={!!canHire}
                   authed={!!session}
                   onHire={() => onHireClick(r)}
+                  onView={() => navigate({ to: "/arbitro/$id", params: { id: r.id } })}
                 />
               ))}
             </div>
