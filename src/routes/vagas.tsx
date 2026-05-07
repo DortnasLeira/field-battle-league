@@ -406,6 +406,156 @@ function VagasPage() {
 
 /* ---------- Sub-componentes ---------- */
 
+function ApplicationsInbox({
+  openings,
+  applications,
+  currentUserId,
+  onAccept,
+  onReject,
+}: {
+  openings: PositionOpening[];
+  applications: import("@/lib/mockData").PlayerApplication[];
+  currentUserId?: string;
+  onAccept: (id: string) => void;
+  onReject: (id: string) => void;
+}) {
+  const [filter, setFilter] = useState<"pending" | "accepted" | "rejected" | "all">("pending");
+
+  if (openings.length === 0) {
+    return (
+      <EmptyState
+        icon={<Inbox className="h-8 w-8" />}
+        title="Nenhuma vaga publicada"
+        hint="Anuncie uma vaga para começar a receber candidaturas."
+      />
+    );
+  }
+
+  const myApps = applications.filter((a) => openings.some((o) => o.id === a.openingId));
+  const filtered = filter === "all" ? myApps : myApps.filter((a) => a.status === filter);
+
+  const counters = {
+    pending: myApps.filter((a) => a.status === "pending").length,
+    accepted: myApps.filter((a) => a.status === "accepted").length,
+    rejected: myApps.filter((a) => a.status === "rejected").length,
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {(
+          [
+            ["pending", `Pendentes (${counters.pending})`],
+            ["accepted", `Aceitas (${counters.accepted})`],
+            ["rejected", `Recusadas (${counters.rejected})`],
+            ["all", `Todas (${myApps.length})`],
+          ] as const
+        ).map(([k, label]) => (
+          <Button
+            key={k}
+            size="sm"
+            variant={filter === k ? "default" : "outline"}
+            className={filter === k ? "bg-gradient-primary text-primary-foreground" : ""}
+            onClick={() => setFilter(k)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <EmptyState
+          icon={<Inbox className="h-8 w-8" />}
+          title="Sem candidaturas nesta visão"
+          hint="Quando jogadores se inscreverem, elas aparecem aqui para você aceitar ou recusar."
+        />
+      )}
+
+      <div className="space-y-3">
+        {filtered.map((a) => {
+          const opening = openings.find((o) => o.id === a.openingId);
+          if (!opening) return null;
+          const acceptedCount = applications.filter(
+            (x) => x.openingId === opening.id && x.status === "accepted",
+          ).length;
+          const remaining = Math.max(0, opening.slots - acceptedCount);
+          const isFull = remaining === 0;
+          return (
+            <Card key={a.id} className="border-border bg-card">
+              <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{a.playerName}</span>
+                    <Badge variant="outline" className="border-border text-xs">
+                      {a.playerAge} anos
+                    </Badge>
+                    <ApplicationStatusBadge status={a.status} />
+                    <Badge className="bg-primary/15 text-primary hover:bg-primary/20">
+                      <UserPlus className="mr-1 h-3 w-3" /> {opening.position}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{a.experience}</p>
+                  {a.message && (
+                    <p className="mt-1 text-sm italic text-foreground/80">"{a.message}"</p>
+                  )}
+                  <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {a.playerPhone} · inscrito em {a.createdAt}
+                    {a.decidedAt && (
+                      <>
+                        {" · decidido em "}
+                        {new Date(a.decidedAt).toLocaleString("pt-BR")}
+                        {a.decidedBy && a.decidedBy !== "system" && " por capitão"}
+                        {a.decidedBy === "system" && " (auto: vaga preenchida)"}
+                      </>
+                    )}
+                  </div>
+                </div>
+                {a.status === "pending" && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="bg-success text-success-foreground hover:bg-success/90"
+                      disabled={isFull}
+                      title={isFull ? "Vaga já preenchida" : undefined}
+                      onClick={() => {
+                        if (isFull) {
+                          toast.error("Limite de vagas atingido.");
+                          return;
+                        }
+                        onAccept(a.id);
+                        const willFill = acceptedCount + 1 >= opening.slots;
+                        toast.success(
+                          willFill
+                            ? `${a.playerName} aceito! Vaga preenchida — demais inscrições recusadas.`
+                            : `${a.playerName} aceito no time!`,
+                        );
+                      }}
+                    >
+                      <Check className="mr-1 h-4 w-4" /> Aceitar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        onReject(a.id);
+                        toast.info("Inscrição recusada.");
+                      }}
+                    >
+                      <X className="mr-1 h-4 w-4" /> Recusar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+
 function StatusBadge({ status }: { status: PositionOpening["status"] }) {
   if (status === "open")
     return (
