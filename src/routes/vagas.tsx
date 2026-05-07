@@ -138,7 +138,7 @@ function VagasPage() {
       </Card>
 
       <Tabs defaultValue="market" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+        <TabsList className="grid w-full grid-cols-3 sm:w-auto">
           <TabsTrigger value="market" className="font-display uppercase tracking-wide">
             <Users className="mr-2 h-4 w-4" /> Mercado ({otherOpenings.length})
           </TabsTrigger>
@@ -149,6 +149,17 @@ function VagasPage() {
             title={!canCreateOpening ? "Apenas perfis de Time gerenciam vagas" : undefined}
           >
             <Shield className="mr-2 h-4 w-4" /> Minhas Vagas {canCreateOpening ? `(${myOpenings.length})` : "🔒"}
+          </TabsTrigger>
+          <TabsTrigger
+            value="applications"
+            className="font-display uppercase tracking-wide"
+            disabled={!canCreateOpening}
+            title={!canCreateOpening ? "Apenas perfis de Time recebem candidaturas" : undefined}
+          >
+            <Inbox className="mr-2 h-4 w-4" /> Candidaturas{" "}
+            {canCreateOpening
+              ? `(${applications.filter((a) => myOpenings.some((o) => o.id === a.openingId) && a.status === "pending").length})`
+              : "🔒"}
           </TabsTrigger>
         </TabsList>
 
