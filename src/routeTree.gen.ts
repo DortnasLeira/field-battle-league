@@ -17,8 +17,10 @@ import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as CamposRouteImport } from './routes/campos'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ArbitragemRouteImport } from './routes/arbitragem'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeIdRouteImport } from './routes/time.$id'
+import { Route as SumulaMatchIdRouteImport } from './routes/sumula.$matchId'
 import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 import { Route as ArbitroIdRouteImport } from './routes/arbitro.$id'
@@ -64,6 +66,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArbitragemRoute = ArbitragemRouteImport.update({
+  id: '/arbitragem',
+  path: '/arbitragem',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -72,6 +79,11 @@ const IndexRoute = IndexRouteImport.update({
 const TimeIdRoute = TimeIdRouteImport.update({
   id: '/time/$id',
   path: '/time/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SumulaMatchIdRoute = SumulaMatchIdRouteImport.update({
+  id: '/sumula/$matchId',
+  path: '/sumula/$matchId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PerfilEditarRoute = PerfilEditarRouteImport.update({
@@ -97,6 +109,7 @@ const TimeIdTransferirRoute = TimeIdTransferirRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/arbitragem': typeof ArbitragemRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
@@ -108,11 +121,13 @@ export interface FileRoutesByFullPath {
   '/arbitro/$id': typeof ArbitroIdRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
+  '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
   '/time/$id/transferir': typeof TimeIdTransferirRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/arbitragem': typeof ArbitragemRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
@@ -124,12 +139,14 @@ export interface FileRoutesByTo {
   '/arbitro/$id': typeof ArbitroIdRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
+  '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
   '/time/$id/transferir': typeof TimeIdTransferirRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/arbitragem': typeof ArbitragemRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
@@ -141,6 +158,7 @@ export interface FileRoutesById {
   '/arbitro/$id': typeof ArbitroIdRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil_/editar': typeof PerfilEditarRoute
+  '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
   '/time_/$id/transferir': typeof TimeIdTransferirRoute
 }
@@ -148,6 +166,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/arbitragem'
     | '/auth'
     | '/buscar'
     | '/campos'
@@ -159,11 +178,13 @@ export interface FileRouteTypes {
     | '/arbitro/$id'
     | '/jogador/$id'
     | '/perfil/editar'
+    | '/sumula/$matchId'
     | '/time/$id'
     | '/time/$id/transferir'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/arbitragem'
     | '/auth'
     | '/buscar'
     | '/campos'
@@ -175,11 +196,13 @@ export interface FileRouteTypes {
     | '/arbitro/$id'
     | '/jogador/$id'
     | '/perfil/editar'
+    | '/sumula/$matchId'
     | '/time/$id'
     | '/time/$id/transferir'
   id:
     | '__root__'
     | '/'
+    | '/arbitragem'
     | '/auth'
     | '/buscar'
     | '/campos'
@@ -191,12 +214,14 @@ export interface FileRouteTypes {
     | '/arbitro/$id'
     | '/jogador/$id'
     | '/perfil_/editar'
+    | '/sumula/$matchId'
     | '/time/$id'
     | '/time_/$id/transferir'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArbitragemRoute: typeof ArbitragemRoute
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   CamposRoute: typeof CamposRoute
@@ -208,6 +233,7 @@ export interface RootRouteChildren {
   ArbitroIdRoute: typeof ArbitroIdRoute
   JogadorIdRoute: typeof JogadorIdRoute
   PerfilEditarRoute: typeof PerfilEditarRoute
+  SumulaMatchIdRoute: typeof SumulaMatchIdRoute
   TimeIdRoute: typeof TimeIdRoute
   TimeIdTransferirRoute: typeof TimeIdTransferirRoute
 }
@@ -270,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/arbitragem': {
+      id: '/arbitragem'
+      path: '/arbitragem'
+      fullPath: '/arbitragem'
+      preLoaderRoute: typeof ArbitragemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -282,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/time/$id'
       fullPath: '/time/$id'
       preLoaderRoute: typeof TimeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sumula/$matchId': {
+      id: '/sumula/$matchId'
+      path: '/sumula/$matchId'
+      fullPath: '/sumula/$matchId'
+      preLoaderRoute: typeof SumulaMatchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/perfil_/editar': {
@@ -317,6 +357,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArbitragemRoute: ArbitragemRoute,
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   CamposRoute: CamposRoute,
@@ -328,9 +369,19 @@ const rootRouteChildren: RootRouteChildren = {
   ArbitroIdRoute: ArbitroIdRoute,
   JogadorIdRoute: JogadorIdRoute,
   PerfilEditarRoute: PerfilEditarRoute,
+  SumulaMatchIdRoute: SumulaMatchIdRoute,
   TimeIdRoute: TimeIdRoute,
   TimeIdTransferirRoute: TimeIdTransferirRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
