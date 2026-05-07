@@ -85,6 +85,53 @@ function RefereeProfilePage() {
     setHireOpen(true);
   };
 
+  const submitHire = async () => {
+    if (!session || !referee || !activeProfile) return;
+    if (activeProfile.type !== "team" && activeProfile.type !== "field") {
+      toast.error("Apenas perfis TIME ou CAMPO podem contratar árbitros.");
+      return;
+    }
+    if (!hireDate || !hireTime) {
+      toast.error("Selecione data e horário.");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("referee_hires").insert({
+      referee_id: referee.id,
+      referee_name: referee.name,
+      requester_user_id: session.user.id,
+      requester_profile_type: activeProfile.type,
+      requester_name: activeProfile.name,
+      hire_date: hireDate,
+      hire_time: hireTime,
+      price: referee.pricePerGame,
+      message: hireMsg || null,
+      status: "pending",
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Não foi possível enviar a solicitação.", { description: error.message });
+      return;
+    }
+    toast.success("Solicitação enviada! Aguardando confirmação do árbitro.");
+    setHireOpen(false);
+    setHireMsg("");
+    loadHires();
+  };
+
+  const cancelHire = async (hireId: string) => {
+    const { error } = await supabase
+      .from("referee_hires")
+      .update({ status: "cancelled" })
+      .eq("id", hireId);
+    if (error) {
+      toast.error("Não foi possível cancelar.", { description: error.message });
+      return;
+    }
+    toast.success("Solicitação cancelada.");
+    loadHires();
+  };
+
   const completed = referee.hireHistory.filter((h) => h.status === "completed");
   const upcoming = referee.hireHistory.filter((h) => h.status === "scheduled");
 
