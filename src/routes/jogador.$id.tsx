@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type UserProfile } from "@/lib/auth";
-import { PlayerDashboard } from "@/components/PlayerDashboard";
+import { PublicPlayerDashboard } from "@/components/PublicPlayerDashboard";
 
 export const Route = createFileRoute("/jogador/$id")({
   head: () => ({ meta: [{ title: "Perfil do Jogador — PeladaPro" }] }),
@@ -54,7 +54,7 @@ function PlayerPublicPage() {
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar para a busca</Link>
       </Button>
-      <PlayerDashboard profile={player} isOwner={false} />
+      <PublicPlayerDashboard profile={player} />
     </div>
   );
 }
