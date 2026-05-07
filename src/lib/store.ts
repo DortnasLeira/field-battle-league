@@ -4,11 +4,14 @@ import {
   type Field,
   type League,
   type Match,
+  type MatchGoal,
+  type MatchCard,
   type Team,
   type PositionOpening,
   type PlayerApplication,
   type OpeningStatus,
   type FieldRental,
+  type Referee,
   CURRENT_TEAM_ID,
   challenges as initialChallenges,
   fields as initialFields,
@@ -17,10 +20,12 @@ import {
   teams as initialTeams,
   positionOpenings as initialOpenings,
   playerApplications as initialApplications,
+  referees as initialReferees,
 } from "./mockData";
 
 type State = {
   currentTeamId: string;
+  currentRefereeId: string; // demo: which referee profile is "logged" for inbox
   teams: Team[];
   leagues: League[];
   matches: Match[];
@@ -29,6 +34,7 @@ type State = {
   openings: PositionOpening[];
   applications: PlayerApplication[];
   rentals: FieldRental[];
+  referees: Referee[];
   // actions
   joinLeague: (leagueId: string, teamId: string) => void;
   leaveLeague: (leagueId: string, teamId: string) => void;
@@ -38,6 +44,16 @@ type State = {
   acceptChallenge: (challengeId: string) => void;
   declineChallenge: (challengeId: string) => void;
   createChallenge: (c: Omit<Challenge, "id" | "status">) => void;
+  // Referee on a challenge
+  requestRefereeForChallenge: (challengeId: string, refereeId: string) => void;
+  acceptRefereeRequest: (challengeId: string) => void;
+  declineRefereeRequest: (challengeId: string) => void;
+  // Súmula digital — only the contracted referee can sign
+  refereeSignMatch: (
+    matchId: string,
+    payload: { homeScore: number; awayScore: number; goals: MatchGoal[]; cards: MatchCard[] },
+  ) => void;
+  setCurrentReferee: (refereeId: string) => void;
   reserveSlot: (fieldId: string, date: string, time: string) => void;
   updateTeamPrefs: (teamId: string, days: string[], times: string[]) => void;
   createOpening: (o: Omit<PositionOpening, "id" | "createdAt" | "status">) => void;
