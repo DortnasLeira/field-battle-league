@@ -79,6 +79,7 @@ function VagasPage() {
   const navigate = useNavigate();
   const requireLogin = () => { toast.error("Faça login para continuar."); navigate({ to: "/auth", search: { redirect: "/vagas" } }); };
   const isTeamProfile = activeProfile?.type === "team";
+  const isPlayerProfile = activeProfile?.type === "player";
   // Times que o usuário gerencia (mock: apenas o time atual quando perfil é TIME)
   const managedTeams = isTeamProfile ? teams.filter((t) => t.id === currentTeamId) : [];
   const canCreateOpening = isTeamProfile && managedTeams.length > 0;
