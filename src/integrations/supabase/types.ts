@@ -280,6 +280,54 @@ export type Database = {
         }
         Relationships: []
       }
+      referee_hires: {
+        Row: {
+          created_at: string
+          hire_date: string
+          hire_time: string
+          id: string
+          message: string | null
+          price: number | null
+          referee_id: string
+          referee_name: string
+          requester_name: string | null
+          requester_profile_type: string
+          requester_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hire_date: string
+          hire_time: string
+          id?: string
+          message?: string | null
+          price?: number | null
+          referee_id: string
+          referee_name: string
+          requester_name?: string | null
+          requester_profile_type: string
+          requester_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hire_date?: string
+          hire_time?: string
+          id?: string
+          message?: string | null
+          price?: number | null
+          referee_id?: string
+          referee_name?: string
+          requester_name?: string | null
+          requester_profile_type?: string
+          requester_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           created_at: string
