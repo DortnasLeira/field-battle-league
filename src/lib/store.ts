@@ -295,7 +295,7 @@ export const useStore = create<State>((set) => ({
       ],
     })),
 
-  acceptApplication: (applicationId) =>
+  acceptApplication: (applicationId, decidedBy) =>
     set((s) => {
       const app = s.applications.find((a) => a.id === applicationId);
       if (!app) return {};
@@ -304,12 +304,14 @@ export const useStore = create<State>((set) => ({
         s.applications.filter((x) => x.openingId === app.openingId && x.status === "accepted").length + 1;
       const filled = !!opening && acceptedCount >= opening.slots;
       const newStatus: OpeningStatus = filled ? "filled" : opening?.status ?? "open";
+      const now = new Date().toISOString();
       return {
         applications: s.applications.map((x) => {
-          if (x.id === applicationId) return { ...x, status: "accepted" };
+          if (x.id === applicationId)
+            return { ...x, status: "accepted", decidedAt: now, decidedBy };
           // Quando a vaga é preenchida, recusa automaticamente os demais pendentes
           if (filled && x.openingId === app.openingId && x.status === "pending") {
-            return { ...x, status: "rejected" };
+            return { ...x, status: "rejected", decidedAt: now, decidedBy: decidedBy ?? "system" };
           }
           return x;
         }),
@@ -317,10 +319,12 @@ export const useStore = create<State>((set) => ({
       };
     }),
 
-  rejectApplication: (applicationId) =>
+  rejectApplication: (applicationId, decidedBy) =>
     set((s) => ({
       applications: s.applications.map((a) =>
-        a.id === applicationId ? { ...a, status: "rejected" } : a,
+        a.id === applicationId
+          ? { ...a, status: "rejected", decidedAt: new Date().toISOString(), decidedBy }
+          : a,
       ),
     })),
 
