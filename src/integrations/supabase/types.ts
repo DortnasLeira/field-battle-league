@@ -190,6 +190,65 @@ export type Database = {
         }
         Relationships: []
       }
+      match_assignments: {
+        Row: {
+          challenge_id: string | null
+          created_at: string
+          id: string
+          match_id: string | null
+          message: string | null
+          price: number
+          referee_id: string
+          requester_profile_type: string
+          requester_team_id: string | null
+          requester_user_id: string
+          scheduled_at: string
+          signed_at: string | null
+          status: Database["public"]["Enums"]["assignment_status"]
+          updated_at: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          match_id?: string | null
+          message?: string | null
+          price?: number
+          referee_id: string
+          requester_profile_type: string
+          requester_team_id?: string | null
+          requester_user_id: string
+          scheduled_at: string
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Update: {
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          match_id?: string | null
+          message?: string | null
+          price?: number
+          referee_id?: string
+          requester_profile_type?: string
+          requester_team_id?: string | null
+          requester_user_id?: string
+          scheduled_at?: string
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_assignments_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: false
+            referencedRelation: "referees"
+            referencedColumns: ["referee_id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           away_score: number | null
@@ -253,6 +312,72 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          amount: number
+          assignment_id: string
+          created_at: string
+          currency: string
+          held_at: string
+          id: string
+          payer_user_id: string
+          referee_id: string
+          refunded_at: string | null
+          released_at: string | null
+          status: Database["public"]["Enums"]["payout_status"]
+          stripe_payment_intent_id: string | null
+          stripe_transfer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          assignment_id: string
+          created_at?: string
+          currency?: string
+          held_at?: string
+          id?: string
+          payer_user_id: string
+          referee_id: string
+          refunded_at?: string | null
+          released_at?: string | null
+          status?: Database["public"]["Enums"]["payout_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          assignment_id?: string
+          created_at?: string
+          currency?: string
+          held_at?: string
+          id?: string
+          payer_user_id?: string
+          referee_id?: string
+          refunded_at?: string | null
+          released_at?: string | null
+          status?: Database["public"]["Enums"]["payout_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "match_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: false
+            referencedRelation: "referees"
+            referencedColumns: ["referee_id"]
           },
         ]
       }
@@ -324,6 +449,105 @@ export type Database = {
           requester_profile_type?: string
           requester_user_id?: string
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      referee_reviews: {
+        Row: {
+          assignment_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          referee_id: string
+          reviewer_user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          referee_id: string
+          reviewer_user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          referee_id?: string
+          reviewer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referee_reviews_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "match_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referee_reviews_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: false
+            referencedRelation: "referees"
+            referencedColumns: ["referee_id"]
+          },
+        ]
+      }
+      referees: {
+        Row: {
+          active: boolean
+          available_days: string[]
+          available_times: string[]
+          bio: string | null
+          certifications: string[]
+          city: string | null
+          created_at: string
+          display_name: string
+          experience_years: number
+          price_per_game: number
+          referee_id: string
+          reviews_count: number
+          score: number
+          tier: Database["public"]["Enums"]["referee_tier"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          available_days?: string[]
+          available_times?: string[]
+          bio?: string | null
+          certifications?: string[]
+          city?: string | null
+          created_at?: string
+          display_name: string
+          experience_years?: number
+          price_per_game?: number
+          referee_id: string
+          reviews_count?: number
+          score?: number
+          tier?: Database["public"]["Enums"]["referee_tier"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          available_days?: string[]
+          available_times?: string[]
+          bio?: string | null
+          certifications?: string[]
+          city?: string | null
+          created_at?: string
+          display_name?: string
+          experience_years?: number
+          price_per_game?: number
+          referee_id?: string
+          reviews_count?: number
+          score?: number
+          tier?: Database["public"]["Enums"]["referee_tier"]
           updated_at?: string
         }
         Relationships: []
@@ -502,7 +726,15 @@ export type Database = {
       team_admin_count: { Args: { _team_id: string }; Returns: number }
     }
     Enums: {
+      assignment_status:
+        | "pending"
+        | "accepted"
+        | "declined"
+        | "completed"
+        | "cancelled"
+      payout_status: "held" | "released" | "refunded"
       profile_type: "player" | "team" | "field"
+      referee_tier: "bronze" | "silver" | "gold"
       team_role: "owner" | "admin"
     }
     CompositeTypes: {
@@ -631,7 +863,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      assignment_status: [
+        "pending",
+        "accepted",
+        "declined",
+        "completed",
+        "cancelled",
+      ],
+      payout_status: ["held", "released", "refunded"],
       profile_type: ["player", "team", "field"],
+      referee_tier: ["bronze", "silver", "gold"],
       team_role: ["owner", "admin"],
     },
   },
