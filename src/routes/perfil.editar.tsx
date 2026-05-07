@@ -94,7 +94,7 @@ function PerfilPage() {
           if (!confirm("Remover este perfil? Esta ação não pode ser desfeita.")) return;
           await deleteProfile(activeProfile.id);
           toast.success("Perfil removido.");
-          navigate({ to: "/" });
+          navigate({ to: "/perfil" });
         }}
       />
     </div>
