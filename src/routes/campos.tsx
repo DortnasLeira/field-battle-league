@@ -38,6 +38,7 @@ function CamposPage() {
   const [query, setQuery] = useState("");
   const [surface, setSurface] = useState<string>("all");
   const [city, setCity] = useState("");
+  const [searchBy, setSearchBy] = useState<"date" | "time">("date");
   const [date, setDate] = useState("");
   const [timeFrom, setTimeFrom] = useState("");
   const [timeTo, setTimeTo] = useState("");
