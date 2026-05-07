@@ -428,12 +428,20 @@ function OpeningCard({
   teamName,
   teamShield,
   teamCity,
+  isAuthenticated,
+  isPlayer,
+  playerProfile,
+  onRequireLogin,
   onApply,
 }: {
   opening: PositionOpening;
   teamName: string;
   teamShield: string;
   teamCity: string;
+  isAuthenticated: boolean;
+  isPlayer: boolean;
+  playerProfile: import("@/lib/auth").UserProfile | null;
+  onRequireLogin: () => void;
   onApply: (payload: {
     playerName: string;
     playerAge: number;
@@ -476,7 +484,17 @@ function OpeningCard({
         <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           Publicada em {opening.createdAt}
         </div>
-        <ApplyDialog opening={opening} onApply={onApply} />
+        {!isAuthenticated ? (
+          <Button size="sm" className="bg-gradient-primary text-primary-foreground" onClick={onRequireLogin}>
+            <UserPlus className="mr-2 h-4 w-4" /> Entrar para inscrever-se
+          </Button>
+        ) : !isPlayer || !playerProfile ? (
+          <Badge variant="outline" className="border-border text-muted-foreground">
+            Apenas perfis de Jogador podem se inscrever
+          </Badge>
+        ) : (
+          <ApplyDialog opening={opening} playerProfile={playerProfile} onApply={onApply} />
+        )}
       </div>
     </Card>
   );
