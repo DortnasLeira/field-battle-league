@@ -160,7 +160,12 @@
     background-clip: text;
     color: transparent;
   }
+  .bg-gradient-referee { background-image: var(--gradient-referee); }
+  .text-referee { color: var(--color-referee); }
+  .bg-referee { background-color: var(--color-referee); color: var(--color-referee-foreground); }
+  .border-referee { border-color: var(--color-referee); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-glow-referee { box-shadow: 0 0 30px -8px var(--color-referee); }
   .shadow-card { box-shadow: var(--shadow-card); }
   .field-pattern {
     background-image:
