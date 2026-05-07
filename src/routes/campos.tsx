@@ -176,9 +176,13 @@ function CamposPage() {
             </div>
           </FiltersPanel>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map((f) => (
-              <FieldCard key={f.id} fieldId={f.id} />
+              <FieldCard
+                key={f.id}
+                fieldId={f.id}
+                slotFilter={slotMatches}
+              />
             ))}
           </div>
         </TabsContent>
