@@ -125,6 +125,8 @@ function ChallengeCard({ challenge, mode }: { challenge: Challenge; mode: "recei
   const { fields, currentTeamId, acceptChallenge, declineChallenge } = useStore();
   const field = fields.find((f) => f.id === challenge.fieldId);
   const otherId = challenge.fromTeamId === currentTeamId ? challenge.toTeamId : challenge.fromTeamId;
+  const isCreator = challenge.fromTeamId === currentTeamId;
+  const [refOpen, setRefOpen] = useState(false);
 
   const statusConfig = {
     pending: { label: "Pendente", className: "border-warning/40 text-warning" },
@@ -162,6 +164,8 @@ function ChallengeCard({ challenge, mode }: { challenge: Challenge; mode: "recei
           </div>
         </div>
 
+        <RefereeRequestPanel challenge={challenge} canAttach={isCreator && challenge.status !== "declined"} onAttach={() => setRefOpen(true)} />
+
         {mode === "received" && challenge.status === "pending" && (
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => { declineChallenge(challenge.id); toast("Desafio recusado."); }}>
@@ -173,10 +177,154 @@ function ChallengeCard({ challenge, mode }: { challenge: Challenge; mode: "recei
             </Button>
           </div>
         )}
-        {mode === "accepted" && (
+        {mode === "accepted" && !challenge.refereeRequest && (
           <Badge className="w-full justify-center bg-success/10 py-2 text-success hover:bg-success/10">⚡ Pronto pra batalha</Badge>
         )}
       </div>
+
+      <AttachRefereeDialog open={refOpen} onOpenChange={setRefOpen} challenge={challenge} />
     </Card>
+  );
+}
+
+function RefereeRequestPanel({
+  challenge,
+  canAttach,
+  onAttach,
+}: {
+  challenge: Challenge;
+  canAttach: boolean;
+  onAttach: () => void;
+}) {
+  const req = challenge.refereeRequest;
+  if (!req) {
+    if (!canAttach) return null;
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="mb-3 w-full border-referee/40 text-referee hover:bg-referee/10"
+        onClick={onAttach}
+      >
+        <Gavel className="mr-1.5 h-4 w-4" /> Anexar pedido de arbitragem
+      </Button>
+    );
+  }
+  const statusMap = {
+    pending: { label: "Aguardando árbitro", cls: "border-warning/40 text-warning" },
+    accepted: { label: "Árbitro confirmado", cls: "border-success/40 text-success" },
+    declined: { label: "Árbitro recusou", cls: "border-destructive/40 text-destructive" },
+  } as const;
+  const st = statusMap[req.status];
+  return (
+    <div className="mb-3 rounded-lg border border-referee/30 bg-referee/5 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Award className="h-4 w-4 text-referee" />
+          <div>
+            <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Súmula digital</div>
+            <div className="text-sm font-semibold">{req.refereeName}</div>
+          </div>
+        </div>
+        <Badge variant="outline" className={st.cls}>{st.label}</Badge>
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        Após o jogo, o placar e estatísticas só entram no ranking quando o árbitro assinar a súmula.
+      </p>
+      {req.status === "accepted" && req.matchId && (
+        <Link
+          to="/sumula/$matchId"
+          params={{ matchId: req.matchId }}
+          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-referee underline-offset-4 hover:underline"
+        >
+          Ver súmula →
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function AttachRefereeDialog({
+  open,
+  onOpenChange,
+  challenge,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  challenge: Challenge;
+}) {
+  const { referees, requestRefereeForChallenge } = useStore();
+  const [selected, setSelected] = useState<string>("");
+
+  const list = useMemo<Referee[]>(() => {
+    return referees
+      .filter((r) => r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time))
+      .concat(referees.filter((r) => !(r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time))));
+  }, [referees, challenge.date, challenge.time]);
+
+  const submit = () => {
+    if (!selected) return toast.error("Selecione um árbitro.");
+    requestRefereeForChallenge(challenge.id, selected);
+    toast.success("Pedido enviado. Árbitro receberá uma notificação.");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-referee" /> Contratar árbitro
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground">
+          Para {new Date(challenge.date).toLocaleDateString("pt-BR")} · {challenge.time}. Disponíveis aparecem primeiro.
+        </p>
+        <div className="max-h-[360px] space-y-2 overflow-auto pr-1">
+          {list.map((r) => {
+            const available = r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time);
+            const tier = REFEREE_TIER_INFO[r.tier];
+            const isSel = selected === r.id;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setSelected(r.id)}
+                className={cn(
+                  "flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition",
+                  isSel ? "border-referee bg-referee/10" : "border-border bg-surface hover:border-referee/40",
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-referee/10 text-xl">{r.avatar}</div>
+                  <div>
+                    <div className="text-sm font-semibold">{r.name}</div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span className={cn("rounded border px-1.5 py-0.5 font-mono uppercase tracking-wider", tier.tokenClass)}>
+                        {tier.label}
+                      </span>
+                      <span>★ {r.score.toFixed(1)}</span>
+                      <span>{r.city}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-semibold">R$ {r.pricePerGame}</div>
+                  <div className={cn("text-[10px]", available ? "text-success" : "text-muted-foreground")}>
+                    {available ? "Disponível" : "Sem horário"}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button className="bg-gradient-referee text-background shadow-glow-referee" onClick={submit}>
+            Enviar pedido
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
