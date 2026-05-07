@@ -359,6 +359,19 @@ export const playerApplications: PlayerApplication[] = [
   },
 ];
 
+export type RefereeTier = "Bronze" | "Prata" | "Ouro";
+
+export type RefereeHire = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  hirerName: string;
+  hirerType: "team" | "field";
+  matchTitle: string;
+  status: "completed" | "scheduled" | "cancelled";
+  rating?: number;
+};
+
 export type Referee = {
   id: string;
   name: string;
@@ -368,17 +381,36 @@ export type Referee = {
   score: number; // 0-5
   reviews: number;
   experienceYears: number;
+  tier: RefereeTier; // Bronze (Iniciante) | Prata (Regional) | Ouro (Nacional/Federado)
   certifications: string[];
   availableDays: string[]; // YYYY-MM-DD
   availableTimes: string[]; // HH:mm
   bio: string;
+  hireHistory: RefereeHire[];
 };
 
 export const referees: Referee[] = [
-  { id: "r1", name: "Marcos Pereira", avatar: "🧑‍⚖️", city: "São Paulo", pricePerGame: 150, score: 4.9, reviews: 87, experienceYears: 12, certifications: ["CBF", "FPF"], availableDays: ["2026-05-09","2026-05-10","2026-05-16"], availableTimes: ["18:00","20:00"], bio: "Árbitro federado, especialista em campeonatos amadores." },
-  { id: "r2", name: "Júlia Santos", avatar: "👩‍⚖️", city: "São Paulo", pricePerGame: 180, score: 4.8, reviews: 64, experienceYears: 8, certifications: ["FPF"], availableDays: ["2026-05-08","2026-05-09","2026-05-15"], availableTimes: ["19:00","21:00"], bio: "Apito firme, foco em fair-play e ritmo de jogo." },
-  { id: "r3", name: "Ricardo Alves", avatar: "🧑‍⚖️", city: "Guarulhos", pricePerGame: 120, score: 4.6, reviews: 42, experienceYears: 6, certifications: ["FPF"], availableDays: ["2026-05-10","2026-05-11"], availableTimes: ["10:00","16:00"], bio: "Disponível para finais de semana e ligas regionais." },
-  { id: "r4", name: "Bruno Lima", avatar: "🧑‍⚖️", city: "Osasco", pricePerGame: 100, score: 4.3, reviews: 21, experienceYears: 3, certifications: [], availableDays: ["2026-05-09","2026-05-12"], availableTimes: ["20:00","22:00"], bio: "Árbitro iniciante, peladas e amistosos." },
-  { id: "r5", name: "Patrícia Rocha", avatar: "👩‍⚖️", city: "São Paulo", pricePerGame: 200, score: 5.0, reviews: 132, experienceYears: 15, certifications: ["CBF","FIFA"], availableDays: ["2026-05-15","2026-05-16","2026-05-17"], availableTimes: ["15:00","17:00","19:00"], bio: "Quadro CBF, experiência em torneios oficiais." },
-  { id: "r6", name: "Felipe Andrade", avatar: "🧑‍⚖️", city: "São Bernardo", pricePerGame: 130, score: 4.4, reviews: 28, experienceYears: 5, certifications: ["FPF"], availableDays: ["2026-05-09","2026-05-10"], availableTimes: ["18:00","21:00"], bio: "Atende region ABC, society e campo." },
+  { id: "r1", name: "Marcos Pereira", avatar: "🧑‍⚖️", city: "São Paulo", pricePerGame: 150, score: 4.9, reviews: 87, experienceYears: 12, tier: "Ouro", certifications: ["CBF", "FPF"], availableDays: ["2026-05-09","2026-05-10","2026-05-16"], availableTimes: ["18:00","20:00"], bio: "Árbitro federado, especialista em campeonatos amadores.", hireHistory: [
+    { id: "h1", date: "2026-04-12", time: "18:00", hirerName: "Liga Central", hirerType: "team", matchTitle: "Leões da Vila × Águias FC", status: "completed", rating: 5 },
+    { id: "h2", date: "2026-04-20", time: "20:00", hirerName: "Arena Central", hirerType: "field", matchTitle: "Final amador zona sul", status: "completed", rating: 4.8 },
+    { id: "h3", date: "2026-05-09", time: "18:00", hirerName: "Tubarões United", hirerType: "team", matchTitle: "Desafio interclubes", status: "scheduled" },
+  ] },
+  { id: "r2", name: "Júlia Santos", avatar: "👩‍⚖️", city: "São Paulo", pricePerGame: 180, score: 4.8, reviews: 64, experienceYears: 8, tier: "Ouro", certifications: ["FPF"], availableDays: ["2026-05-08","2026-05-09","2026-05-15"], availableTimes: ["19:00","21:00"], bio: "Apito firme, foco em fair-play e ritmo de jogo.", hireHistory: [
+    { id: "h4", date: "2026-04-15", time: "19:00", hirerName: "Lobos da Mooca", hirerType: "team", matchTitle: "Clássico da Mooca", status: "completed", rating: 4.9 },
+  ] },
+  { id: "r3", name: "Ricardo Alves", avatar: "🧑‍⚖️", city: "Guarulhos", pricePerGame: 120, score: 4.6, reviews: 42, experienceYears: 6, tier: "Prata", certifications: ["FPF"], availableDays: ["2026-05-10","2026-05-11"], availableTimes: ["10:00","16:00"], bio: "Disponível para finais de semana e ligas regionais.", hireHistory: [
+    { id: "h5", date: "2026-04-18", time: "10:00", hirerName: "Society Park", hirerType: "field", matchTitle: "Torneio sub-30", status: "completed", rating: 4.6 },
+  ] },
+  { id: "r4", name: "Bruno Lima", avatar: "🧑‍⚖️", city: "Osasco", pricePerGame: 100, score: 4.3, reviews: 21, experienceYears: 3, tier: "Bronze", certifications: [], availableDays: ["2026-05-09","2026-05-12"], availableTimes: ["20:00","22:00"], bio: "Árbitro iniciante, peladas e amistosos.", hireHistory: [] },
+  { id: "r5", name: "Patrícia Rocha", avatar: "👩‍⚖️", city: "São Paulo", pricePerGame: 200, score: 5.0, reviews: 132, experienceYears: 15, tier: "Ouro", certifications: ["CBF","FIFA"], availableDays: ["2026-05-15","2026-05-16","2026-05-17"], availableTimes: ["15:00","17:00","19:00"], bio: "Quadro CBF, experiência em torneios oficiais.", hireHistory: [
+    { id: "h6", date: "2026-04-05", time: "17:00", hirerName: "Estádio Municipal", hirerType: "field", matchTitle: "Copa da Cidade — Semi", status: "completed", rating: 5 },
+    { id: "h7", date: "2026-04-22", time: "15:00", hirerName: "Falcões Negros", hirerType: "team", matchTitle: "Decisão da chave", status: "completed", rating: 5 },
+  ] },
+  { id: "r6", name: "Felipe Andrade", avatar: "🧑‍⚖️", city: "São Bernardo", pricePerGame: 130, score: 4.4, reviews: 28, experienceYears: 5, tier: "Prata", certifications: ["FPF"], availableDays: ["2026-05-09","2026-05-10"], availableTimes: ["18:00","21:00"], bio: "Atende region ABC, society e campo.", hireHistory: [] },
 ];
+
+export const REFEREE_TIER_INFO: Record<RefereeTier, { label: string; description: string; tokenClass: string }> = {
+  Bronze: { label: "Bronze", description: "Iniciante — peladas e amistosos", tokenClass: "text-[color:var(--tier-bronze)] border-[color:var(--tier-bronze)]" },
+  Prata: { label: "Prata", description: "Regional — ligas amadoras e torneios locais", tokenClass: "text-[color:var(--tier-silver)] border-[color:var(--tier-silver)]" },
+  Ouro: { label: "Ouro", description: "Nacional / Federado — CBF, FPF, FIFA", tokenClass: "text-[color:var(--tier-gold)] border-[color:var(--tier-gold)]" },
+};
