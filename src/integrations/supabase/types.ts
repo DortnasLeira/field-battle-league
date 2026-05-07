@@ -315,6 +315,60 @@ export type Database = {
           },
         ]
       }
+      opening_applications: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          experience: string | null
+          id: string
+          message: string | null
+          opening_id: string
+          player_age: number | null
+          player_name: string
+          player_nickname: string | null
+          player_phone: string
+          player_user_id: string
+          status: Database["public"]["Enums"]["opening_application_status"]
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          experience?: string | null
+          id?: string
+          message?: string | null
+          opening_id: string
+          player_age?: number | null
+          player_name: string
+          player_nickname?: string | null
+          player_phone: string
+          player_user_id: string
+          status?: Database["public"]["Enums"]["opening_application_status"]
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          experience?: string | null
+          id?: string
+          message?: string | null
+          opening_id?: string
+          player_age?: number | null
+          player_name?: string
+          player_nickname?: string | null
+          player_phone?: string
+          player_user_id?: string
+          status?: Database["public"]["Enums"]["opening_application_status"]
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           amount: number
@@ -732,6 +786,7 @@ export type Database = {
         | "declined"
         | "completed"
         | "cancelled"
+      opening_application_status: "pending" | "accepted" | "rejected"
       payout_status: "held" | "released" | "refunded"
       profile_type: "player" | "team" | "field"
       referee_tier: "bronze" | "silver" | "gold"
@@ -870,6 +925,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      opening_application_status: ["pending", "accepted", "rejected"],
       payout_status: ["held", "released", "refunded"],
       profile_type: ["player", "team", "field"],
       referee_tier: ["bronze", "silver", "gold"],
