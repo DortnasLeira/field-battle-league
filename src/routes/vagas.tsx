@@ -90,9 +90,10 @@ function VagasPage() {
   const [fDateFrom, setFDateFrom] = useState<string>("");
   const [fDateTo, setFDateTo] = useState<string>("");
 
-  const myOpenings = openings.filter((o) => o.teamId === currentTeamId);
+  const managedTeamIds = new Set(managedTeams.map((t) => t.id));
+  const myOpenings = openings.filter((o) => managedTeamIds.has(o.teamId));
   const otherOpenings = openings
-    .filter((o) => o.teamId !== currentTeamId)
+    .filter((o) => !managedTeamIds.has(o.teamId))
     .filter((o) => {
       const team = teams.find((t) => t.id === o.teamId);
       if (fPosition !== "all" && o.position !== fPosition) return false;
