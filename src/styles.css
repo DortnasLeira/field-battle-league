@@ -46,6 +46,11 @@
   --color-ring: var(--ring);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
+  --color-referee: var(--referee);
+  --color-referee-foreground: var(--referee-foreground);
+  --color-tier-bronze: var(--tier-bronze);
+  --color-tier-silver: var(--tier-silver);
+  --color-tier-gold: var(--tier-gold);
 
   --shadow-glow: 0 0 30px -8px var(--primary);
   --shadow-card: 0 8px 24px -12px oklch(0 0 0 / 0.6);
@@ -108,7 +113,15 @@
   --sidebar-border: oklch(0.28 0.018 250);
   --sidebar-ring: oklch(0.78 0.18 60);
 
+  /* Referee — neon gold accent to distinguish from players/teams */
+  --referee: oklch(0.88 0.18 95);
+  --referee-foreground: oklch(0.15 0.01 250);
+  --tier-bronze: oklch(0.65 0.13 50);
+  --tier-silver: oklch(0.82 0.02 250);
+  --tier-gold: oklch(0.88 0.18 95);
+
   --gradient-primary: linear-gradient(135deg, oklch(0.78 0.18 60), oklch(0.65 0.22 35));
+  --gradient-referee: linear-gradient(135deg, oklch(0.88 0.18 95), oklch(0.78 0.18 70));
   --gradient-surface: linear-gradient(180deg, oklch(0.20 0.014 250), oklch(0.16 0.012 250));
   --gradient-hero: radial-gradient(ellipse at top, oklch(0.78 0.18 60 / 0.18), transparent 60%),
                    radial-gradient(ellipse at bottom right, oklch(0.65 0.22 35 / 0.12), transparent 60%);
@@ -147,7 +160,12 @@
     background-clip: text;
     color: transparent;
   }
+  .bg-gradient-referee { background-image: var(--gradient-referee); }
+  .text-referee { color: var(--color-referee); }
+  .bg-referee { background-color: var(--color-referee); color: var(--color-referee-foreground); }
+  .border-referee { border-color: var(--color-referee); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-glow-referee { box-shadow: 0 0 30px -8px var(--color-referee); }
   .shadow-card { box-shadow: var(--shadow-card); }
   .field-pattern {
     background-image:

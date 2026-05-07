@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeIdRouteImport } from './routes/time.$id'
 import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
+import { Route as ArbitroIdRouteImport } from './routes/arbitro.$id'
 import { Route as TimeIdTransferirRouteImport } from './routes/time_.$id.transferir'
 
 const VagasRoute = VagasRouteImport.update({
@@ -83,6 +84,11 @@ const JogadorIdRoute = JogadorIdRouteImport.update({
   path: '/jogador/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArbitroIdRoute = ArbitroIdRouteImport.update({
+  id: '/arbitro/$id',
+  path: '/arbitro/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TimeIdTransferirRoute = TimeIdTransferirRouteImport.update({
   id: '/time_/$id/transferir',
   path: '/time/$id/transferir',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
+  '/arbitro/$id': typeof ArbitroIdRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
+  '/arbitro/$id': typeof ArbitroIdRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
+  '/arbitro/$id': typeof ArbitroIdRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil_/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/perfil'
     | '/vagas'
+    | '/arbitro/$id'
     | '/jogador/$id'
     | '/perfil/editar'
     | '/time/$id'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/perfil'
     | '/vagas'
+    | '/arbitro/$id'
     | '/jogador/$id'
     | '/perfil/editar'
     | '/time/$id'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/perfil'
     | '/vagas'
+    | '/arbitro/$id'
     | '/jogador/$id'
     | '/perfil_/editar'
     | '/time/$id'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PerfilRoute: typeof PerfilRoute
   VagasRoute: typeof VagasRoute
+  ArbitroIdRoute: typeof ArbitroIdRoute
   JogadorIdRoute: typeof JogadorIdRoute
   PerfilEditarRoute: typeof PerfilEditarRoute
   TimeIdRoute: typeof TimeIdRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JogadorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/arbitro/$id': {
+      id: '/arbitro/$id'
+      path: '/arbitro/$id'
+      fullPath: '/arbitro/$id'
+      preLoaderRoute: typeof ArbitroIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/time_/$id/transferir': {
       id: '/time_/$id/transferir'
       path: '/time/$id/transferir'
@@ -305,6 +325,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PerfilRoute: PerfilRoute,
   VagasRoute: VagasRoute,
+  ArbitroIdRoute: ArbitroIdRoute,
   JogadorIdRoute: JogadorIdRoute,
   PerfilEditarRoute: PerfilEditarRoute,
   TimeIdRoute: TimeIdRoute,
