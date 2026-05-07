@@ -79,6 +79,7 @@ function VagasPage() {
   const navigate = useNavigate();
   const requireLogin = () => { toast.error("Faça login para continuar."); navigate({ to: "/auth", search: { redirect: "/vagas" } }); };
   const isTeamProfile = activeProfile?.type === "team";
+  const isPlayerProfile = activeProfile?.type === "player";
   // Times que o usuário gerencia (mock: apenas o time atual quando perfil é TIME)
   const managedTeams = isTeamProfile ? teams.filter((t) => t.id === currentTeamId) : [];
   const canCreateOpening = isTeamProfile && managedTeams.length > 0;
@@ -203,12 +204,14 @@ function VagasPage() {
                   teamName={team?.name ?? "Time"}
                   teamShield={team?.shield ?? "⚽"}
                   teamCity={team?.city ?? ""}
+                  isAuthenticated={!!session}
+                  isPlayer={isPlayerProfile}
+                  playerProfile={isPlayerProfile ? activeProfile : null}
+                  onRequireLogin={requireLogin}
                   onApply={(payload) => {
-                    if (!session) return requireLogin();
                     applyToOpening({ openingId: o.id, ...payload });
                     toast.success("Inscrição enviada! O capitão vai avaliar seu perfil.");
                   }}
-                  
                 />
               );
             })}
@@ -425,12 +428,20 @@ function OpeningCard({
   teamName,
   teamShield,
   teamCity,
+  isAuthenticated,
+  isPlayer,
+  playerProfile,
+  onRequireLogin,
   onApply,
 }: {
   opening: PositionOpening;
   teamName: string;
   teamShield: string;
   teamCity: string;
+  isAuthenticated: boolean;
+  isPlayer: boolean;
+  playerProfile: import("@/lib/auth").UserProfile | null;
+  onRequireLogin: () => void;
   onApply: (payload: {
     playerName: string;
     playerAge: number;
@@ -473,7 +484,17 @@ function OpeningCard({
         <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           Publicada em {opening.createdAt}
         </div>
-        <ApplyDialog opening={opening} onApply={onApply} />
+        {!isAuthenticated ? (
+          <Button size="sm" className="bg-gradient-primary text-primary-foreground" onClick={onRequireLogin}>
+            <UserPlus className="mr-2 h-4 w-4" /> Entrar para inscrever-se
+          </Button>
+        ) : !isPlayer || !playerProfile ? (
+          <Badge variant="outline" className="border-border text-muted-foreground">
+            Apenas perfis de Jogador podem se inscrever
+          </Badge>
+        ) : (
+          <ApplyDialog opening={opening} playerProfile={playerProfile} onApply={onApply} />
+        )}
       </div>
     </Card>
   );
@@ -481,9 +502,11 @@ function OpeningCard({
 
 function ApplyDialog({
   opening,
+  playerProfile,
   onApply,
 }: {
   opening: PositionOpening;
+  playerProfile: import("@/lib/auth").UserProfile;
   onApply: (payload: {
     playerName: string;
     playerAge: number;
@@ -493,15 +516,14 @@ function ApplyDialog({
   }) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
+  const lockedName = playerProfile.name ?? "";
+  const lockedNickname = playerProfile.nickname ?? "";
+  const lockedAge = playerProfile.age ?? "";
+  const lockedExp = [playerProfile.position, playerProfile.level].filter(Boolean).join(" · ") || "—";
   const [phone, setPhone] = useState("");
-  const [exp, setExp] = useState("");
   const [msg, setMsg] = useState("");
 
-  const reset = () => {
-    setName(""); setAge(""); setPhone(""); setExp(""); setMsg("");
-  };
+  const reset = () => { setPhone(""); setMsg(""); };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
@@ -516,28 +538,36 @@ function ApplyDialog({
             Inscrição — {opening.position}
           </DialogTitle>
           <DialogDescription>
-            Preencha seus dados para se candidatar à vaga. O capitão entra em contato em caso de aprovação.
+            Seus dados de jogador foram preenchidos automaticamente. Apenas o telefone para contato é editável.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="pname">Nome completo</Label>
-            <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: João Silva" />
+            <Input id="pname" value={lockedName} readOnly disabled />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
-              <Label htmlFor="page">Idade</Label>
-              <Input id="page" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" />
+              <Label htmlFor="pnick">Apelido</Label>
+              <Input id="pnick" value={lockedNickname} readOnly disabled placeholder="—" />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="pphone">Telefone</Label>
-              <Input id="pphone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-0000" />
+              <Label htmlFor="page">Idade</Label>
+              <Input id="page" value={String(lockedAge)} readOnly disabled />
             </div>
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="pphone">Telefone para contato</Label>
+            <Input
+              id="pphone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="(11) 99999-0000"
+            />
+          </div>
+          <div className="grid gap-2">
             <Label htmlFor="pexp">Experiência</Label>
-            <Textarea id="pexp" rows={2} value={exp} onChange={(e) => setExp(e.target.value)}
-              placeholder="Conte rapidamente sobre sua experiência na posição." />
+            <Input id="pexp" value={lockedExp} readOnly disabled />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="pmsg">Mensagem (opcional)</Label>
@@ -549,13 +579,17 @@ function ApplyDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
             className="bg-gradient-primary text-primary-foreground"
-            disabled={!name || !age || !phone || !exp}
+            disabled={!lockedName || !lockedAge || !phone}
             onClick={() => {
+              if (!playerProfile.age) {
+                toast.error("Complete sua idade no perfil de jogador antes de se inscrever.");
+                return;
+              }
               onApply({
-                playerName: name,
-                playerAge: Number(age),
+                playerName: lockedNickname ? `${lockedName} (${lockedNickname})` : lockedName,
+                playerAge: Number(lockedAge),
                 playerPhone: phone,
-                experience: exp,
+                experience: lockedExp,
                 message: msg,
               });
               setOpen(false);
