@@ -440,6 +440,9 @@ function OpeningCard({
   teamName,
   teamShield,
   teamCity,
+  acceptedCount,
+  remaining,
+  isFull,
   isAuthenticated,
   isPlayer,
   playerProfile,
@@ -450,6 +453,9 @@ function OpeningCard({
   teamName: string;
   teamShield: string;
   teamCity: string;
+  acceptedCount: number;
+  remaining: number;
+  isFull: boolean;
   isAuthenticated: boolean;
   isPlayer: boolean;
   playerProfile: import("@/lib/auth").UserProfile | null;
@@ -486,8 +492,21 @@ function OpeningCard({
           <Badge variant="outline" className="border-border text-muted-foreground">
             {opening.level}
           </Badge>
-          <span className="stat-num text-sm font-bold text-primary">
-            {opening.slots} vaga{opening.slots > 1 ? "s" : ""}
+          <Badge
+            className={
+              remaining === 0
+                ? "bg-muted text-muted-foreground"
+                : remaining === 1
+                  ? "bg-warning/15 text-warning hover:bg-warning/20"
+                  : "bg-success/15 text-success hover:bg-success/20"
+            }
+          >
+            {remaining === 0
+              ? "Sem vagas"
+              : `${remaining} de ${opening.slots} disponível${remaining > 1 ? "s" : ""}`}
+          </Badge>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            {acceptedCount}/{opening.slots} preenchida{opening.slots > 1 ? "s" : ""}
           </span>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">{opening.description}</p>
@@ -504,6 +523,10 @@ function OpeningCard({
           <Badge variant="outline" className="border-border text-muted-foreground">
             Apenas perfis de Jogador podem se inscrever
           </Badge>
+        ) : isFull ? (
+          <Button size="sm" disabled variant="outline">
+            Vaga preenchida
+          </Button>
         ) : (
           <ApplyDialog opening={opening} playerProfile={playerProfile} onApply={onApply} />
         )}
