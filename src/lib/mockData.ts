@@ -20,6 +20,9 @@ export type League = {
 
 export type MatchStatus = "scheduled" | "awaiting_score" | "awaiting_validation" | "completed";
 
+export type MatchGoal = { teamId: string; player: string; minute: number };
+export type MatchCard = { teamId: string; player: string; type: "yellow" | "red"; minute: number };
+
 export type Match = {
   id: string;
   leagueId: string;
@@ -31,6 +34,11 @@ export type Match = {
   homeScore?: number;
   awayScore?: number;
   scoreSubmittedBy?: string; // teamId who submitted
+  refereeId?: string;
+  signedByReferee?: boolean;
+  goals?: MatchGoal[];
+  cards?: MatchCard[];
+  signedAt?: string;
 };
 
 export type Field = {
@@ -46,6 +54,18 @@ export type Field = {
 
 export type ChallengeStatus = "pending" | "accepted" | "declined";
 
+export type RefereeRequestStatus = "pending" | "accepted" | "declined";
+
+export type ChallengeRefereeRequest = {
+  refereeId: string;
+  refereeName: string;
+  pricePerGame: number;
+  status: RefereeRequestStatus;
+  requestedAt: string;
+  decidedAt?: string;
+  matchId?: string; // created when accepted, used to sign súmula
+};
+
 export type Challenge = {
   id: string;
   fromTeamId: string;
@@ -55,6 +75,7 @@ export type Challenge = {
   time: string;
   message: string;
   status: ChallengeStatus;
+  refereeRequest?: ChallengeRefereeRequest;
 };
 
 export const CURRENT_TEAM_ID = "t1";
