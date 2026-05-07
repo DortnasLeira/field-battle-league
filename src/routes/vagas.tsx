@@ -197,6 +197,11 @@ function VagasPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {otherOpenings.map((o) => {
               const team = teams.find((t) => t.id === o.teamId);
+              const acceptedCount = applications.filter(
+                (a) => a.openingId === o.id && a.status === "accepted",
+              ).length;
+              const remaining = Math.max(0, o.slots - acceptedCount);
+              const isFull = remaining === 0 || o.status !== "open";
               return (
                 <OpeningCard
                   key={o.id}
@@ -204,11 +209,18 @@ function VagasPage() {
                   teamName={team?.name ?? "Time"}
                   teamShield={team?.shield ?? "⚽"}
                   teamCity={team?.city ?? ""}
+                  acceptedCount={acceptedCount}
+                  remaining={remaining}
+                  isFull={isFull}
                   isAuthenticated={!!session}
                   isPlayer={isPlayerProfile}
                   playerProfile={isPlayerProfile ? activeProfile : null}
                   onRequireLogin={requireLogin}
                   onApply={(payload) => {
+                    if (isFull) {
+                      toast.error("Vaga já preenchida.");
+                      return;
+                    }
                     applyToOpening({ openingId: o.id, ...payload });
                     toast.success("Inscrição enviada! O capitão vai avaliar seu perfil.");
                   }}
