@@ -4,11 +4,14 @@ import {
   type Field,
   type League,
   type Match,
+  type MatchGoal,
+  type MatchCard,
   type Team,
   type PositionOpening,
   type PlayerApplication,
   type OpeningStatus,
   type FieldRental,
+  type Referee,
   CURRENT_TEAM_ID,
   challenges as initialChallenges,
   fields as initialFields,
@@ -17,10 +20,12 @@ import {
   teams as initialTeams,
   positionOpenings as initialOpenings,
   playerApplications as initialApplications,
+  referees as initialReferees,
 } from "./mockData";
 
 type State = {
   currentTeamId: string;
+  currentRefereeId: string; // demo: which referee profile is "logged" for inbox
   teams: Team[];
   leagues: League[];
   matches: Match[];
@@ -29,6 +34,7 @@ type State = {
   openings: PositionOpening[];
   applications: PlayerApplication[];
   rentals: FieldRental[];
+  referees: Referee[];
   // actions
   joinLeague: (leagueId: string, teamId: string) => void;
   leaveLeague: (leagueId: string, teamId: string) => void;
@@ -38,6 +44,16 @@ type State = {
   acceptChallenge: (challengeId: string) => void;
   declineChallenge: (challengeId: string) => void;
   createChallenge: (c: Omit<Challenge, "id" | "status">) => void;
+  // Referee on a challenge
+  requestRefereeForChallenge: (challengeId: string, refereeId: string) => void;
+  acceptRefereeRequest: (challengeId: string) => void;
+  declineRefereeRequest: (challengeId: string) => void;
+  // Súmula digital — only the contracted referee can sign
+  refereeSignMatch: (
+    matchId: string,
+    payload: { homeScore: number; awayScore: number; goals: MatchGoal[]; cards: MatchCard[] },
+  ) => void;
+  setCurrentReferee: (refereeId: string) => void;
   reserveSlot: (fieldId: string, date: string, time: string) => void;
   updateTeamPrefs: (teamId: string, days: string[], times: string[]) => void;
   createOpening: (o: Omit<PositionOpening, "id" | "createdAt" | "status">) => void;
@@ -55,6 +71,7 @@ type State = {
 
 export const useStore = create<State>((set) => ({
   currentTeamId: CURRENT_TEAM_ID,
+  currentRefereeId: initialReferees[0]?.id ?? "r1",
   teams: initialTeams,
   leagues: initialLeagues,
   matches: initialMatches,
@@ -63,6 +80,99 @@ export const useStore = create<State>((set) => ({
   openings: initialOpenings,
   applications: initialApplications,
   rentals: [],
+  referees: initialReferees,
+
+  setCurrentReferee: (refereeId) => set({ currentRefereeId: refereeId }),
+
+  requestRefereeForChallenge: (challengeId, refereeId) =>
+    set((s) => {
+      const ref = s.referees.find((r) => r.id === refereeId);
+      if (!ref) return {};
+      return {
+        challenges: s.challenges.map((c) =>
+          c.id === challengeId
+            ? {
+                ...c,
+                refereeRequest: {
+                  refereeId: ref.id,
+                  refereeName: ref.name,
+                  pricePerGame: ref.pricePerGame,
+                  status: "pending",
+                  requestedAt: new Date().toISOString(),
+                },
+              }
+            : c,
+        ),
+      };
+    }),
+
+  acceptRefereeRequest: (challengeId) =>
+    set((s) => {
+      const c = s.challenges.find((x) => x.id === challengeId);
+      if (!c?.refereeRequest) return {};
+      const matchId = `m_${challengeId}`;
+      const newMatch: Match = {
+        id: matchId,
+        leagueId: "",
+        homeId: c.fromTeamId,
+        awayId: c.toTeamId,
+        fieldId: c.fieldId,
+        date: `${c.date}T${c.time}:00`,
+        status: "awaiting_referee_signature",
+        refereeId: c.refereeRequest.refereeId,
+        signedByReferee: false,
+      };
+      return {
+        challenges: s.challenges.map((x) =>
+          x.id === challengeId && x.refereeRequest
+            ? {
+                ...x,
+                refereeRequest: {
+                  ...x.refereeRequest,
+                  status: "accepted",
+                  decidedAt: new Date().toISOString(),
+                  matchId,
+                },
+              }
+            : x,
+        ),
+        matches: s.matches.some((m) => m.id === matchId) ? s.matches : [...s.matches, newMatch],
+      };
+    }),
+
+  declineRefereeRequest: (challengeId) =>
+    set((s) => ({
+      challenges: s.challenges.map((x) =>
+        x.id === challengeId && x.refereeRequest
+          ? {
+              ...x,
+              refereeRequest: {
+                ...x.refereeRequest,
+                status: "declined",
+                decidedAt: new Date().toISOString(),
+              },
+            }
+          : x,
+      ),
+    })),
+
+  refereeSignMatch: (matchId, payload) =>
+    set((s) => ({
+      matches: s.matches.map((m) =>
+        m.id === matchId && m.refereeId
+          ? {
+              ...m,
+              homeScore: payload.homeScore,
+              awayScore: payload.awayScore,
+              goals: payload.goals,
+              cards: payload.cards,
+              signedByReferee: true,
+              signedAt: new Date().toISOString(),
+              status: "completed",
+            }
+          : m,
+      ),
+    })),
 
   joinLeague: (leagueId, teamId) =>
     set((s) => ({

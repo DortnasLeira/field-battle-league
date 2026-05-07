@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings, Search } from "lucide-react";
+import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings, Search, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -22,9 +22,10 @@ const publicLinks = [
 
 const authLinks = [
   { to: "/desafios", label: "Desafios", icon: Swords },
+  { to: "/arbitragem", label: "Arbitragem", icon: Award },
 ] as const;
 
-const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios"]);
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
