@@ -1,0 +1,247 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { ArrowLeft, MapPin, Star, DollarSign, Award, Calendar, Clock, Whistle, History, Trophy, Lock as LockIcon } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { referees, REFEREE_TIER_INFO } from "@/lib/mockData";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/arbitro/$id")({
+  head: () => ({ meta: [{ title: "Perfil do Árbitro — PeladaPro" }] }),
+  component: RefereeProfilePage,
+});
+
+function RefereeProfilePage() {
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const { session, activeProfile } = useAuth();
+  const referee = referees.find((r) => r.id === id);
+  const [hireOpen, setHireOpen] = useState(false);
+
+  if (!referee) {
+    return (
+      <Card className="border-border bg-card p-8 text-center text-sm text-muted-foreground">
+        Árbitro não encontrado. <Link to="/buscar" className="text-primary underline">Voltar à busca</Link>
+      </Card>
+    );
+  }
+
+  const tier = REFEREE_TIER_INFO[referee.tier];
+  const canHire = activeProfile?.type === "team" || activeProfile?.type === "field";
+
+  const onHire = () => {
+    if (!session) {
+      toast.error("Faça login para contratar.");
+      navigate({ to: "/auth", search: { redirect: `/arbitro/${id}` } });
+      return;
+    }
+    if (!canHire) {
+      toast.error("Apenas perfis TIME ou CAMPO podem contratar árbitros.");
+      return;
+    }
+    setHireOpen(true);
+  };
+
+  const completed = referee.hireHistory.filter((h) => h.status === "completed");
+  const upcoming = referee.hireHistory.filter((h) => h.status === "scheduled");
+
+  return (
+    <div className="space-y-6">
+      <Button asChild variant="ghost" size="sm" className="-ml-2">
+        <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar à busca</Link>
+      </Button>
+
+      {/* Header */}
+      <Card className="relative overflow-hidden border-referee/40 bg-card p-6 shadow-glow-referee">
+        <div className="absolute inset-0 bg-gradient-referee opacity-10" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-referee/20 text-5xl ring-2 ring-referee/60">
+            {referee.avatar}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <Whistle className="h-4 w-4 text-referee" />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-referee">Árbitro</span>
+            </div>
+            <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">{referee.name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{referee.city}</span>
+              <span className="inline-flex items-center gap-1 text-referee"><Star className="h-3 w-3 fill-current" />{referee.score.toFixed(1)} <span className="text-muted-foreground">({referee.reviews} avaliações)</span></span>
+              <span className="inline-flex items-center gap-1"><DollarSign className="h-3 w-3" />R$ {referee.pricePerGame}/jogo</span>
+              <span>{referee.experienceYears} anos de experiência</span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className={cn("font-display uppercase tracking-wider", tier.tokenClass)}>
+                <Trophy className="mr-1 h-3 w-3" /> Nível {tier.label}
+              </Badge>
+              <span className="text-[11px] text-muted-foreground">{tier.description}</span>
+            </div>
+          </div>
+          <Button size="lg" onClick={onHire} className="bg-referee text-referee-foreground hover:bg-referee/90">
+            {!session || canHire ? <Whistle className="mr-1 h-4 w-4" /> : <LockIcon className="mr-1 h-4 w-4" />}
+            Contratar
+          </Button>
+        </div>
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Bio + certs */}
+        <Card className="border-border bg-card p-5 lg:col-span-2">
+          <h2 className="font-display text-lg uppercase tracking-wide">Sobre</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{referee.bio}</p>
+
+          <div className="mt-4">
+            <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Certificações</h3>
+            {referee.certifications.length === 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">Nenhuma certificação registrada.</p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {referee.certifications.map((c) => (
+                  <Badge key={c} variant="outline" className="border-referee/50 text-referee">
+                    <Award className="mr-1 h-3 w-3" />{c}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Sistema de Níveis</h3>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              {(["Bronze", "Prata", "Ouro"] as const).map((t) => {
+                const info = REFEREE_TIER_INFO[t];
+                const active = referee.tier === t;
+                return (
+                  <div key={t} className={cn("rounded-md border p-3", active ? info.tokenClass + " bg-card/60" : "border-border opacity-60")}>
+                    <div className="flex items-center gap-1 font-display uppercase tracking-wide">
+                      <Trophy className="h-3.5 w-3.5" />{info.label}
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{info.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+
+        {/* Availability */}
+        <Card className="border-border bg-card p-5">
+          <h2 className="font-display text-lg uppercase tracking-wide">Disponibilidade</h2>
+          <div className="mt-3">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <Calendar className="mr-0.5 inline h-3 w-3" /> Datas
+            </div>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {referee.availableDays.map((d) => (
+                <Badge key={d} variant="outline" className="border-border text-xs">
+                  {new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <Clock className="mr-0.5 inline h-3 w-3" /> Horários
+            </div>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {referee.availableTimes.map((t) => (
+                <Badge key={t} variant="outline" className="border-border text-xs">{t}</Badge>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* History */}
+      <Card className="border-border bg-card p-5">
+        <div className="flex items-center gap-2">
+          <History className="h-4 w-4 text-referee" />
+          <h2 className="font-display text-lg uppercase tracking-wide">Histórico de Contratações</h2>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            ({completed.length} concluídas · {upcoming.length} agendadas)
+          </span>
+        </div>
+
+        {referee.hireHistory.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">Sem contratações registradas ainda.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-border">
+            {referee.hireHistory.map((h) => (
+              <li key={h.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <div className="font-display text-sm uppercase tracking-wide truncate">{h.matchTitle}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {new Date(h.date).toLocaleDateString("pt-BR")} · {h.time} · {h.hirerType === "team" ? "Time" : "Campo"} · {h.hirerName}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {h.rating && (
+                    <span className="inline-flex items-center gap-0.5 text-xs text-referee">
+                      <Star className="h-3 w-3 fill-current" />{h.rating.toFixed(1)}
+                    </span>
+                  )}
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[10px]",
+                      h.status === "completed" && "border-success/50 text-success",
+                      h.status === "scheduled" && "border-referee/50 text-referee",
+                      h.status === "cancelled" && "border-destructive/50 text-destructive",
+                    )}
+                  >
+                    {h.status === "completed" ? "Concluída" : h.status === "scheduled" ? "Agendada" : "Cancelada"}
+                  </Badge>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      {/* Hire dialog */}
+      <Dialog open={hireOpen} onOpenChange={setHireOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase tracking-wide">Contratar árbitro</DialogTitle>
+            <DialogDescription>
+              Solicitação para <strong>{referee.name}</strong> · R$ {referee.pricePerGame}/jogo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Data</Label>
+                <Input type="date" defaultValue={referee.availableDays[0]} />
+              </div>
+              <div>
+                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Horário</Label>
+                <select className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                  {referee.availableTimes.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Mensagem (opcional)</Label>
+              <Input placeholder="Local, formato do jogo, observações..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHireOpen(false)}>Cancelar</Button>
+            <Button
+              className="bg-referee text-referee-foreground hover:bg-referee/90"
+              onClick={() => { toast.success("Solicitação enviada ao árbitro!"); setHireOpen(false); }}
+            >
+              Enviar solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
