@@ -106,6 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const upsertProfile = useCallback<AuthContextValue["upsertProfile"]>(
     async (p) => {
       if (!session?.user) return null;
+      const exists = profiles.some((existing) => existing.type === p.type);
+      if (exists) {
+        throw new Error(
+          `Você já possui um perfil de ${PROFILE_TYPE_LABEL[p.type]}. Edite o existente em vez de criar outro.`,
+        );
+      }
       const payload = { ...p, user_id: session.user.id };
       const { data, error } = await supabase
         .from("user_profiles")
@@ -116,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await refreshProfiles();
       return data as UserProfile;
     },
-    [session, refreshProfiles],
+    [session, profiles, refreshProfiles],
   );
 
   const updateProfile = useCallback(
