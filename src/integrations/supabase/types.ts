@@ -40,6 +40,156 @@ export type Database = {
           },
         ]
       }
+      bookings: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          field_id: string
+          id: string
+          message: string | null
+          requester_team_id: string | null
+          requester_user_id: string
+          scheduled_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          field_id: string
+          id?: string
+          message?: string | null
+          requester_team_id?: string | null
+          requester_user_id: string
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          field_id?: string
+          id?: string
+          message?: string | null
+          requester_team_id?: string | null
+          requester_user_id?: string
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_requester_team_id_fkey"
+            columns: ["requester_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          created_at: string
+          created_by_team_id: string
+          description: string | null
+          id: string
+          location: string | null
+          opponent_team_id: string | null
+          scheduled_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_team_id: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          opponent_team_id?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_team_id?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          opponent_team_id?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_created_by_team_id_fkey"
+            columns: ["created_by_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenges_opponent_team_id_fkey"
+            columns: ["opponent_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fields: {
+        Row: {
+          address: string | null
+          capacity: number | null
+          city: string | null
+          created_at: string
+          field_type: string
+          id: string
+          name: string
+          owner_user_id: string
+          price_per_hour: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          capacity?: number | null
+          city?: string | null
+          created_at?: string
+          field_type: string
+          id?: string
+          name: string
+          owner_user_id: string
+          price_per_hour?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          capacity?: number | null
+          city?: string | null
+          created_at?: string
+          field_type?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+          price_per_hour?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           away_score: number | null
