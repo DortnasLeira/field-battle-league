@@ -671,10 +671,14 @@ function NewOpeningDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
             className="bg-gradient-primary text-primary-foreground"
-            disabled={!desc || Number(slots) < 1}
+            disabled={!teamId || !desc || Number(slots) < 1}
             onClick={() => {
+              if (!teamId) {
+                toast.error("Selecione um time.");
+                return;
+              }
               onCreate({
-                teamId: currentTeamId,
+                teamId,
                 position,
                 slots: Number(slots),
                 level,
