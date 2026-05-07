@@ -249,7 +249,7 @@ function RentalRow({
         <div>
           <div className="font-display text-base uppercase tracking-wide">{field?.name ?? "Campo"}</div>
           <div className="text-xs text-muted-foreground">
-            {new Date(rental.date).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })} · {rental.time}
+            {(() => { const [y,m,d] = rental.date.split("-"); return `${d}/${m}/${y}`; })()} · {rental.time}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             Solicitado por <strong className="text-foreground">{rental.requesterName}</strong>
