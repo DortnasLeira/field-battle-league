@@ -378,7 +378,7 @@ function PlayerCard({ p, onView, locked }: { p: UserProfile; onView: () => void;
   );
 }
 
-function RefereeCard({ r, canHire, authed, onHire }: { r: Referee; canHire: boolean; authed: boolean; onHire: () => void }) {
+function RefereeCard({ r, canHire, authed, onHire, onView }: { r: Referee; canHire: boolean; authed: boolean; onHire: () => void; onView: () => void }) {
   return (
     <Card className="flex flex-col gap-3 border-border bg-card p-4">
       <div className="flex items-start gap-3">
