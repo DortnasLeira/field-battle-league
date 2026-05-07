@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, MapPin, Star, DollarSign, Award, Calendar, Clock, Flag as Whistle, History, Trophy, Lock as LockIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, MapPin, Star, DollarSign, Award, Calendar, Clock, Flag as Whistle, History, Trophy, Lock as LockIcon, X, CheckCircle2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { referees, REFEREE_TIER_INFO } from "@/lib/mockData";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+type HireRow = {
+  id: string;
+  referee_id: string;
+  hire_date: string;
+  hire_time: string;
+  message: string | null;
+  status: "pending" | "confirmed" | "cancelled";
+  created_at: string;
+};
 
 export const Route = createFileRoute("/arbitro/$id")({
   head: () => ({ meta: [{ title: "Perfil do Árbitro — PeladaPro" }] }),
@@ -23,6 +34,32 @@ function RefereeProfilePage() {
   const { session, activeProfile } = useAuth();
   const referee = referees.find((r) => r.id === id);
   const [hireOpen, setHireOpen] = useState(false);
+  const [hireDate, setHireDate] = useState<string>("");
+  const [hireTime, setHireTime] = useState<string>("");
+  const [hireMsg, setHireMsg] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+  const [myHires, setMyHires] = useState<HireRow[]>([]);
+
+  useEffect(() => {
+    if (referee) {
+      setHireDate(referee.availableDays[0] ?? "");
+      setHireTime(referee.availableTimes[0] ?? "");
+    }
+  }, [referee?.id]);
+
+  const loadHires = async () => {
+    if (!session || !referee) return;
+    const { data } = await supabase
+      .from("referee_hires")
+      .select("id, referee_id, hire_date, hire_time, message, status, created_at")
+      .eq("referee_id", referee.id)
+      .eq("requester_user_id", session.user.id)
+      .order("created_at", { ascending: false });
+    setMyHires((data ?? []) as HireRow[]);
+  };
+
+  useEffect(() => { loadHires(); }, [session?.user.id, referee?.id]);
+
 
   if (!referee) {
     return (
