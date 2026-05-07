@@ -327,9 +327,20 @@ function VagasPage() {
                           <Button
                             size="sm"
                             className="bg-success text-success-foreground hover:bg-success/90"
+                            disabled={accepted >= o.slots}
+                            title={accepted >= o.slots ? "Vaga já preenchida" : undefined}
                             onClick={() => {
+                              if (accepted >= o.slots) {
+                                toast.error("Limite de vagas atingido.");
+                                return;
+                              }
                               acceptApplication(a.id);
-                              toast.success(`${a.playerName} aceito no time!`);
+                              const willFill = accepted + 1 >= o.slots;
+                              toast.success(
+                                willFill
+                                  ? `${a.playerName} aceito! Vaga preenchida — demais inscrições recusadas.`
+                                  : `${a.playerName} aceito no time!`,
+                              );
                             }}
                           >
                             <Check className="mr-1 h-4 w-4" /> Aceitar
