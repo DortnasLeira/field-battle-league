@@ -105,12 +105,18 @@ function OnboardingPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             {TYPES.map(({ id, icon: Icon, desc }) => {
               const active = selected.includes(id);
+              const exists = existingTypes.has(id);
               return (
                 <button
                   key={id}
                   onClick={() => toggleType(id)}
+                  disabled={exists}
                   className={`flex flex-col gap-3 rounded-xl border p-5 text-left transition ${
-                    active ? "border-primary bg-primary/10 shadow-glow" : "border-border bg-card hover:border-primary/40"
+                    exists
+                      ? "cursor-not-allowed border-border bg-muted/30 opacity-60"
+                      : active
+                      ? "border-primary bg-primary/10 shadow-glow"
+                      : "border-border bg-card hover:border-primary/40"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -119,6 +125,11 @@ function OnboardingPage() {
                   </div>
                   <div className="font-display text-lg uppercase tracking-wide">{PROFILE_TYPE_LABEL[id]}</div>
                   <p className="text-xs text-muted-foreground">{desc}</p>
+                  {exists && (
+                    <span className="mt-1 inline-flex w-fit rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary">
+                      Já criado
+                    </span>
+                  )}
                 </button>
               );
             })}
