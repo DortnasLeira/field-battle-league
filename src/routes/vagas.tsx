@@ -122,12 +122,16 @@ function VagasPage() {
               Anuncie posições em aberto no seu time ou inscreva-se para completar um elenco.
             </p>
           </div>
-          {session ? (
-            <NewOpeningDialog onCreate={createOpening} currentTeamId={currentTeamId} />
-          ) : (
+          {!session ? (
             <Button onClick={requireLogin} className="bg-gradient-primary text-primary-foreground shadow-glow">
               <Plus className="mr-2 h-4 w-4" /> Entrar para anunciar
             </Button>
+          ) : canCreateOpening ? (
+            <NewOpeningDialog onCreate={createOpening} managedTeams={managedTeams} />
+          ) : (
+            <Badge variant="outline" className="border-border text-muted-foreground">
+              Apenas perfis de Time podem anunciar vagas
+            </Badge>
           )}
         </div>
       </Card>
@@ -140,10 +144,10 @@ function VagasPage() {
           <TabsTrigger
             value="manage"
             className="font-display uppercase tracking-wide"
-            disabled={!session}
-            title={!session ? "Faça login para gerenciar suas vagas" : undefined}
+            disabled={!canCreateOpening}
+            title={!canCreateOpening ? "Apenas perfis de Time gerenciam vagas" : undefined}
           >
-            <Shield className="mr-2 h-4 w-4" /> Minhas Vagas {session ? `(${myOpenings.length})` : "🔒"}
+            <Shield className="mr-2 h-4 w-4" /> Minhas Vagas {canCreateOpening ? `(${myOpenings.length})` : "🔒"}
           </TabsTrigger>
         </TabsList>
 
