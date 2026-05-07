@@ -19,7 +19,7 @@ import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeIdRouteImport } from './routes/time.$id'
-import { Route as PerfilEditarRouteImport } from './routes/perfil.editar'
+import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 
 const VagasRoute = VagasRouteImport.update({
@@ -73,9 +73,9 @@ const TimeIdRoute = TimeIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const PerfilEditarRoute = PerfilEditarRouteImport.update({
-  id: '/editar',
-  path: '/editar',
-  getParentRoute: () => PerfilRoute,
+  id: '/perfil_/editar',
+  path: '/perfil/editar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const JogadorIdRoute = JogadorIdRouteImport.update({
   id: '/jogador/$id',
@@ -91,7 +91,7 @@ export interface FileRoutesByFullPath {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
-  '/perfil': typeof PerfilRouteWithChildren
+  '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
@@ -105,7 +105,7 @@ export interface FileRoutesByTo {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
-  '/perfil': typeof PerfilRouteWithChildren
+  '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
@@ -120,10 +120,10 @@ export interface FileRoutesById {
   '/desafios': typeof DesafiosRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
-  '/perfil': typeof PerfilRouteWithChildren
+  '/perfil': typeof PerfilRoute
   '/vagas': typeof VagasRoute
   '/jogador/$id': typeof JogadorIdRoute
-  '/perfil/editar': typeof PerfilEditarRoute
+  '/perfil_/editar': typeof PerfilEditarRoute
   '/time/$id': typeof TimeIdRoute
 }
 export interface FileRouteTypes {
@@ -167,7 +167,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/vagas'
     | '/jogador/$id'
-    | '/perfil/editar'
+    | '/perfil_/editar'
     | '/time/$id'
   fileRoutesById: FileRoutesById
 }
@@ -179,9 +179,10 @@ export interface RootRouteChildren {
   DesafiosRoute: typeof DesafiosRoute
   LigasRoute: typeof LigasRoute
   OnboardingRoute: typeof OnboardingRoute
-  PerfilRoute: typeof PerfilRouteWithChildren
+  PerfilRoute: typeof PerfilRoute
   VagasRoute: typeof VagasRoute
   JogadorIdRoute: typeof JogadorIdRoute
+  PerfilEditarRoute: typeof PerfilEditarRoute
   TimeIdRoute: typeof TimeIdRoute
 }
 
@@ -257,12 +258,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil/editar': {
-      id: '/perfil/editar'
-      path: '/editar'
+    '/perfil_/editar': {
+      id: '/perfil_/editar'
+      path: '/perfil/editar'
       fullPath: '/perfil/editar'
       preLoaderRoute: typeof PerfilEditarRouteImport
-      parentRoute: typeof PerfilRoute
+      parentRoute: typeof rootRouteImport
     }
     '/jogador/$id': {
       id: '/jogador/$id'
@@ -274,17 +275,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface PerfilRouteChildren {
-  PerfilEditarRoute: typeof PerfilEditarRoute
-}
-
-const PerfilRouteChildren: PerfilRouteChildren = {
-  PerfilEditarRoute: PerfilEditarRoute,
-}
-
-const PerfilRouteWithChildren =
-  PerfilRoute._addFileChildren(PerfilRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -293,11 +283,21 @@ const rootRouteChildren: RootRouteChildren = {
   DesafiosRoute: DesafiosRoute,
   LigasRoute: LigasRoute,
   OnboardingRoute: OnboardingRoute,
-  PerfilRoute: PerfilRouteWithChildren,
+  PerfilRoute: PerfilRoute,
   VagasRoute: VagasRoute,
   JogadorIdRoute: JogadorIdRoute,
+  PerfilEditarRoute: PerfilEditarRoute,
   TimeIdRoute: TimeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
