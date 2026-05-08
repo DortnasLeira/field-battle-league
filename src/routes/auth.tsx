@@ -83,7 +83,10 @@ function AuthPage() {
           </TabsContent>
         </Tabs>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 flex items-center justify-between text-xs text-muted-foreground">
+          <Link to="/forgot-password" className="underline underline-offset-4 hover:text-foreground">
+            Esqueci a senha
+          </Link>
           <Link to="/" className="underline underline-offset-4 hover:text-foreground">
             Voltar para a home
           </Link>
