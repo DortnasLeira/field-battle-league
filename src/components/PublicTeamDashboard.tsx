@@ -352,6 +352,14 @@ function computeTeamAchievements(s: { j: number; w: number; sg: number }) {
   ];
 }
 
+function ratingTier(r: number) {
+  if (r >= 1900) return "Elite";
+  if (r >= 1700) return "Avançado";
+  if (r >= 1500) return "Intermediário";
+  if (r >= 1300) return "Em ascensão";
+  return "Iniciante";
+}
+
 function InfoPill({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-border bg-surface/60 p-2 backdrop-blur">
