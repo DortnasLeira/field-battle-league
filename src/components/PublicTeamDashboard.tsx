@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Trophy, Calendar, MapPin, Star, History, Shield, Users } from "lucide-react";
+import { Trophy, Calendar, MapPin, Star, History, Shield, Users, BadgeCheck, Settings, Pencil, Lock, TrendingUp, HeartHandshake } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 type TeamRow = {
@@ -15,6 +17,18 @@ type TeamRow = {
   founded: number | null;
   preferred_days: string[] | null;
   preferred_times: string[] | null;
+  verified?: boolean | null;
+  rating?: number | null;
+  fair_play?: number | null;
+};
+
+type Trophy = {
+  id: string;
+  title: string;
+  kind: string;
+  season: string | null;
+  icon: string | null;
+  awarded_at: string;
 };
 
 type MatchRow = {
