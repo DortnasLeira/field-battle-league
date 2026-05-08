@@ -41,7 +41,7 @@ function TeamPublicPage() {
     }
     supabase
       .from("teams")
-      .select("id, name, shield, city, captain, founded, preferred_days, preferred_times")
+      .select("id, name, shield, city, captain, founded, preferred_days, preferred_times, verified, rating, fair_play")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => {
