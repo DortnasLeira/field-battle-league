@@ -638,6 +638,50 @@ export type Database = {
           },
         ]
       }
+      team_trophies: {
+        Row: {
+          awarded_at: string
+          created_at: string
+          icon: string | null
+          id: string
+          kind: string
+          season: string | null
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          awarded_at?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          kind?: string
+          season?: string | null
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          awarded_at?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          kind?: string
+          season?: string | null
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_trophies_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           bio: string | null
@@ -645,13 +689,16 @@ export type Database = {
           city: string | null
           color: string | null
           created_at: string
+          fair_play: number
           founded: number | null
           id: string
           name: string
           preferred_days: string[] | null
           preferred_times: string[] | null
+          rating: number
           shield: string | null
           updated_at: string
+          verified: boolean
         }
         Insert: {
           bio?: string | null
@@ -659,13 +706,16 @@ export type Database = {
           city?: string | null
           color?: string | null
           created_at?: string
+          fair_play?: number
           founded?: number | null
           id?: string
           name: string
           preferred_days?: string[] | null
           preferred_times?: string[] | null
+          rating?: number
           shield?: string | null
           updated_at?: string
+          verified?: boolean
         }
         Update: {
           bio?: string | null
@@ -673,13 +723,16 @@ export type Database = {
           city?: string | null
           color?: string | null
           created_at?: string
+          fair_play?: number
           founded?: number | null
           id?: string
           name?: string
           preferred_days?: string[] | null
           preferred_times?: string[] | null
+          rating?: number
           shield?: string | null
           updated_at?: string
+          verified?: boolean
         }
         Relationships: []
       }
