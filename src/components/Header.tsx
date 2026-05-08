@@ -23,6 +23,7 @@ const publicLinks = [
 const authLinks = [
   { to: "/desafios", label: "Desafios", icon: Swords },
   { to: "/arbitragem", label: "Arbitragem", icon: Award },
+  { to: "/pro", label: "PRO", icon: Trophy },
 ] as const;
 
 const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem"]);
