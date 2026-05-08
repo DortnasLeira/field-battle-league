@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Trophy, Calendar, MapPin, Star, History, Shield, Users } from "lucide-react";
+import { Trophy, Calendar, MapPin, Star, History, Shield, Users, BadgeCheck, Settings, Pencil, Lock, TrendingUp, HeartHandshake } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 type TeamRow = {
@@ -15,6 +17,18 @@ type TeamRow = {
   founded: number | null;
   preferred_days: string[] | null;
   preferred_times: string[] | null;
+  verified?: boolean | null;
+  rating?: number | null;
+  fair_play?: number | null;
+};
+
+type TrophyRow = {
+  id: string;
+  title: string;
+  kind: string;
+  season: string | null;
+  icon: string | null;
+  awarded_at: string;
 };
 
 type MatchRow = {
@@ -30,18 +44,43 @@ type MatchRow = {
 };
 
 export function PublicTeamDashboard({ team }: { team: TeamRow }) {
+  const { session } = useAuth();
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [teamsById, setTeamsById] = useState<Record<string, TeamRow>>({});
+  const [trophies, setTrophies] = useState<TrophyRow[]>([]);
+  const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data: ms } = await supabase
+      const matchesPromise = supabase
         .from("matches")
         .select("id, home_team_id, away_team_id, home_score, away_score, status, scheduled_at, played_at, location")
         .or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`)
         .order("scheduled_at", { ascending: false });
+
+      const trophiesPromise = supabase
+        .from("team_trophies")
+        .select("id, title, kind, season, icon, awarded_at")
+        .eq("team_id", team.id)
+        .order("awarded_at", { ascending: false });
+
+      const ownerPromise = session
+        ? supabase
+            .from("team_members")
+            .select("role")
+            .eq("team_id", team.id)
+            .eq("user_id", session.user.id)
+            .eq("role", "owner")
+            .maybeSingle()
+        : Promise.resolve({ data: null });
+
+      const [{ data: ms }, { data: tr }, { data: own }] = await Promise.all([
+        matchesPromise,
+        trophiesPromise,
+        ownerPromise,
+      ]);
       const list = (ms ?? []) as MatchRow[];
 
       const ids = new Set<string>();
@@ -53,7 +92,7 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
 
       const { data: ts } = await supabase
         .from("teams")
-        .select("id, name, shield, city, captain, founded, preferred_days, preferred_times")
+        .select("id, name, shield, city, captain, founded, preferred_days, preferred_times, verified, rating, fair_play")
         .in("id", Array.from(ids));
       const map: Record<string, TeamRow> = {};
       (ts ?? []).forEach((t) => (map[(t as TeamRow).id] = t as TeamRow));
@@ -61,10 +100,12 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
       if (!active) return;
       setMatches(list);
       setTeamsById(map);
+      setTrophies((tr ?? []) as TrophyRow[]);
+      setIsOwner(!!own);
       setLoading(false);
     })();
     return () => { active = false; };
-  }, [team.id]);
+  }, [team.id, session]);
 
   const completed = useMemo(
     () => matches.filter((m) => m.status === "completed" && m.home_score != null && m.away_score != null),
@@ -101,6 +142,11 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
               <Badge className="bg-primary/15 text-primary hover:bg-primary/20">
                 <Shield className="mr-1 h-3 w-3" /> Time
               </Badge>
+              {team.verified && (
+                <Badge className="bg-gradient-to-r from-primary to-primary/70 text-background">
+                  <BadgeCheck className="mr-1 h-3 w-3" /> Time PRO
+                </Badge>
+              )}
               {team.founded && (
                 <Badge variant="outline" className="border-border">
                   <Star className="mr-1 h-3 w-3 text-primary" /> Desde {team.founded}
@@ -115,6 +161,70 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
               <InfoPill label="Horários" value={team.preferred_times?.join(", ") || "—"} />
             </div>
           </div>
+        </div>
+      </Card>
+
+      {isOwner && (
+        <Card className="border-primary/30 bg-primary/5 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary">
+                <Settings className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-display text-sm uppercase tracking-wide">Dashboard de gestão</div>
+                <p className="text-xs text-muted-foreground">Visível somente para o dono. Edite informações e privacidade.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="outline" className="border-primary/40">
+                <Link to="/perfil/editar"><Pencil className="mr-1 h-4 w-4" /> Editar informações</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="border-border">
+                <Link to="/perfil"><Lock className="mr-1 h-4 w-4" /> Privacidade</Link>
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <Card className="border-border bg-card p-6">
+        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" /> Painel de status
+        </h2>
+        <p className="text-xs text-muted-foreground">Score Elo do time e fair play coletivo.</p>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatBox label="Rating Elo" value={Math.round(Number(team.rating ?? 1500))} accent />
+          <StatBox label="Tier" value={ratingTier(Number(team.rating ?? 1500))} />
+          <StatBox label="Fair Play" value={`${Math.round(Number(team.fair_play ?? 100))}%`} />
+          <StatBox label="Verificado" value={team.verified ? "Sim" : "Não"} />
+        </div>
+        <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <HeartHandshake className="h-3.5 w-3.5" /> Elo recalculado automaticamente após cada súmula assinada.
+        </div>
+      </Card>
+
+      <Card className="border-border bg-card p-6">
+        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-primary" /> Vitrine de troféus
+        </h2>
+        <p className="text-xs text-muted-foreground">Conquistas coletivas (ligas, desafios e copas).</p>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {trophies.length === 0 && (
+            <div className="col-span-full rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Nenhum troféu ainda. As conquistas aparecem aqui após ligas e desafios oficiais.
+            </div>
+          )}
+          {trophies.map((t) => (
+            <div key={t.id} className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <div className="text-2xl">{t.icon || "🏆"}</div>
+              <div className="mt-1 text-sm font-semibold">{t.title}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {t.kind === "league" ? "Liga" : t.kind === "challenge" ? "Desafio" : t.kind === "cup" ? "Copa" : "Conquista"}
+                {t.season ? ` · ${t.season}` : ""}
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
 
@@ -240,6 +350,14 @@ function computeTeamAchievements(s: { j: number; w: number; sg: number }) {
     { id: "positive_sg", title: "Saldo positivo", description: "Saldo de gols positivo", emoji: "📈", unlocked: s.sg > 0 },
     { id: "hundred", title: "Centenário", description: "100 partidas disputadas", emoji: "💯", unlocked: s.j >= 100 },
   ];
+}
+
+function ratingTier(r: number) {
+  if (r >= 1900) return "Elite";
+  if (r >= 1700) return "Avançado";
+  if (r >= 1500) return "Intermediário";
+  if (r >= 1300) return "Em ascensão";
+  return "Iniciante";
 }
 
 function InfoPill({ label, value }: { label: string; value: string }) {

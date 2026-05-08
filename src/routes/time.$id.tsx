@@ -16,6 +16,9 @@ type TeamRow = {
   founded: number | null;
   preferred_days: string[] | null;
   preferred_times: string[] | null;
+  verified: boolean | null;
+  rating: number | null;
+  fair_play: number | null;
 };
 
 export const Route = createFileRoute("/time/$id")({
@@ -38,7 +41,7 @@ function TeamPublicPage() {
     }
     supabase
       .from("teams")
-      .select("id, name, shield, city, captain, founded, preferred_days, preferred_times")
+      .select("id, name, shield, city, captain, founded, preferred_days, preferred_times, verified, rating, fair_play")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => {
