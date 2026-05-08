@@ -91,32 +91,37 @@ export const listInvoices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { environment: StripeEnv }) => data)
   .handler(async ({ data, context }): Promise<InvoiceRow[]> => {
-    const { supabase, userId } = context;
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("stripe_customer_id")
-      .eq("user_id", userId)
-      .eq("environment", data.environment)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (!sub?.stripe_customer_id) return [];
+    try {
+      const { supabase, userId } = context;
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("stripe_customer_id")
+        .eq("user_id", userId)
+        .eq("environment", data.environment)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!sub?.stripe_customer_id) return [];
 
-    const stripe = createStripeClient(data.environment);
-    const invoices = await stripe.invoices.list({
-      customer: sub.stripe_customer_id as string,
-      limit: 24,
-    });
-    return invoices.data.map((i) => ({
-      id: i.id ?? "",
-      number: i.number ?? null,
-      amount_paid: i.amount_paid,
-      currency: i.currency,
-      status: i.status ?? null,
-      created: i.created,
-      hosted_invoice_url: i.hosted_invoice_url ?? null,
-      invoice_pdf: i.invoice_pdf ?? null,
-      period_start: i.period_start ?? null,
-      period_end: i.period_end ?? null,
-    }));
+      const stripe = createStripeClient(data.environment);
+      const invoices = await stripe.invoices.list({
+        customer: sub.stripe_customer_id as string,
+        limit: 24,
+      });
+      return invoices.data.map((i) => ({
+        id: i.id ?? "",
+        number: i.number ?? null,
+        amount_paid: i.amount_paid,
+        currency: i.currency,
+        status: i.status ?? null,
+        created: i.created,
+        hosted_invoice_url: i.hosted_invoice_url ?? null,
+        invoice_pdf: i.invoice_pdf ?? null,
+        period_start: i.period_start ?? null,
+        period_end: i.period_end ?? null,
+      }));
+    } catch (e) {
+      console.error("listInvoices failed:", e);
+      return [];
+    }
   });
