@@ -44,18 +44,43 @@ type MatchRow = {
 };
 
 export function PublicTeamDashboard({ team }: { team: TeamRow }) {
+  const { session } = useAuth();
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [teamsById, setTeamsById] = useState<Record<string, TeamRow>>({});
+  const [trophies, setTrophies] = useState<TrophyRow[]>([]);
+  const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data: ms } = await supabase
+      const matchesPromise = supabase
         .from("matches")
         .select("id, home_team_id, away_team_id, home_score, away_score, status, scheduled_at, played_at, location")
         .or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`)
         .order("scheduled_at", { ascending: false });
+
+      const trophiesPromise = supabase
+        .from("team_trophies")
+        .select("id, title, kind, season, icon, awarded_at")
+        .eq("team_id", team.id)
+        .order("awarded_at", { ascending: false });
+
+      const ownerPromise = session
+        ? supabase
+            .from("team_members")
+            .select("role")
+            .eq("team_id", team.id)
+            .eq("user_id", session.user.id)
+            .eq("role", "owner")
+            .maybeSingle()
+        : Promise.resolve({ data: null });
+
+      const [{ data: ms }, { data: tr }, { data: own }] = await Promise.all([
+        matchesPromise,
+        trophiesPromise,
+        ownerPromise,
+      ]);
       const list = (ms ?? []) as MatchRow[];
 
       const ids = new Set<string>();
@@ -67,7 +92,7 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
 
       const { data: ts } = await supabase
         .from("teams")
-        .select("id, name, shield, city, captain, founded, preferred_days, preferred_times")
+        .select("id, name, shield, city, captain, founded, preferred_days, preferred_times, verified, rating, fair_play")
         .in("id", Array.from(ids));
       const map: Record<string, TeamRow> = {};
       (ts ?? []).forEach((t) => (map[(t as TeamRow).id] = t as TeamRow));
@@ -75,10 +100,12 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
       if (!active) return;
       setMatches(list);
       setTeamsById(map);
+      setTrophies((tr ?? []) as TrophyRow[]);
+      setIsOwner(!!own);
       setLoading(false);
     })();
     return () => { active = false; };
-  }, [team.id]);
+  }, [team.id, session]);
 
   const completed = useMemo(
     () => matches.filter((m) => m.status === "completed" && m.home_score != null && m.away_score != null),
