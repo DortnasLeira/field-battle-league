@@ -164,6 +164,70 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
         </div>
       </Card>
 
+      {isOwner && (
+        <Card className="border-primary/30 bg-primary/5 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary">
+                <Settings className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-display text-sm uppercase tracking-wide">Dashboard de gestão</div>
+                <p className="text-xs text-muted-foreground">Visível somente para o dono. Edite informações e privacidade.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="outline" className="border-primary/40">
+                <Link to="/perfil/editar"><Pencil className="mr-1 h-4 w-4" /> Editar informações</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="border-border">
+                <Link to="/perfil"><Lock className="mr-1 h-4 w-4" /> Privacidade</Link>
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <Card className="border-border bg-card p-6">
+        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" /> Painel de status
+        </h2>
+        <p className="text-xs text-muted-foreground">Score Elo do time e fair play coletivo.</p>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatBox label="Rating Elo" value={Math.round(Number(team.rating ?? 1500))} accent />
+          <StatBox label="Tier" value={ratingTier(Number(team.rating ?? 1500))} />
+          <StatBox label="Fair Play" value={`${Math.round(Number(team.fair_play ?? 100))}%`} />
+          <StatBox label="Verificado" value={team.verified ? "Sim" : "Não"} />
+        </div>
+        <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <HeartHandshake className="h-3.5 w-3.5" /> Elo recalculado automaticamente após cada súmula assinada.
+        </div>
+      </Card>
+
+      <Card className="border-border bg-card p-6">
+        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-primary" /> Vitrine de troféus
+        </h2>
+        <p className="text-xs text-muted-foreground">Conquistas coletivas (ligas, desafios e copas).</p>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {trophies.length === 0 && (
+            <div className="col-span-full rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Nenhum troféu ainda. As conquistas aparecem aqui após ligas e desafios oficiais.
+            </div>
+          )}
+          {trophies.map((t) => (
+            <div key={t.id} className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <div className="text-2xl">{t.icon || "🏆"}</div>
+              <div className="mt-1 text-sm font-semibold">{t.title}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {t.kind === "league" ? "Liga" : t.kind === "challenge" ? "Desafio" : t.kind === "cup" ? "Copa" : "Conquista"}
+                {t.season ? ` · ${t.season}` : ""}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
       <Card className="border-border bg-card p-6">
         <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
           <Trophy className="h-5 w-5 text-primary" /> Estatísticas
