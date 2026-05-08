@@ -37,7 +37,7 @@ async function handleSubscriptionUpsert(sub: SubObj, env: StripeEnv) {
   const periodStart = item?.current_period_start ?? sub.current_period_start;
   const periodEnd = item?.current_period_end ?? sub.current_period_end;
 
-  await getSupabase().from("subscriptions").upsert(
+  await (getSupabase() as any).from("subscriptions").upsert(
     {
       user_id: userId,
       team_id: teamId,
@@ -57,7 +57,7 @@ async function handleSubscriptionUpsert(sub: SubObj, env: StripeEnv) {
 }
 
 async function handleSubscriptionDeleted(sub: SubObj, env: StripeEnv) {
-  await getSupabase()
+  await (getSupabase() as any)
     .from("subscriptions")
     .update({ status: "canceled", updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", sub.id)

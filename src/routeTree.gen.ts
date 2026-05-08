@@ -25,6 +25,7 @@ import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 import { Route as ArbitroIdRouteImport } from './routes/arbitro.$id'
 import { Route as TimeIdTransferirRouteImport } from './routes/time_.$id.transferir'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const VagasRoute = VagasRouteImport.update({
   id: '/vagas',
@@ -106,6 +107,12 @@ const TimeIdTransferirRoute = TimeIdTransferirRouteImport.update({
   path: '/time/$id/transferir',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
   '/time/$id/transferir': typeof TimeIdTransferirRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +150,7 @@ export interface FileRoutesByTo {
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
   '/time/$id/transferir': typeof TimeIdTransferirRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +170,7 @@ export interface FileRoutesById {
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
   '/time_/$id/transferir': typeof TimeIdTransferirRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/sumula/$matchId'
     | '/time/$id'
     | '/time/$id/transferir'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/sumula/$matchId'
     | '/time/$id'
     | '/time/$id/transferir'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -217,6 +229,7 @@ export interface FileRouteTypes {
     | '/sumula/$matchId'
     | '/time/$id'
     | '/time_/$id/transferir'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +249,7 @@ export interface RootRouteChildren {
   SumulaMatchIdRoute: typeof SumulaMatchIdRoute
   TimeIdRoute: typeof TimeIdRoute
   TimeIdTransferirRoute: typeof TimeIdTransferirRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -352,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimeIdTransferirRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -372,6 +393,7 @@ const rootRouteChildren: RootRouteChildren = {
   SumulaMatchIdRoute: SumulaMatchIdRoute,
   TimeIdRoute: TimeIdRoute,
   TimeIdTransferirRoute: TimeIdTransferirRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
