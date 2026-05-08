@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy, Calendar, MapPin, Star, History, Shield, Users, BadgeCheck, Settings, Pencil, Lock, TrendingUp, HeartHandshake } from "lucide-react";
+import { TeamHub } from "@/components/TeamHub";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -163,6 +164,8 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
           </div>
         </div>
       </Card>
+
+      {isOwner && <TeamHub teamId={team.id} teamName={team.name} />}
 
       {isOwner && (
         <Card className="border-primary/30 bg-primary/5 p-5">

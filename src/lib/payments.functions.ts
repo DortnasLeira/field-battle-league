@@ -17,7 +17,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
 
-    // Verify user owns the team
     const { data: ownerCheck } = await supabase
       .from("team_members")
       .select("role")
@@ -73,4 +72,51 @@ export const createPortalSession = createServerFn({ method: "POST" })
       ...(data.returnUrl && { return_url: data.returnUrl }),
     });
     return portal.url;
+  });
+
+export type InvoiceRow = {
+  id: string;
+  number: string | null;
+  amount_paid: number;
+  currency: string;
+  status: string | null;
+  created: number;
+  hosted_invoice_url: string | null;
+  invoice_pdf: string | null;
+  period_start: number | null;
+  period_end: number | null;
+};
+
+export const listInvoices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { environment: StripeEnv }) => data)
+  .handler(async ({ data, context }): Promise<InvoiceRow[]> => {
+    const { supabase, userId } = context;
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", userId)
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!sub?.stripe_customer_id) return [];
+
+    const stripe = createStripeClient(data.environment);
+    const invoices = await stripe.invoices.list({
+      customer: sub.stripe_customer_id as string,
+      limit: 24,
+    });
+    return invoices.data.map((i) => ({
+      id: i.id ?? "",
+      number: i.number ?? null,
+      amount_paid: i.amount_paid,
+      currency: i.currency,
+      status: i.status ?? null,
+      created: i.created,
+      hosted_invoice_url: i.hosted_invoice_url ?? null,
+      invoice_pdf: i.invoice_pdf ?? null,
+      period_start: i.period_start ?? null,
+      period_end: i.period_end ?? null,
+    }));
   });
