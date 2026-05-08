@@ -142,6 +142,11 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
               <Badge className="bg-primary/15 text-primary hover:bg-primary/20">
                 <Shield className="mr-1 h-3 w-3" /> Time
               </Badge>
+              {team.verified && (
+                <Badge className="bg-gradient-to-r from-primary to-primary/70 text-background">
+                  <BadgeCheck className="mr-1 h-3 w-3" /> Time PRO
+                </Badge>
+              )}
               {team.founded && (
                 <Badge variant="outline" className="border-border">
                   <Star className="mr-1 h-3 w-3 text-primary" /> Desde {team.founded}
