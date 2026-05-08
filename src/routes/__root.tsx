@@ -2,6 +2,7 @@ import { Outlet, createRootRoute, HeadContent, Scripts, Link } from "@tanstack/r
 import { Header } from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 import appCss from "../styles.css?url";
 
@@ -65,6 +66,7 @@ function RootComponent() {
   return (
     <AuthProvider>
       <div className="min-h-screen bg-background text-foreground">
+        <PaymentTestModeBanner />
         <Header />
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10">
           <Outlet />
