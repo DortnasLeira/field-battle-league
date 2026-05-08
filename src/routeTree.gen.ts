@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as PagamentosRouteImport } from './routes/pagamentos'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -41,6 +43,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProRoute = ProRouteImport.update({
   id: '/pro',
   path: '/pro',
@@ -49,6 +56,11 @@ const ProRoute = ProRouteImport.update({
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentosRoute = PagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -148,8 +160,10 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/pagamentos': typeof PagamentosRoute
   '/perfil': typeof PerfilRoute
   '/pro': typeof ProRoute
+  '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
@@ -171,8 +185,10 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/pagamentos': typeof PagamentosRoute
   '/perfil': typeof PerfilRoute
   '/pro': typeof ProRoute
+  '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
@@ -195,8 +211,10 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/pagamentos': typeof PagamentosRoute
   '/perfil': typeof PerfilRoute
   '/pro': typeof ProRoute
+  '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
@@ -220,8 +238,10 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/ligas'
     | '/onboarding'
+    | '/pagamentos'
     | '/perfil'
     | '/pro'
+    | '/ranking'
     | '/reset-password'
     | '/vagas'
     | '/arbitro/$id'
@@ -243,8 +263,10 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/ligas'
     | '/onboarding'
+    | '/pagamentos'
     | '/perfil'
     | '/pro'
+    | '/ranking'
     | '/reset-password'
     | '/vagas'
     | '/arbitro/$id'
@@ -266,8 +288,10 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/ligas'
     | '/onboarding'
+    | '/pagamentos'
     | '/perfil'
     | '/pro'
+    | '/ranking'
     | '/reset-password'
     | '/vagas'
     | '/arbitro/$id'
@@ -290,8 +314,10 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LigasRoute: typeof LigasRoute
   OnboardingRoute: typeof OnboardingRoute
+  PagamentosRoute: typeof PagamentosRoute
   PerfilRoute: typeof PerfilRoute
   ProRoute: typeof ProRoute
+  RankingRoute: typeof RankingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   VagasRoute: typeof VagasRoute
   ArbitroIdRoute: typeof ArbitroIdRoute
@@ -320,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro': {
       id: '/pro'
       path: '/pro'
@@ -332,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamentos': {
+      id: '/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof PagamentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -466,8 +506,10 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LigasRoute: LigasRoute,
   OnboardingRoute: OnboardingRoute,
+  PagamentosRoute: PagamentosRoute,
   PerfilRoute: PerfilRoute,
   ProRoute: ProRoute,
+  RankingRoute: RankingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   VagasRoute: VagasRoute,
   ArbitroIdRoute: ArbitroIdRoute,
