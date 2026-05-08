@@ -16,6 +16,9 @@ type TeamRow = {
   founded: number | null;
   preferred_days: string[] | null;
   preferred_times: string[] | null;
+  verified: boolean | null;
+  rating: number | null;
+  fair_play: number | null;
 };
 
 export const Route = createFileRoute("/time/$id")({
