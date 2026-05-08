@@ -22,7 +22,7 @@ type TeamRow = {
   fair_play?: number | null;
 };
 
-type Trophy = {
+type TrophyRow = {
   id: string;
   title: string;
   kind: string;
