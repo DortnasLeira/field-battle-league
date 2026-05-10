@@ -230,13 +230,20 @@ function VenueSubFields({
     return new Date(`${date}T${time}:00`).toISOString();
   }, [date, time]);
 
+  const priced = useMemo(() => {
+    if (!selected || !scheduledAt) return null;
+    return computeSlotPrice(Number(selected.price_per_hour), selected.pricing_rules ?? [], scheduledAt);
+  }, [selected, scheduledAt]);
+
   if (showCheckout && selected && scheduledAt) {
+    const final = priced?.price ?? Number(selected.price_per_hour);
     return (
       <div>
         <DialogHeader>
           <DialogTitle className="font-display uppercase">Pagamento · {selected.name}</DialogTitle>
           <DialogDescription>
-            R$ {Number(selected.price_per_hour).toFixed(2)} · {date} {time}
+            R$ {final.toFixed(2)} · {date} {time}
+            {priced?.rule ? ` · ${describeRule(priced.rule)}` : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
