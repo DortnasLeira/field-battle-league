@@ -606,6 +606,56 @@ export type Database = {
         }
         Relationships: []
       }
+      sub_fields: {
+        Row: {
+          active: boolean
+          available_days: string[]
+          available_times: string[]
+          created_at: string
+          field_type: Database["public"]["Enums"]["sub_field_type"]
+          id: string
+          name: string
+          photo_url: string | null
+          price_per_hour: number
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          active?: boolean
+          available_days?: string[]
+          available_times?: string[]
+          created_at?: string
+          field_type: Database["public"]["Enums"]["sub_field_type"]
+          id?: string
+          name: string
+          photo_url?: string | null
+          price_per_hour?: number
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          active?: boolean
+          available_days?: string[]
+          available_times?: string[]
+          created_at?: string
+          field_type?: Database["public"]["Enums"]["sub_field_type"]
+          id?: string
+          name?: string
+          photo_url?: string | null
+          price_per_hour?: number
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_fields_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
@@ -894,6 +944,45 @@ export type Database = {
         }
         Relationships: []
       }
+      venues: {
+        Row: {
+          address: string | null
+          bio: string | null
+          city: string | null
+          created_at: string
+          id: string
+          name: string
+          owner_user_id: string
+          phone: string | null
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          owner_user_id: string
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -925,6 +1014,7 @@ export type Database = {
       payout_status: "held" | "released" | "refunded"
       profile_type: "player" | "team" | "field"
       referee_tier: "bronze" | "silver" | "gold"
+      sub_field_type: "society" | "areia" | "sintetico" | "salao"
       team_role: "owner" | "admin"
     }
     CompositeTypes: {
@@ -1065,6 +1155,7 @@ export const Constants = {
       payout_status: ["held", "released", "refunded"],
       profile_type: ["player", "team", "field"],
       referee_tier: ["bronze", "silver", "gold"],
+      sub_field_type: ["society", "areia", "sintetico", "salao"],
       team_role: ["owner", "admin"],
     },
   },
