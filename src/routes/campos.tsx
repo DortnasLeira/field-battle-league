@@ -202,7 +202,7 @@ function VenueSubFields({
     setLoading(true);
     supabase
       .from("sub_fields")
-      .select("id, venue_id, name, field_type, price_per_hour, available_days, available_times, photo_url, active")
+      .select("id, venue_id, name, field_type, price_per_hour, available_days, available_times, pricing_rules, photo_url, active")
       .eq("venue_id", venue.id)
       .eq("active", true)
       .order("name")
