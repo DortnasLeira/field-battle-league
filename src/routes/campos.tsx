@@ -1,511 +1,349 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Star, Calendar, Clock, Search, Inbox, Bell, Check, X } from "lucide-react";
+import { MapPin, Search, Building2, Clock, ChevronRight, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { useStore } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { FiltersPanel } from "@/components/FiltersPanel";
+import { BookingStripeCheckout } from "@/components/BookingStripeCheckout";
 
 export const Route = createFileRoute("/campos")({
   head: () => ({
     meta: [
-      { title: "Buscar campo — PeladaPro" },
-      { name: "description", content: "Reserve campos próximos com horários disponíveis e dispare desafios." },
+      { title: "Campos — PeladaPro" },
+      { name: "description", content: "Reserve sub-campos por hora com pagamento seguro." },
     ],
   }),
   component: CamposPage,
 });
 
+type Venue = {
+  id: string;
+  name: string;
+  city: string | null;
+  address: string | null;
+  bio: string | null;
+  photo_url: string | null;
+};
+
+type SubField = {
+  id: string;
+  venue_id: string;
+  name: string;
+  field_type: "society" | "areia" | "sintetico" | "salao";
+  price_per_hour: number;
+  available_days: string[];
+  available_times: string[];
+  photo_url: string | null;
+  active: boolean;
+};
+
+const TYPE_LABEL: Record<SubField["field_type"], string> = {
+  society: "Society",
+  areia: "Areia",
+  sintetico: "Sintético",
+  salao: "Salão",
+};
+
 function CamposPage() {
-  const { fields, rentals, expireOldRentals, approveRental, declineRental } = useStore();
-  const { activeProfile } = useAuth();
+  const { session, activeProfile } = useAuth();
+  const navigate = useNavigate();
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [query, setQuery] = useState("");
-  const [surface, setSurface] = useState<string>("all");
   const [city, setCity] = useState("");
-  const [searchBy, setSearchBy] = useState<"date" | "time">("date");
-  const [date, setDate] = useState("");
-  const [timeFrom, setTimeFrom] = useState("");
-  const [timeTo, setTimeTo] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-  const [onlyAvail, setOnlyAvail] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Auto-expire old rental requests on mount + every minute
   useEffect(() => {
-    expireOldRentals();
-    const t = setInterval(expireOldRentals, 60_000);
-    return () => clearInterval(t);
-  }, [expireOldRentals]);
+    setLoading(true);
+    supabase
+      .from("venues")
+      .select("id, name, city, address, bio, photo_url")
+      .order("name")
+      .then(({ data }) => {
+        setVenues((data ?? []) as Venue[]);
+        setLoading(false);
+      });
+  }, []);
 
-  const filterCount = [
-    surface !== "all", city,
-    searchBy === "date" ? date : (timeFrom || timeTo),
-    priceMax, onlyAvail,
-  ].filter(Boolean).length;
-
-  const clear = () => {
-    setQuery(""); setSurface("all"); setCity(""); setDate("");
-    setTimeFrom(""); setTimeTo(""); setPriceMax(""); setOnlyAvail(false);
-  };
-
-  const slotMatches = (s: { date: string; time: string; available: boolean }) => {
-    if (searchBy === "date" && date && s.date !== date) return false;
-    if (searchBy === "time") {
-      if (timeFrom && s.time < timeFrom) return false;
-      if (timeTo && s.time > timeTo) return false;
-    }
-    if (onlyAvail && !s.available) return false;
-    return true;
-  };
-
-  const filtered = fields.filter((f) => {
-    const matchQ = !query || f.name.toLowerCase().includes(query.toLowerCase()) || f.address.toLowerCase().includes(query.toLowerCase());
-    const matchS = surface === "all" || f.surface === surface;
-    const matchCity = !city || f.address.toLowerCase().includes(city.toLowerCase());
-    const matchPrice = !priceMax || f.pricePerHour <= Number(priceMax);
-    const hasFilter = (searchBy === "date" && date) || (searchBy === "time" && (timeFrom || timeTo)) || onlyAvail;
-    const matchSlots = !hasFilter || f.slots.some(slotMatches);
-    return matchQ && matchS && matchCity && matchPrice && matchSlots;
-  });
-
-  const isField = activeProfile?.type === "field";
-  const myFieldRentals = isField
-    ? rentals // demo: campo logado vê todas as solicitações
-    : [];
-  const myRequests = activeProfile && !isField
-    ? rentals.filter((r) => r.requesterId === activeProfile.id)
-    : [];
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return venues.filter((v) => {
+      if (q && !v.name.toLowerCase().includes(q) && !(v.address ?? "").toLowerCase().includes(q)) return false;
+      if (city && !(v.city ?? "").toLowerCase().includes(city.toLowerCase())) return false;
+      return true;
+    });
+  }, [venues, query, city]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">Buscar Campo</h1>
-        <p className="text-sm text-muted-foreground">Solicite uma reserva — o campo tem 48h para aprovar.</p>
+        <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">Campos</h1>
+        <p className="text-sm text-muted-foreground">
+          Escolha um estabelecimento, depois um campo e horário. Pagamento processado na hora.
+        </p>
       </div>
 
-      <Tabs defaultValue="search">
-        <TabsList>
-          <TabsTrigger value="search">Buscar</TabsTrigger>
-          {isField && (
-            <TabsTrigger value="inbox">
-              <Inbox className="mr-2 h-4 w-4" /> Solicitações
-              {rentals.filter((r) => r.status === "pending").length > 0 && (
-                <span className="ml-2 rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">
-                  {rentals.filter((r) => r.status === "pending").length}
-                </span>
-              )}
-            </TabsTrigger>
-          )}
-          {!isField && activeProfile && (
-            <TabsTrigger value="mine">
-              <Bell className="mr-2 h-4 w-4" /> Minhas solicitações ({myRequests.length})
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="search" className="mt-6 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Card className="border-border bg-card p-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="pl-10"
-              placeholder="Digite o nome do campo ou endereço..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              placeholder="Nome do estabelecimento ou endereço..."
+              className="pl-9"
             />
           </div>
-          <FiltersPanel count={filterCount} onClear={clear}>
-            <div className="space-y-3">
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Select value={surface} onValueChange={setSurface}>
-                  <SelectTrigger className="sm:w-48"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os pisos</SelectItem>
-                    <SelectItem value="Grama">Grama natural</SelectItem>
-                    <SelectItem value="Sintético">Sintético</SelectItem>
-                    <SelectItem value="Society">Society</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <Input placeholder="Cidade / bairro" value={city} onChange={(e) => setCity(e.target.value)} />
-                <Input type="number" placeholder="Preço máx (R$)" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
-                <Select value={searchBy} onValueChange={(v) => setSearchBy(v as "date" | "time")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date">Buscar por data</SelectItem>
-                    <SelectItem value="time">Buscar por horário</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {searchBy === "date" ? (
-                <div>
-                  <Label className="text-xs text-muted-foreground">Data desejada</Label>
-                  <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="sm:w-60" />
-                </div>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 sm:max-w-md">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">A partir de</Label>
-                    <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Até</Label>
-                    <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} />
-                  </div>
-                </div>
-              )}
-              <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                <input type="checkbox" checked={onlyAvail} onChange={(e) => setOnlyAvail(e.target.checked)} />
-                Apenas com horários disponíveis
-              </label>
-            </div>
-          </FiltersPanel>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((f) => (
-              <FieldCard
-                key={f.id}
-                fieldId={f.id}
-                slotFilter={slotMatches}
-              />
-            ))}
+          <div className="sm:w-60">
+            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
           </div>
-        </TabsContent>
+        </div>
+      </Card>
 
-        {isField && (
-          <TabsContent value="inbox" className="mt-6 space-y-3">
-            {myFieldRentals.length === 0 && (
-              <Card className="border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-                Nenhuma solicitação por enquanto.
-              </Card>
-            )}
-            {myFieldRentals.map((r) => (
-              <RentalRow
-                key={r.id}
-                rental={r}
-                onApprove={() => { approveRental(r.id); toast.success("Reserva aprovada!"); }}
-                onDecline={() => { declineRental(r.id); toast("Reserva recusada."); }}
-              />
-            ))}
-          </TabsContent>
-        )}
+      {loading ? (
+        <div className="flex justify-center p-10 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <Card className="border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+          Nenhum estabelecimento encontrado.
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((v) => (
+            <VenueCard key={v.id} venue={v} onOpen={() => setSelectedVenue(v)} />
+          ))}
+        </div>
+      )}
 
-        {!isField && activeProfile && (
-          <TabsContent value="mine" className="mt-6 space-y-3">
-            {myRequests.length === 0 && (
-              <Card className="border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-                Você ainda não solicitou nenhum campo.
-              </Card>
-            )}
-            {myRequests.map((r) => (
-              <RentalRow key={r.id} rental={r} />
-            ))}
-          </TabsContent>
-        )}
-      </Tabs>
+      <Dialog open={!!selectedVenue} onOpenChange={(o) => !o && setSelectedVenue(null)}>
+        <DialogContent className="max-w-3xl">
+          {selectedVenue && (
+            <VenueSubFields
+              venue={selectedVenue}
+              onClose={() => setSelectedVenue(null)}
+              authed={!!session}
+              canBook={activeProfile?.type === "player" || activeProfile?.type === "team"}
+              onLogin={() => {
+                setSelectedVenue(null);
+                navigate({ to: "/auth", search: { redirect: "/campos" } });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function RentalRow({
-  rental,
-  onApprove,
-  onDecline,
-}: {
-  rental: ReturnType<typeof useStore.getState>["rentals"][number];
-  onApprove?: () => void;
-  onDecline?: () => void;
-}) {
-  const { fields } = useStore();
-  const field = fields.find((f) => f.id === rental.fieldId);
-  const remainingMs = new Date(rental.expiresAt).getTime() - Date.now();
-  const hoursLeft = Math.max(0, Math.floor(remainingMs / 3600000));
-
-  const cfg = {
-    pending: { label: `Pendente · ${hoursLeft}h restantes`, className: "border-warning/40 text-warning" },
-    approved: { label: "Aprovada", className: "border-success/40 text-success" },
-    declined: { label: "Recusada", className: "border-destructive/40 text-destructive" },
-    expired: { label: "Expirada (48h sem resposta)", className: "border-muted text-muted-foreground" },
-  }[rental.status];
-
+function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: () => void }) {
   return (
-    <Card className="border-border bg-card p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="font-display text-base uppercase tracking-wide">{field?.name ?? "Campo"}</div>
-          <div className="text-xs text-muted-foreground">
-            {(() => { const [y,m,d] = rental.date.split("-"); return `${d}/${m}/${y}`; })()} · {rental.time}
+    <Card className="overflow-hidden border-border bg-card p-0">
+      <div className="relative h-28 bg-gradient-primary/40">
+        {venue.photo_url ? (
+          <img src={venue.photo_url} alt={venue.name} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-primary/60">
+            <Building2 className="h-10 w-10" />
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            Solicitado por <strong className="text-foreground">{rental.requesterName}</strong>
-            {" "}({rental.requesterType === "team" ? "Time" : "Jogador"})
-          </div>
-          {rental.message && <p className="mt-2 text-sm italic text-muted-foreground">"{rental.message}"</p>}
-        </div>
-        <Badge variant="outline" className={cfg.className}>{cfg.label}</Badge>
+        )}
       </div>
-      {rental.status === "pending" && onApprove && onDecline && (
-        <div className="mt-3 flex justify-end gap-2">
-          <Button size="sm" variant="outline" onClick={onDecline}><X className="mr-1 h-4 w-4" /> Recusar</Button>
-          <Button size="sm" className="bg-success text-success-foreground" onClick={onApprove}>
-            <Check className="mr-1 h-4 w-4" /> Aprovar
-          </Button>
-        </div>
-      )}
+      <div className="space-y-2 p-4">
+        <div className="font-display text-lg uppercase tracking-wide">{venue.name}</div>
+        {venue.address && (
+          <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
+            <span className="line-clamp-2">{venue.address}</span>
+          </div>
+        )}
+        <Button onClick={onOpen} variant="outline" size="sm" className="w-full">
+          Ver campos disponíveis <ChevronRight className="ml-1 h-3.5 w-3.5" />
+        </Button>
+      </div>
     </Card>
   );
 }
 
-type Slot = { date: string; time: string; available: boolean };
-
-function formatDate(iso: string) {
-  // Stable SSR-safe DD/MM
-  const [, m, d] = iso.split("-");
-  return `${d}/${m}`;
-}
-function formatDateLong(iso: string) {
-  const [y, m, d] = iso.split("-");
-  const months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-  return `${d}/${months[Number(m) - 1]}/${y.slice(2)}`;
-}
-
-function FieldCard({
-  fieldId,
-  slotFilter,
+function VenueSubFields({
+  venue,
+  onClose,
+  authed,
+  canBook,
+  onLogin,
 }: {
-  fieldId: string;
-  slotFilter: (s: Slot) => boolean;
+  venue: Venue;
+  onClose: () => void;
+  authed: boolean;
+  canBook: boolean;
+  onLogin: () => void;
 }) {
-  const { fields } = useStore();
-  const { session, activeProfile } = useAuth();
-  const navigate = useNavigate();
-  const field = fields.find((f) => f.id === fieldId)!;
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [allOpen, setAllOpen] = useState(false);
-  const [preset, setPreset] = useState<Slot | null>(null);
+  const [subFields, setSubFields] = useState<SubField[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<SubField | null>(null);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [showCheckout, setShowCheckout] = useState(false);
 
-  const matchingSlots = useMemo(
-    () => field.slots.filter((s) => s.available && slotFilter(s)),
-    [field.slots, slotFilter],
-  );
-  const visible = matchingSlots.slice(0, 3);
-  const canRent = !!session && !!activeProfile && activeProfile.type !== "field";
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from("sub_fields")
+      .select("id, venue_id, name, field_type, price_per_hour, available_days, available_times, photo_url, active")
+      .eq("venue_id", venue.id)
+      .eq("active", true)
+      .order("name")
+      .then(({ data }) => {
+        setSubFields((data ?? []) as SubField[]);
+        setLoading(false);
+      });
+  }, [venue.id]);
 
-  const handleSlot = (slot: Slot) => {
-    if (!session) {
-      toast.error("Faça login para alugar.");
-      navigate({ to: "/auth" });
+  const startCheckout = () => {
+    if (!authed) return onLogin();
+    if (!canBook) {
+      toast.error("Apenas perfis Jogador ou Time podem reservar.");
       return;
     }
-    if (!canRent) {
-      toast.error("Apenas Jogador ou Time pode alugar.");
+    if (!selected || !date || !time) {
+      toast.error("Selecione campo, data e horário.");
       return;
     }
-    setPreset(slot);
-    setDialogOpen(true);
+    setShowCheckout(true);
   };
 
-  return (
-    <Card className="overflow-hidden border-border bg-card p-0">
-      <div className={`relative h-20 bg-gradient-to-br ${field.image} field-pattern flex items-end p-3`}>
-        <div className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-background/80 px-1.5 py-0.5 text-[11px] backdrop-blur">
-          <Star className="h-3 w-3 fill-primary text-primary" />
-          <span className="stat-num font-bold">{field.rating}</span>
+  const scheduledAt = useMemo(() => {
+    if (!date || !time) return "";
+    return new Date(`${date}T${time}:00`).toISOString();
+  }, [date, time]);
+
+  if (showCheckout && selected && scheduledAt) {
+    return (
+      <div>
+        <DialogHeader>
+          <DialogTitle className="font-display uppercase">Pagamento · {selected.name}</DialogTitle>
+          <DialogDescription>
+            R$ {Number(selected.price_per_hour).toFixed(2)} · {date} {time}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          <BookingStripeCheckout subFieldId={selected.id} scheduledAt={scheduledAt} />
         </div>
-        <h3 className="font-display text-base uppercase tracking-wide text-foreground drop-shadow">{field.name}</h3>
+        <div className="mt-3 flex justify-end">
+          <Button variant="ghost" size="sm" onClick={onClose}>Fechar</Button>
+        </div>
       </div>
+    );
+  }
 
-      <div className="space-y-2.5 p-3">
-        <div className="flex items-start gap-2 text-[11px] text-muted-foreground">
-          <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
-          <span className="line-clamp-1">{field.address}</span>
-        </div>
+  return (
+    <div>
+      <DialogHeader>
+        <DialogTitle className="font-display uppercase tracking-wide">{venue.name}</DialogTitle>
+        <DialogDescription>
+          {venue.address ?? "Selecione um campo e horário disponível."}
+        </DialogDescription>
+      </DialogHeader>
 
-        <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-[10px]">{field.surface}</Badge>
-          <span className="font-mono text-xs">
-            <span className="text-muted-foreground">R$ </span>
-            <span className="text-sm font-bold text-primary">{field.pricePerHour}</span>
-            <span className="text-muted-foreground">/h</span>
-          </span>
-        </div>
-
-        <div>
-          <div className="mb-1.5 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-              <Clock className="h-3 w-3" /> Horários disponíveis
-            </div>
-            {matchingSlots.length > 3 && (
-              <button
-                type="button"
-                onClick={() => setAllOpen(true)}
-                className="text-[10px] font-medium text-primary hover:underline"
-              >
-                Ver mais ({matchingSlots.length})
-              </button>
-            )}
+      <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+        {loading ? (
+          <div className="flex justify-center p-8 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
           </div>
-          {visible.length === 0 ? (
-            <div className="rounded-md border border-dashed border-border bg-surface/30 px-2 py-2 text-center text-[11px] text-muted-foreground">
-              Nenhum horário {field.slots.length ? "para o filtro." : "disponível."}
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-1.5">
-              {visible.map((slot) => (
-                <button
-                  key={slot.date + slot.time}
-                  type="button"
-                  onClick={() => handleSlot(slot)}
-                  className="rounded-md border border-border bg-surface px-2 py-1.5 text-[11px] font-medium transition hover:border-primary hover:bg-primary/10"
-                >
-                  <div className="font-mono">{formatDate(slot.date)}</div>
-                  <div className="font-bold">{slot.time}</div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <Dialog open={allOpen} onOpenChange={setAllOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-display uppercase">Horários · {field.name}</DialogTitle>
-            </DialogHeader>
-            {matchingSlots.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                Nenhum horário disponível para o filtro selecionado.
-              </div>
-            ) : (
-              <div className="grid max-h-[60vh] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
-                {matchingSlots.map((slot) => (
-                  <button
-                    key={slot.date + slot.time}
-                    type="button"
-                    onClick={() => { setAllOpen(false); handleSlot(slot); }}
-                    className="rounded-md border border-border bg-surface px-2 py-2 text-xs font-medium transition hover:border-primary hover:bg-primary/10"
-                  >
-                    <div className="font-mono">{formatDateLong(slot.date)}</div>
-                    <div className="text-sm font-bold">{slot.time}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {!session && (
-          <Button onClick={() => { toast.error("Faça login para alugar."); navigate({ to: "/auth" }); }} variant="outline" size="sm" className="w-full">
-            <Calendar className="mr-2 h-3.5 w-3.5" /> Entrar para alugar
-          </Button>
+        ) : subFields.length === 0 ? (
+          <div className="rounded-md border border-dashed border-border bg-surface/30 p-6 text-center text-sm text-muted-foreground">
+            Este estabelecimento ainda não cadastrou campos.
+          </div>
+        ) : (
+          subFields.map((sf) => {
+            const isSelected = selected?.id === sf.id;
+            return (
+              <button
+                key={sf.id}
+                type="button"
+                onClick={() => { setSelected(sf); setTime(""); }}
+                className={`w-full rounded-lg border p-3 text-left transition ${
+                  isSelected ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/50"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="font-display text-base uppercase tracking-wide">{sf.name}</div>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      <Badge variant="outline">{TYPE_LABEL[sf.field_type]}</Badge>
+                      {sf.available_days.length > 0 && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {sf.available_days.length} dias/sem
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono text-xs text-muted-foreground">R$/h</div>
+                    <div className="font-display text-xl text-primary">
+                      {Number(sf.price_per_hour).toFixed(0)}
+                    </div>
+                  </div>
+                </div>
+                {isSelected && (
+                  <div className="mt-3 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
+                    <div>
+                      <Label className="text-xs">Data</Label>
+                      <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">
+                        <Clock className="mr-1 inline h-3 w-3" /> Horário
+                      </Label>
+                      {sf.available_times.length > 0 ? (
+                        <select
+                          value={time}
+                          onChange={(e) => setTime(e.target.value)}
+                          className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                        >
+                          <option value="">Escolha</option>
+                          {sf.available_times.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      ) : (
+                        <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </button>
+            );
+          })
         )}
       </div>
 
-      {canRent && (
-        <RentalRequestDialog
-          fieldId={field.id}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          presetSlot={preset}
-        />
-      )}
-    </Card>
-  );
-}
-
-function RentalRequestDialog({
-  fieldId,
-  open,
-  onOpenChange,
-  presetSlot,
-}: {
-  fieldId: string;
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  presetSlot: Slot | null;
-}) {
-  const { fields, requestRental } = useStore();
-  const { activeProfile } = useAuth();
-  const field = fields.find((f) => f.id === fieldId)!;
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [message, setMessage] = useState("");
-
-  const slots = useMemo(() => field.slots.filter((s) => s.available), [field.slots]);
-
-  useEffect(() => {
-    if (open && presetSlot) {
-      setDate(presetSlot.date);
-      setTime(presetSlot.time);
-    }
-  }, [open, presetSlot]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="font-display uppercase">Solicitar · {field.name}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="rounded-md bg-warning/10 p-3 text-xs text-warning">
-            ⏱️ O campo tem <strong>48 horas</strong> para aprovar. Sem resposta, a solicitação é recusada automaticamente.
-          </div>
-          <div>
-            <Label>Data e horário disponível</Label>
-            <Select value={date && time ? date + "_" + time : ""} onValueChange={(v) => { const [d, t] = v.split("_"); setDate(d); setTime(t); }}>
-              <SelectTrigger><SelectValue placeholder="Escolha um horário" /></SelectTrigger>
-              <SelectContent>
-                {slots.map((s) => (
-                  <SelectItem key={s.date + s.time} value={s.date + "_" + s.time}>
-                    {formatDateLong(s.date)} · {s.time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Mensagem (opcional)</Label>
-            <Textarea value={message} onChange={(e) => setMessage(e.target.value.slice(0, 200))} placeholder="Conta um pouco sobre o jogo..." />
-          </div>
+      <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
+        <div className="text-sm text-muted-foreground">
+          {selected && date && time
+            ? <>Total: <strong className="text-primary">R$ {Number(selected.price_per_hour).toFixed(2)}</strong></>
+            : "Escolha campo, data e horário"}
         </div>
-        <DialogFooter>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
           <Button
-            disabled={!date || !time || !activeProfile}
+            onClick={startCheckout}
+            disabled={!selected || !date || !time}
             className="bg-gradient-primary text-primary-foreground"
-            onClick={() => {
-              if (!activeProfile) return;
-              requestRental({
-                fieldId,
-                requesterType: activeProfile.type === "team" ? "team" : "player",
-                requesterId: activeProfile.id,
-                requesterName: activeProfile.name,
-                date,
-                time,
-                message: message || "Solicitação de reserva.",
-              });
-              toast.success("Solicitação enviada! O campo tem 48h para responder.");
-              onOpenChange(false);
-              setDate(""); setTime(""); setMessage("");
-            }}
           >
-            Enviar solicitação
+            Reservar e pagar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 }
