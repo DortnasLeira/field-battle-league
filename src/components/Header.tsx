@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings, Search, Award, BarChart3, Building2 } from "lucide-react";
+import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings, Search, Award, BarChart3, Building2, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
