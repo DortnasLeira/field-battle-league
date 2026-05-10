@@ -408,13 +408,48 @@ function VenueSubFields({
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
           <Button
             onClick={startCheckout}
-            disabled={!selected || !date || !time}
+            disabled={
+              !selected || !date || !time ||
+              availability === "checking" || availability === "locked"
+            }
             className="bg-gradient-primary text-primary-foreground"
           >
-            Reservar e pagar
+            {availability === "locked"
+              ? <><Lock className="mr-1 h-4 w-4" /> Slot indisponível</>
+              : availability === "checking"
+                ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Verificando…</>
+                : "Reservar e pagar"}
           </Button>
         </div>
       </div>
     </div>
   );
+}
+
+function SlotAvailabilityBadge({ state }: { state: "unknown" | "checking" | "available" | "locked" }) {
+  if (state === "checking") {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Verificando disponibilidade do slot…
+      </div>
+    );
+  }
+  if (state === "available") {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
+        <CheckCircle2 className="h-3.5 w-3.5" />
+        Horário disponível — pronto para reservar.
+      </div>
+    );
+  }
+  if (state === "locked") {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <Lock className="h-3.5 w-3.5" />
+        Slot bloqueado por outra pessoa. Escolha outro horário.
+      </div>
+    );
+  }
+  return null;
 }
