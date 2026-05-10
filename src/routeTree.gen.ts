@@ -18,6 +18,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DesafiosRouteImport } from './routes/desafios'
+import { Route as ComplexoRouteImport } from './routes/complexo'
 import { Route as CamposRouteImport } from './routes/campos'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -75,6 +76,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const DesafiosRoute = DesafiosRouteImport.update({
   id: '/desafios',
   path: '/desafios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComplexoRoute = ComplexoRouteImport.update({
+  id: '/complexo',
+  path: '/complexo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CamposRoute = CamposRouteImport.update({
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
+  '/complexo': typeof ComplexoRoute
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
+  '/complexo': typeof ComplexoRoute
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
+  '/complexo': typeof ComplexoRoute
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/campos'
+    | '/complexo'
     | '/desafios'
     | '/forgot-password'
     | '/ligas'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/campos'
+    | '/complexo'
     | '/desafios'
     | '/forgot-password'
     | '/ligas'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/campos'
+    | '/complexo'
     | '/desafios'
     | '/forgot-password'
     | '/ligas'
@@ -298,6 +310,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   CamposRoute: typeof CamposRoute
+  ComplexoRoute: typeof ComplexoRoute
   DesafiosRoute: typeof DesafiosRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LigasRoute: typeof LigasRoute
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       path: '/desafios'
       fullPath: '/desafios'
       preLoaderRoute: typeof DesafiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/complexo': {
+      id: '/complexo'
+      path: '/complexo'
+      fullPath: '/complexo'
+      preLoaderRoute: typeof ComplexoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/campos': {
@@ -482,6 +502,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   CamposRoute: CamposRoute,
+  ComplexoRoute: ComplexoRoute,
   DesafiosRoute: DesafiosRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LigasRoute: LigasRoute,
