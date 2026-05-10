@@ -1013,6 +1013,15 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      reserve_sub_field_slot: {
+        Args: {
+          _duration_minutes?: number
+          _scheduled_at: string
+          _sub_field_id: string
+          _team_id?: string
+        }
+        Returns: string
+      }
       team_admin_count: { Args: { _team_id: string }; Returns: number }
     }
     Enums: {
