@@ -135,7 +135,11 @@ function OnboardingPage() {
           Bem-vindo ao <span className="text-gradient-primary">PeladaPro</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Você pode ter os 3 tipos de perfil e alternar entre eles a qualquer momento.
+          {step === "kind"
+            ? "Escolha o tipo da sua conta. Esta decisão é permanente."
+            : accountType
+            ? `Conta ${ACCOUNT_TYPE_LABEL[accountType]} — você pode criar: ${allowedTypes.map((t) => PROFILE_TYPE_LABEL[t]).join(" + ")}.`
+            : ""}
         </p>
       </div>
 
@@ -145,10 +149,38 @@ function OnboardingPage() {
         </Card>
       )}
 
+      {step === "kind" && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {ACCOUNT_OPTIONS.map(({ id, icon: Icon, title, desc, allowed }) => (
+              <button
+                key={id}
+                onClick={() => chooseKind(id)}
+                disabled={savingKind !== null}
+                className="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 text-left transition hover:border-primary/60 hover:shadow-glow disabled:opacity-60"
+              >
+                <Icon className="h-7 w-7 text-primary" />
+                <div className="font-display text-xl uppercase tracking-wide">{title}</div>
+                <p className="text-sm text-muted-foreground">{desc}</p>
+                <span className="mt-1 inline-flex w-fit rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary">
+                  Permite: {allowed}
+                </span>
+                {savingKind === id && (
+                  <span className="text-xs text-muted-foreground">Salvando…</span>
+                )}
+              </button>
+            ))}
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            ⚠️ A escolha é definitiva. Contas Business nunca poderão criar perfis de Jogador ou Time, e vice-versa.
+          </p>
+        </>
+      )}
+
       {step === "choose" && (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {TYPES.map(({ id, icon: Icon, desc }) => {
+          <div className={`grid gap-4 ${visibleTypes.length > 1 ? "sm:grid-cols-2" : "sm:grid-cols-1"}`}>
+            {visibleTypes.map(({ id, icon: Icon, desc }) => {
               const active = selected.includes(id);
               const exists = existingTypes.has(id);
               return (
