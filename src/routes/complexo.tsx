@@ -74,15 +74,11 @@ type SubField = {
 };
 
 function ComplexoPage() {
-  const { session, accountType, loading } = useAuth();
+  const { session, accountType, loading, activeProfile } = useAuth();
   const navigate = useNavigate();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [savingVenue, setSavingVenue] = useState(false);
-
-  // Local form state for venue (so editing doesn't fight the source of truth)
-  const [vForm, setVForm] = useState({ name: "", city: "", address: "", phone: "", bio: "", photo_url: "" });
 
   useEffect(() => {
     if (loading) return;
@@ -99,23 +95,30 @@ function ComplexoPage() {
   const load = useCallback(async () => {
     if (!session?.user) return;
     setLoadingData(true);
-    const { data: venues } = await supabase
+    let { data: venues } = await supabase
       .from("venues" as never)
       .select("*")
       .eq("owner_user_id", session.user.id)
       .order("created_at")
       .limit(1);
-    const v = (venues as Venue[] | null)?.[0] ?? null;
+    let v = (venues as Venue[] | null)?.[0] ?? null;
+
+    // Auto-cria venue caso o usuário ainda não tenha (compat com onboarding antigo)
+    if (!v && activeProfile?.type === "field") {
+      const { data: created, error } = await supabase
+        .from("venues" as never)
+        .insert({
+          owner_user_id: session.user.id,
+          name: activeProfile.name,
+          city: activeProfile.city ?? null,
+        } as never)
+        .select()
+        .single();
+      if (!error && created) v = created as Venue;
+    }
+
     setVenue(v);
     if (v) {
-      setVForm({
-        name: v.name ?? "",
-        city: v.city ?? "",
-        address: v.address ?? "",
-        phone: v.phone ?? "",
-        bio: v.bio ?? "",
-        photo_url: v.photo_url ?? "",
-      });
       const { data: sfs } = await supabase
         .from("sub_fields" as never)
         .select("*")
@@ -126,39 +129,12 @@ function ComplexoPage() {
       setSubFields([]);
     }
     setLoadingData(false);
-  }, [session]);
+  }, [session, activeProfile]);
 
   useEffect(() => { load(); }, [load]);
 
-  const saveVenue = async () => {
-    if (!session?.user) return;
-    if (!vForm.name.trim()) { toast.error("Informe o nome do complexo."); return; }
-    setSavingVenue(true);
-    try {
-      if (venue) {
-        const { error } = await supabase
-          .from("venues" as never)
-          .update(vForm as never)
-          .eq("id", venue.id);
-        if (error) throw error;
-        toast.success("Complexo atualizado.");
-      } else {
-        const { error } = await supabase
-          .from("venues" as never)
-          .insert({ ...vForm, owner_user_id: session.user.id } as never);
-        if (error) throw error;
-        toast.success("Complexo cadastrado!");
-      }
-      await load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar");
-    } finally {
-      setSavingVenue(false);
-    }
-  };
-
   const addSubField = async () => {
-    if (!venue) { toast.error("Salve o complexo primeiro."); return; }
+    if (!venue) { toast.error("Estabelecimento não encontrado. Complete o onboarding."); return; }
     const { error } = await supabase
       .from("sub_fields" as never)
       .insert({
@@ -181,10 +157,10 @@ function ComplexoPage() {
           <span className="font-mono text-[10px] uppercase tracking-wider">Perfil Business</span>
         </div>
         <h1 className="mt-1 font-display text-3xl uppercase tracking-wider sm:text-4xl">
-          Meu <span className="text-gradient-primary">Complexo</span>
+          Adicionar <span className="text-gradient-primary">Campos</span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Cadastre o estabelecimento e adicione múltiplos campos físicos, cada um com seu próprio tipo, preço, horários e foto.
+          Cadastre os campos físicos do seu complexo, cada um com seu próprio tipo, preço, horários e foto.
         </p>
       </div>
 
@@ -192,49 +168,49 @@ function ComplexoPage() {
         <Card className="flex items-center justify-center p-10 text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
         </Card>
+      ) : !venue ? (
+        <Card className="space-y-3 p-8 text-center">
+          <Building2 className="mx-auto h-8 w-8 text-muted-foreground" />
+          <h2 className="font-display text-xl uppercase">Nenhum estabelecimento</h2>
+          <p className="text-sm text-muted-foreground">
+            Volte para o onboarding e cadastre os dados do seu complexo.
+          </p>
+          <Button onClick={() => navigate({ to: "/onboarding" })} className="bg-gradient-primary text-primary-foreground">
+            Ir para o onboarding
+          </Button>
+        </Card>
       ) : (
-        <>
-          <VenueForm
-            v={vForm}
-            setV={setVForm}
-            onSave={saveVenue}
-            saving={savingVenue}
-            existing={!!venue}
-            ownerId={session?.user?.id ?? ""}
-          />
-
-          {venue && (
-            <Card className="border-border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Campos do complexo</div>
-                  <h2 className="font-display text-xl uppercase tracking-wide">
-                    {subFields.length} campo{subFields.length === 1 ? "" : "s"}
-                  </h2>
-                </div>
-                <Button onClick={addSubField} className="bg-gradient-primary text-primary-foreground">
-                  <Plus className="mr-1 h-4 w-4" /> Adicionar campo
-                </Button>
+        <Card className="border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                {venue.name}{venue.city ? ` · ${venue.city}` : ""}
               </div>
-              {subFields.length === 0 ? (
-                <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                  Nenhum campo adicionado ainda. Clique em <strong className="text-foreground">Adicionar campo</strong> para começar.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {subFields.map((sf) => (
-                    <SubFieldEditor
-                      key={sf.id}
-                      sf={sf}
-                      ownerId={session?.user?.id ?? ""}
-                      onChange={load}
-                    />
-                  ))}
-                </div>
-              )}
-            </Card>
+              <h2 className="font-display text-xl uppercase tracking-wide">
+                {subFields.length} campo{subFields.length === 1 ? "" : "s"}
+              </h2>
+            </div>
+            <Button onClick={addSubField} className="bg-gradient-primary text-primary-foreground">
+              <Plus className="mr-1 h-4 w-4" /> Adicionar campo
+            </Button>
+          </div>
+          {subFields.length === 0 ? (
+            <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Nenhum campo adicionado ainda. Clique em <strong className="text-foreground">Adicionar campo</strong> para começar.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {subFields.map((sf) => (
+                <SubFieldEditor
+                  key={sf.id}
+                  sf={sf}
+                  ownerId={session?.user?.id ?? ""}
+                  onChange={load}
+                />
+              ))}
+            </div>
           )}
-        </>
+        </Card>
       )}
     </div>
   );

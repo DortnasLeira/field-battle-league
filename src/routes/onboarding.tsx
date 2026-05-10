@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, User, Shield, MapPin, Briefcase, Trophy } from "lucide-react";
+import { Check, ChevronRight, User, Shield, MapPin, Briefcase, Trophy, Phone, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useAuth,
   PROFILE_TYPE_LABEL,
@@ -58,6 +60,7 @@ function OnboardingPage() {
     team: { name: "", nickname: "", city: "", avatar: "🦁", color: "#EF4444" },
     field: { name: "", nickname: "", city: "", avatar: "🏟️", color: "#10B981" },
   });
+  const [venueForm, setVenueForm] = useState({ address: "", phone: "", bio: "" });
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
@@ -120,9 +123,31 @@ function OnboardingPage() {
           color: f.color,
           frame: "classic",
         });
+
+        // Para perfis Business/Campo, cria também o estabelecimento (venues)
+        if (t === "field" && session?.user) {
+          const { data: existingVenues } = await supabase
+            .from("venues" as never)
+            .select("id")
+            .eq("owner_user_id", session.user.id)
+            .limit(1);
+          if (!existingVenues || (existingVenues as { id: string }[]).length === 0) {
+            const { error: venueErr } = await supabase
+              .from("venues" as never)
+              .insert({
+                owner_user_id: session.user.id,
+                name: f.name,
+                city: f.city || null,
+                address: venueForm.address || null,
+                phone: venueForm.phone || null,
+                bio: venueForm.bio || null,
+              } as never);
+            if (venueErr) throw venueErr;
+          }
+        }
       }
       toast.success("Perfis criados!");
-      navigate({ to: "/" });
+      navigate({ to: selected.includes("field") ? "/complexo" : "/" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar perfis");
     }
@@ -301,6 +326,53 @@ function OnboardingPage() {
                   </div>
                 </div>
               </div>
+
+              {t === "field" && (
+                <div className="mt-5 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    <h3 className="font-display text-sm uppercase tracking-wider">Dados do Estabelecimento</h3>
+                  </div>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Cadastre o complexo agora. Os campos físicos (Campo 1, Campo de Areia…) você adiciona depois em <strong className="text-foreground">Adicionar campos</strong>.
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <Label>Endereço</Label>
+                      <div className="relative">
+                        <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          className="pl-9"
+                          value={venueForm.address}
+                          onChange={(e) => setVenueForm((s) => ({ ...s, address: e.target.value }))}
+                          placeholder="Rua, número, bairro"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <div className="relative">
+                        <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          className="pl-9"
+                          value={venueForm.phone}
+                          onChange={(e) => setVenueForm((s) => ({ ...s, phone: e.target.value }))}
+                          placeholder="(11) 99999-0000"
+                        />
+                      </div>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label>Descrição do complexo</Label>
+                      <Textarea
+                        rows={3}
+                        value={venueForm.bio}
+                        onChange={(e) => setVenueForm((s) => ({ ...s, bio: e.target.value }))}
+                        placeholder="Conte sobre estrutura, vestiários, estacionamento…"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </Card>
           ))}
           <div className="flex justify-between">

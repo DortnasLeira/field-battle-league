@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth, PROFILE_TYPE_EMOJI, PROFILE_TYPE_LABEL, type ProfileType } from "@/lib/auth";
 import { PlayerDashboard } from "@/components/PlayerDashboard";
 import { TeamDashboard } from "@/components/TeamDashboard";
+import { FieldDashboard } from "@/components/FieldDashboard";
 import { teams as mockTeams } from "@/lib/mockData";
 
 export const Route = createFileRoute("/perfil")({
@@ -44,6 +45,7 @@ function PerfilPage() {
     const team = mockTeams[0];
     return <TeamDashboard team={team} />;
   }
+  if (activeProfile.type === "field") return <FieldDashboard profile={activeProfile} />;
   return <PlaceholderDashboard type={activeProfile.type} />;
 }
 
