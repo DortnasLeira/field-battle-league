@@ -535,3 +535,136 @@ function PhotoUploader({
     </div>
   );
 }
+
+function PricingRulesEditor({
+  rules, basePrice, onChange,
+}: {
+  rules: PricingRule[];
+  basePrice: number;
+  onChange: (rules: PricingRule[]) => void;
+}) {
+  const update = (idx: number, patch: Partial<PricingRule>) => {
+    const next = rules.slice();
+    next[idx] = { ...next[idx], ...patch };
+    onChange(next);
+  };
+  const remove = (idx: number) => {
+    const next = rules.slice();
+    next.splice(idx, 1);
+    onChange(next);
+  };
+  const add = () => {
+    onChange([
+      ...rules,
+      {
+        id: (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : `r_${Date.now()}`,
+        name: "Horário nobre",
+        days: ["mon","tue","wed","thu","fri"],
+        start: "18:00",
+        end: "23:00",
+        mode: "percent",
+        value: 30,
+      },
+    ]);
+  };
+  const toggleDay = (idx: number, day: string) => {
+    const set = new Set(rules[idx].days);
+    if (set.has(day)) set.delete(day); else set.add(day);
+    update(idx, { days: Array.from(set) });
+  };
+  return (
+    <div className="rounded-md border border-border bg-card/40 p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-4 w-4 text-primary" />
+            <Label className="text-sm font-semibold">Configuração de Horários · Preço Base R$ {basePrice.toFixed(2)}/h</Label>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Defina regras de Horário Nobre. Quando o horário escolhido pelo cliente cair na regra,
+            o sistema aplica acréscimo percentual sobre o preço base ou um valor fixo para a hora.
+          </p>
+        </div>
+        <Button type="button" size="sm" variant="outline" onClick={add}>
+          <Sparkles className="mr-1 h-3.5 w-3.5" /> Nova regra
+        </Button>
+      </div>
+
+      {rules.length === 0 ? (
+        <p className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+          Sem regras: todos os horários cobram o preço base.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {rules.map((r, idx) => (
+            <div key={r.id} className="rounded-md border border-border bg-surface/50 p-3">
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <Input
+                  value={r.name}
+                  onChange={(e) => update(idx, { name: e.target.value })}
+                  placeholder="Nome da regra"
+                />
+                <Button type="button" size="sm" variant="ghost" onClick={() => remove(idx)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-1">
+                {WEEKDAYS.map((d) => {
+                  const on = r.days.includes(d.id);
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => toggleDay(idx, d.id)}
+                      className={`rounded-md border px-2 py-0.5 text-[11px] font-mono uppercase ${
+                        on ? "border-primary bg-primary/15 text-primary" : "border-border bg-card text-muted-foreground"
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                <div>
+                  <Label className="text-[11px]">Início</Label>
+                  <Input type="time" value={r.start} onChange={(e) => update(idx, { start: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-[11px]">Fim</Label>
+                  <Input type="time" value={r.end} onChange={(e) => update(idx, { end: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-[11px]">Tipo</Label>
+                  <Select value={r.mode} onValueChange={(v) => update(idx, { mode: v as "percent" | "fixed" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percent">Acréscimo (%)</SelectItem>
+                      <SelectItem value="fixed">Valor fixo (R$)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-[11px]">{r.mode === "percent" ? "% sobre base" : "R$ por hora"}</Label>
+                  <Input
+                    type="number" min={0} step="0.01"
+                    value={r.value}
+                    onChange={(e) => update(idx, { value: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {r.mode === "percent"
+                  ? `Resulta em R$ ${(basePrice * (1 + (Number(r.value) || 0) / 100)).toFixed(2)} por hora nesta janela.`
+                  : `Cobra R$ ${(Number(r.value) || 0).toFixed(2)} por hora nesta janela.`}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
