@@ -338,9 +338,25 @@ function VenueSubFields({
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
         <div className="text-sm text-muted-foreground">
-          {selected && date && time
-            ? <>Total: <strong className="text-primary">R$ {Number(selected.price_per_hour).toFixed(2)}</strong></>
-            : "Escolha campo, data e horário"}
+          {selected && date && time && priced ? (
+            <div className="flex flex-col">
+              <span>
+                Total: <strong className="text-primary">R$ {priced.price.toFixed(2)}</strong>
+                {priced.rule && Number(selected.price_per_hour) !== priced.price && (
+                  <span className="ml-2 text-xs text-muted-foreground line-through">
+                    R$ {Number(selected.price_per_hour).toFixed(2)}
+                  </span>
+                )}
+              </span>
+              {priced.rule && (
+                <span className="text-[11px] text-primary/80">
+                  {describeRule(priced.rule)}
+                </span>
+              )}
+            </div>
+          ) : (
+            "Escolha campo, data e horário"
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
