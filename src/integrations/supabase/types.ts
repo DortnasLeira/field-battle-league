@@ -51,6 +51,7 @@ export type Database = {
           requester_user_id: string
           scheduled_at: string
           status: string
+          sub_field_id: string | null
           updated_at: string
         }
         Insert: {
@@ -63,6 +64,7 @@ export type Database = {
           requester_user_id: string
           scheduled_at: string
           status?: string
+          sub_field_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -75,6 +77,7 @@ export type Database = {
           requester_user_id?: string
           scheduled_at?: string
           status?: string
+          sub_field_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -90,6 +93,13 @@ export type Database = {
             columns: ["requester_team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_sub_field_id_fkey"
+            columns: ["sub_field_id"]
+            isOneToOne: false
+            referencedRelation: "sub_fields"
             referencedColumns: ["id"]
           },
         ]
