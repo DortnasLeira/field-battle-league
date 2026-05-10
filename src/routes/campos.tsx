@@ -212,6 +212,49 @@ function VenueSubFields({
       });
   }, [venue.id]);
 
+  const scheduledAt = useMemo(() => {
+    if (!date || !time) return "";
+    return new Date(`${date}T${time}:00`).toISOString();
+  }, [date, time]);
+
+  const priced = useMemo(() => {
+    if (!selected || !scheduledAt) return null;
+    return computeSlotPrice(Number(selected.price_per_hour), selected.pricing_rules ?? [], scheduledAt);
+  }, [selected, scheduledAt]);
+
+  // ───── Trava de disponibilidade em tempo real ─────
+  // "unknown" enquanto consulta; "available" libera o checkout; "locked" bloqueia.
+  const [availability, setAvailability] = useState<"unknown" | "checking" | "available" | "locked">("unknown");
+
+  useEffect(() => {
+    if (!selected || !scheduledAt) { setAvailability("unknown"); return; }
+    let cancelled = false;
+    setAvailability("checking");
+    supabase
+      .rpc("is_sub_field_slot_available" as never, {
+        _sub_field_id: selected.id,
+        _scheduled_at: scheduledAt,
+      } as never)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { setAvailability("unknown"); return; }
+        setAvailability(data ? "available" : "locked");
+      });
+    // Re-checa a cada 20s caso o slot acabe de ser bloqueado por outra pessoa
+    const id = window.setInterval(() => {
+      supabase
+        .rpc("is_sub_field_slot_available" as never, {
+          _sub_field_id: selected.id,
+          _scheduled_at: scheduledAt,
+        } as never)
+        .then(({ data, error }) => {
+          if (cancelled || error) return;
+          setAvailability(data ? "available" : "locked");
+        });
+    }, 20_000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [selected?.id, scheduledAt]);
+
   const startCheckout = () => {
     if (!authed) return onLogin();
     if (!canBook) {
@@ -222,18 +265,16 @@ function VenueSubFields({
       toast.error("Selecione campo, data e horário.");
       return;
     }
+    if (availability === "locked") {
+      toast.error("Este horário acabou de ser bloqueado por outra pessoa. Escolha outro slot.");
+      return;
+    }
+    if (availability !== "available") {
+      toast.error("Aguarde a verificação de disponibilidade.");
+      return;
+    }
     setShowCheckout(true);
   };
-
-  const scheduledAt = useMemo(() => {
-    if (!date || !time) return "";
-    return new Date(`${date}T${time}:00`).toISOString();
-  }, [date, time]);
-
-  const priced = useMemo(() => {
-    if (!selected || !scheduledAt) return null;
-    return computeSlotPrice(Number(selected.price_per_hour), selected.pricing_rules ?? [], scheduledAt);
-  }, [selected, scheduledAt]);
 
   if (showCheckout && selected && scheduledAt) {
     const final = priced?.price ?? Number(selected.price_per_hour);
