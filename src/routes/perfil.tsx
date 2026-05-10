@@ -45,6 +45,7 @@ function PerfilPage() {
     const team = mockTeams[0];
     return <TeamDashboard team={team} />;
   }
+  if (activeProfile.type === "field") return <FieldDashboard profile={activeProfile} />;
   return <PlaceholderDashboard type={activeProfile.type} />;
 }
 
