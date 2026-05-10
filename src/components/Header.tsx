@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings, Search, Award, BarChart3, Building2 } from "lucide-react";
+import { Trophy, MapPin, Swords, Shield, UserPlus, LogOut, ChevronsUpDown, Plus, LogIn, User, Settings, Search, Award, BarChart3, Building2, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -27,9 +27,12 @@ const authLinks = [
   { to: "/pro", label: "PRO", icon: Trophy },
 ] as const;
 
-const businessLink = { to: "/complexo", label: "Complexo", icon: Building2 } as const;
+const businessLinks = [
+  { to: "/complexo", label: "Complexo", icon: Building2 },
+  { to: "/painel", label: "Painel", icon: LayoutDashboard },
+] as const;
 
-const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo"]);
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo", "/painel"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -37,7 +40,7 @@ export function Header() {
   const navigate = useNavigate();
   const isActive = (to: string) => pathname.startsWith(to);
   const links = session
-    ? [...publicLinks, ...authLinks, ...(accountType === "business" ? [businessLink] : [])]
+    ? [...publicLinks, ...authLinks, ...(accountType === "business" ? businessLinks : [])]
     : publicLinks;
   const cols = links.length;
 
