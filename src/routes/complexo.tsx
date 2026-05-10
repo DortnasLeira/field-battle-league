@@ -440,6 +440,12 @@ function SubFieldEditor({ sf, ownerId, onChange }: { sf: SubField; ownerId: stri
             </div>
           </div>
 
+          <PricingRulesEditor
+            rules={local.pricing_rules ?? []}
+            basePrice={Number(local.price_per_hour) || 0}
+            onChange={(rules) => setLocal((s) => ({ ...s, pricing_rules: rules }))}
+          />
+
           <div className="flex items-center justify-between pt-1">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input
