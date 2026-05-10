@@ -80,14 +80,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!session?.user) {
       setProfiles([]);
       setActiveId(null);
+      setAccountTypeState(null);
       return;
     }
-    const [{ data: profs }, { data: act }] = await Promise.all([
+    const [{ data: profs }, { data: act }, { data: acct }] = await Promise.all([
       supabase.from("user_profiles").select("*").eq("user_id", session.user.id).order("created_at"),
       supabase.from("active_profile").select("profile_id").eq("user_id", session.user.id).maybeSingle(),
+      supabase.from("user_account_types" as never).select("account_type").eq("user_id", session.user.id).maybeSingle(),
     ]);
     const list = (profs ?? []) as UserProfile[];
     setProfiles(list);
+    setAccountTypeState(((acct as { account_type?: AccountType } | null)?.account_type) ?? null);
     if (act?.profile_id && list.some((p) => p.id === act.profile_id)) {
       setActiveId(act.profile_id);
     } else if (list.length > 0) {
