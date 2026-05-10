@@ -185,12 +185,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     profiles,
     activeProfile,
+    accountType,
     refreshProfiles,
     setActive,
     signOut,
     upsertProfile,
     updateProfile,
     deleteProfile,
+    setAccountType,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
