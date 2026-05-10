@@ -333,6 +333,7 @@ function SubFieldEditor({ sf, ownerId, onChange }: { sf: SubField; ownerId: stri
           price_per_hour: Number(local.price_per_hour) || 0,
           available_days: local.available_days,
           available_times: local.available_times,
+          pricing_rules: local.pricing_rules ?? [],
           photo_url: local.photo_url,
           active: local.active,
         } as never)
