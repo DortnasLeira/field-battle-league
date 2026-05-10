@@ -118,7 +118,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfiles([]);
     setActiveId(null);
+    setAccountTypeState(null);
   }, []);
+
+  const setAccountType = useCallback(
+    async (t: AccountType) => {
+      if (!session?.user) throw new Error("Não autenticado");
+      if (accountType && accountType !== t) {
+        throw new Error("Tipo de conta já definido e não pode ser alterado.");
+      }
+      const { error } = await supabase
+        .from("user_account_types" as never)
+        .insert({ user_id: session.user.id, account_type: t } as never);
+      if (error && !/duplicate|already/i.test(error.message)) throw error;
+      setAccountTypeState(t);
+    },
+    [session, accountType],
+  );
 
   const upsertProfile = useCallback<AuthContextValue["upsertProfile"]>(
     async (p) => {
