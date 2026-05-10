@@ -27,9 +27,12 @@ const authLinks = [
   { to: "/pro", label: "PRO", icon: Trophy },
 ] as const;
 
-const businessLink = { to: "/complexo", label: "Complexo", icon: Building2 } as const;
+const businessLinks = [
+  { to: "/complexo", label: "Complexo", icon: Building2 },
+  { to: "/painel", label: "Painel", icon: LayoutDashboard },
+] as const;
 
-const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo"]);
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo", "/painel"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
