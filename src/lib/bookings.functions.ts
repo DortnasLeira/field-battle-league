@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient } from "@/lib/stripe.server";
+import { computeSlotPrice, type PricingRule } from "@/lib/pricing";
 
 export const createBookingCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
