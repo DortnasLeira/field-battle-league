@@ -22,15 +22,21 @@ export const createBookingCheckout = createServerFn({ method: "POST" })
 
     const { data: sub, error } = await supabase
       .from("sub_fields")
-      .select("id, name, price_per_hour, venue_id, venues:venue_id(name)")
+      .select("id, name, price_per_hour, pricing_rules, venue_id, venues:venue_id(name)")
       .eq("id", data.subFieldId)
       .maybeSingle();
     if (error || !sub) throw new Error("Campo não encontrado");
 
-    const amountCents = Math.round(Number(sub.price_per_hour) * 100);
+    const { price, rule } = computeSlotPrice(
+      Number(sub.price_per_hour),
+      (sub as { pricing_rules?: PricingRule[] | null }).pricing_rules ?? [],
+      data.scheduledAt,
+    );
+    const amountCents = Math.round(price * 100);
     if (!amountCents || amountCents < 50) throw new Error("Preço inválido para este campo");
 
     const venueName = (sub.venues as { name?: string } | null)?.name ?? "Estabelecimento";
+    const ruleSuffix = rule ? ` · ${rule.name || "Horário nobre"}` : "";
 
     const stripe = createStripeClient(data.environment);
     const session = await stripe.checkout.sessions.create({
