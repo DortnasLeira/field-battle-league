@@ -62,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [accountType, setAccountTypeState] = useState<AccountType | null>(null);
 
   // Bootstrap session
   useEffect(() => {
