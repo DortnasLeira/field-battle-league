@@ -795,6 +795,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_account_types: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           address: string | null
@@ -896,6 +914,7 @@ export type Database = {
       team_admin_count: { Args: { _team_id: string }; Returns: number }
     }
     Enums: {
+      account_type: "sportist" | "business"
       assignment_status:
         | "pending"
         | "accepted"
@@ -1034,6 +1053,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["sportist", "business"],
       assignment_status: [
         "pending",
         "accepted",
