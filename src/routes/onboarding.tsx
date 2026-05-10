@@ -99,16 +99,6 @@ function OnboardingPage() {
     setSelected((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
   };
 
-  const toggleType = (t: ProfileType) => {
-    if (existingTypes.has(t)) {
-      toast.error(
-        `Você já possui um perfil de ${PROFILE_TYPE_LABEL[t]}. Edite o perfil existente em vez de criar outro.`,
-      );
-      return;
-    }
-    setSelected((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
-  };
-
   const submitAll = async () => {
     try {
       for (const t of selected) {
