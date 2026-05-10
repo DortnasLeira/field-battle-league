@@ -40,7 +40,7 @@ export function Header() {
   const navigate = useNavigate();
   const isActive = (to: string) => pathname.startsWith(to);
   const links = session
-    ? [...publicLinks, ...authLinks, ...(accountType === "business" ? [businessLink] : [])]
+    ? [...publicLinks, ...authLinks, ...(accountType === "business" ? businessLinks : [])]
     : publicLinks;
   const cols = links.length;
 
