@@ -35,32 +35,68 @@ export const createBookingCheckout = createServerFn({ method: "POST" })
     const amountCents = Math.round(price * 100);
     if (!amountCents || amountCents < 50) throw new Error("Preço inválido para este campo");
 
+    // ───── Trava de Segurança: reserva atômica do slot (5 min) ─────
+    // RPC roda em uma transação com advisory lock + checagem de conflito.
+    // Se o slot estiver ocupado (confirmado ou pending recente de outra pessoa),
+    // a função lança erro e o checkout do Stripe NÃO é aberto.
+    const { data: bookingId, error: lockError } = await supabase.rpc(
+      "reserve_sub_field_slot" as never,
+      {
+        _sub_field_id: data.subFieldId,
+        _scheduled_at: data.scheduledAt,
+        _duration_minutes: 60,
+        _team_id: data.teamId ?? null,
+      } as never,
+    );
+    if (lockError || !bookingId) {
+      const msg = lockError?.message ?? "Slot indisponível";
+      // Mensagem amigável para o cliente
+      throw new Error(
+        msg.includes("indisponível") || msg.includes("40001")
+          ? "Este horário acabou de ser reservado por outra pessoa. Escolha outro slot."
+          : `Não foi possível bloquear o horário: ${msg}`,
+      );
+    }
+
     const venueName = (sub.venues as { name?: string } | null)?.name ?? "Estabelecimento";
     const ruleSuffix = rule ? ` · ${rule.name || "Horário nobre"}` : "";
 
-    const stripe = createStripeClient(data.environment);
-    const session = await stripe.checkout.sessions.create({
-      line_items: [{
-        price_data: {
-          currency: "brl",
-          product_data: { name: `${venueName} — ${sub.name} (1h)${ruleSuffix}` },
-          unit_amount: amountCents,
+    try {
+      const stripe = createStripeClient(data.environment);
+      const session = await stripe.checkout.sessions.create({
+        line_items: [{
+          price_data: {
+            currency: "brl",
+            product_data: { name: `${venueName} — ${sub.name} (1h)${ruleSuffix}` },
+            unit_amount: amountCents,
+          },
+          quantity: 1,
+        }],
+        mode: "payment",
+        ui_mode: "embedded_page",
+        return_url: data.returnUrl,
+        // Bloqueio expira em 5 minutos no banco; o Stripe respeita o mesmo limite.
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // mínimo aceito pelo Stripe
+        metadata: {
+          kind: "sub_field_booking",
+          userId,
+          subFieldId: data.subFieldId,
+          scheduledAt: data.scheduledAt,
+          bookingId: String(bookingId),
+          ...(data.teamId && { teamId: data.teamId }),
         },
-        quantity: 1,
-      }],
-      mode: "payment",
-      ui_mode: "embedded_page",
-      return_url: data.returnUrl,
-      metadata: {
-        kind: "sub_field_booking",
-        userId,
-        subFieldId: data.subFieldId,
-        scheduledAt: data.scheduledAt,
-        ...(data.teamId && { teamId: data.teamId }),
-      },
-    });
+      });
 
-    return session.client_secret;
+      return session.client_secret;
+    } catch (e) {
+      // Se o Stripe falhar, libera o bloqueio para não prender o slot por 5 min.
+      await supabase
+        .from("bookings")
+        .delete()
+        .eq("id", bookingId as unknown as string)
+        .eq("status", "pending");
+      throw e;
+    }
   });
 
 export type BookingConfirmation = {
@@ -86,42 +122,25 @@ export const confirmBookingFromSession = createServerFn({ method: "POST" })
     const md = session.metadata ?? {};
     if (md.kind !== "sub_field_booking") return { ok: false, message: "Sessão não é uma reserva." };
     if (md.userId !== userId) return { ok: false, message: "Usuário não corresponde à sessão." };
-    const subFieldId = md.subFieldId;
-    const scheduledAt = md.scheduledAt;
-    if (!subFieldId || !scheduledAt) return { ok: false, message: "Dados incompletos." };
+    const bookingId = md.bookingId;
+    if (!bookingId) return { ok: false, message: "Reserva não localizada." };
 
-    // Idempotência: evita duplicar se o usuário recarregar a página de retorno
-    const { data: existing } = await supabase
+    // Idempotência: já confirmada → retorna ok.
+    const { data: current } = await supabase
       .from("bookings")
-      .select("id")
-      .eq("sub_field_id", subFieldId)
+      .select("id, status")
+      .eq("id", bookingId)
+      .maybeSingle();
+    if (!current) return { ok: false, message: "Reserva não localizada." };
+    if (current.status === "confirmed") return { ok: true, bookingId };
+
+    const { data: updated, error } = await supabase
+      .from("bookings")
+      .update({ status: "confirmed", message: "Reserva paga via Stripe" })
+      .eq("id", bookingId)
       .eq("requester_user_id", userId)
-      .eq("scheduled_at", scheduledAt)
-      .maybeSingle();
-    if (existing) return { ok: true, bookingId: existing.id };
-
-    // sub_fields não tem field_id: bookings.field_id é NOT NULL, usamos venue_id como fallback
-    const { data: sf } = await supabase
-      .from("sub_fields")
-      .select("venue_id")
-      .eq("id", subFieldId)
-      .maybeSingle();
-    const fieldId = sf?.venue_id ?? subFieldId;
-
-    const { data: inserted, error } = await supabase
-      .from("bookings")
-      .insert({
-        field_id: fieldId,
-        sub_field_id: subFieldId,
-        requester_user_id: userId,
-        requester_team_id: md.teamId ?? null,
-        scheduled_at: scheduledAt,
-        duration_minutes: 60,
-        status: "confirmed",
-        message: "Reserva paga via Stripe",
-      })
       .select("id")
       .single();
     if (error) return { ok: false, message: error.message };
-    return { ok: true, bookingId: inserted.id };
+    return { ok: true, bookingId: updated.id };
   });
