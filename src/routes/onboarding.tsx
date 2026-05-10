@@ -123,9 +123,31 @@ function OnboardingPage() {
           color: f.color,
           frame: "classic",
         });
+
+        // Para perfis Business/Campo, cria também o estabelecimento (venues)
+        if (t === "field" && session?.user) {
+          const { data: existingVenues } = await supabase
+            .from("venues" as never)
+            .select("id")
+            .eq("owner_user_id", session.user.id)
+            .limit(1);
+          if (!existingVenues || (existingVenues as { id: string }[]).length === 0) {
+            const { error: venueErr } = await supabase
+              .from("venues" as never)
+              .insert({
+                owner_user_id: session.user.id,
+                name: f.name,
+                city: f.city || null,
+                address: venueForm.address || null,
+                phone: venueForm.phone || null,
+                bio: venueForm.bio || null,
+              } as never);
+            if (venueErr) throw venueErr;
+          }
+        }
       }
       toast.success("Perfis criados!");
-      navigate({ to: "/" });
+      navigate({ to: selected.includes("field") ? "/complexo" : "/" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar perfis");
     }
