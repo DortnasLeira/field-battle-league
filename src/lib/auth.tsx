@@ -3,6 +3,17 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ProfileType = "player" | "team" | "field";
+export type AccountType = "sportist" | "business";
+
+export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
+  sportist: "Esportista",
+  business: "Business",
+};
+
+export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
+  sportist: ["player", "team"],
+  business: ["field"],
+};
 
 export type UserProfile = {
   id: string;
@@ -34,12 +45,14 @@ type AuthContextValue = {
   loading: boolean;
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
+  accountType: AccountType | null;
   refreshProfiles: () => Promise<void>;
   setActive: (profileId: string) => Promise<void>;
   signOut: () => Promise<void>;
   upsertProfile: (p: Partial<UserProfile> & { type: ProfileType; name: string }) => Promise<UserProfile | null>;
   updateProfile: (id: string, patch: Partial<UserProfile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
+  setAccountType: (t: AccountType) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -49,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [accountType, setAccountTypeState] = useState<AccountType | null>(null);
 
   // Bootstrap session
   useEffect(() => {
@@ -66,14 +80,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!session?.user) {
       setProfiles([]);
       setActiveId(null);
+      setAccountTypeState(null);
       return;
     }
-    const [{ data: profs }, { data: act }] = await Promise.all([
+    const [{ data: profs }, { data: act }, { data: acct }] = await Promise.all([
       supabase.from("user_profiles").select("*").eq("user_id", session.user.id).order("created_at"),
       supabase.from("active_profile").select("profile_id").eq("user_id", session.user.id).maybeSingle(),
+      supabase.from("user_account_types" as never).select("account_type").eq("user_id", session.user.id).maybeSingle(),
     ]);
     const list = (profs ?? []) as UserProfile[];
     setProfiles(list);
+    setAccountTypeState(((acct as { account_type?: AccountType } | null)?.account_type) ?? null);
     if (act?.profile_id && list.some((p) => p.id === act.profile_id)) {
       setActiveId(act.profile_id);
     } else if (list.length > 0) {
@@ -101,7 +118,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfiles([]);
     setActiveId(null);
+    setAccountTypeState(null);
   }, []);
+
+  const setAccountType = useCallback(
+    async (t: AccountType) => {
+      if (!session?.user) throw new Error("Não autenticado");
+      if (accountType && accountType !== t) {
+        throw new Error("Tipo de conta já definido e não pode ser alterado.");
+      }
+      const { error } = await supabase
+        .from("user_account_types" as never)
+        .insert({ user_id: session.user.id, account_type: t } as never);
+      if (error && !/duplicate|already/i.test(error.message)) throw error;
+      setAccountTypeState(t);
+    },
+    [session, accountType],
+  );
 
   const upsertProfile = useCallback<AuthContextValue["upsertProfile"]>(
     async (p) => {
@@ -152,12 +185,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     profiles,
     activeProfile,
+    accountType,
     refreshProfiles,
     setActive,
     signOut,
     upsertProfile,
     updateProfile,
     deleteProfile,
+    setAccountType,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
