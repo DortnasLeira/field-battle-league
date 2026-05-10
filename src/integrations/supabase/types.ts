@@ -627,6 +627,7 @@ export type Database = {
           name: string
           photo_url: string | null
           price_per_hour: number
+          pricing_rules: Json
           updated_at: string
           venue_id: string
         }
@@ -640,6 +641,7 @@ export type Database = {
           name: string
           photo_url?: string | null
           price_per_hour?: number
+          pricing_rules?: Json
           updated_at?: string
           venue_id: string
         }
@@ -653,6 +655,7 @@ export type Database = {
           name?: string
           photo_url?: string | null
           price_per_hour?: number
+          pricing_rules?: Json
           updated_at?: string
           venue_id?: string
         }

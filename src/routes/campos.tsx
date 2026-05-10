@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { BookingStripeCheckout } from "@/components/BookingStripeCheckout";
+import { computeSlotPrice, describeRule, type PricingRule } from "@/lib/pricing";
 
 export const Route = createFileRoute("/campos")({
   head: () => ({
@@ -45,6 +46,7 @@ type SubField = {
   price_per_hour: number;
   available_days: string[];
   available_times: string[];
+  pricing_rules: PricingRule[];
   photo_url: string | null;
   active: boolean;
 };
@@ -200,7 +202,7 @@ function VenueSubFields({
     setLoading(true);
     supabase
       .from("sub_fields")
-      .select("id, venue_id, name, field_type, price_per_hour, available_days, available_times, photo_url, active")
+      .select("id, venue_id, name, field_type, price_per_hour, available_days, available_times, pricing_rules, photo_url, active")
       .eq("venue_id", venue.id)
       .eq("active", true)
       .order("name")
@@ -228,13 +230,20 @@ function VenueSubFields({
     return new Date(`${date}T${time}:00`).toISOString();
   }, [date, time]);
 
+  const priced = useMemo(() => {
+    if (!selected || !scheduledAt) return null;
+    return computeSlotPrice(Number(selected.price_per_hour), selected.pricing_rules ?? [], scheduledAt);
+  }, [selected, scheduledAt]);
+
   if (showCheckout && selected && scheduledAt) {
+    const final = priced?.price ?? Number(selected.price_per_hour);
     return (
       <div>
         <DialogHeader>
           <DialogTitle className="font-display uppercase">Pagamento · {selected.name}</DialogTitle>
           <DialogDescription>
-            R$ {Number(selected.price_per_hour).toFixed(2)} · {date} {time}
+            R$ {final.toFixed(2)} · {date} {time}
+            {priced?.rule ? ` · ${describeRule(priced.rule)}` : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
@@ -329,9 +338,25 @@ function VenueSubFields({
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
         <div className="text-sm text-muted-foreground">
-          {selected && date && time
-            ? <>Total: <strong className="text-primary">R$ {Number(selected.price_per_hour).toFixed(2)}</strong></>
-            : "Escolha campo, data e horário"}
+          {selected && date && time && priced ? (
+            <div className="flex flex-col">
+              <span>
+                Total: <strong className="text-primary">R$ {priced.price.toFixed(2)}</strong>
+                {priced.rule && Number(selected.price_per_hour) !== priced.price && (
+                  <span className="ml-2 text-xs text-muted-foreground line-through">
+                    R$ {Number(selected.price_per_hour).toFixed(2)}
+                  </span>
+                )}
+              </span>
+              {priced.rule && (
+                <span className="text-[11px] text-primary/80">
+                  {describeRule(priced.rule)}
+                </span>
+              )}
+            </div>
+          ) : (
+            "Escolha campo, data e horário"
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
