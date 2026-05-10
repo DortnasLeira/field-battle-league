@@ -14,6 +14,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as PainelRouteImport } from './routes/painel'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -56,6 +57,11 @@ const ProRoute = ProRouteImport.update({
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelRoute = PainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/pro': typeof ProRoute
   '/ranking': typeof RankingRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/pro': typeof ProRoute
   '/ranking': typeof RankingRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/pro': typeof ProRoute
   '/ranking': typeof RankingRoute
@@ -239,6 +248,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/ligas'
     | '/onboarding'
+    | '/painel'
     | '/perfil'
     | '/pro'
     | '/ranking'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/ligas'
     | '/onboarding'
+    | '/painel'
     | '/perfil'
     | '/pro'
     | '/ranking'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/ligas'
     | '/onboarding'
+    | '/painel'
     | '/perfil'
     | '/pro'
     | '/ranking'
@@ -315,6 +327,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LigasRoute: typeof LigasRoute
   OnboardingRoute: typeof OnboardingRoute
+  PainelRoute: typeof PainelRoute
   PerfilRoute: typeof PerfilRoute
   ProRoute: typeof ProRoute
   RankingRoute: typeof RankingRoute
@@ -365,6 +378,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel': {
+      id: '/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof PainelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -507,6 +527,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LigasRoute: LigasRoute,
   OnboardingRoute: OnboardingRoute,
+  PainelRoute: PainelRoute,
   PerfilRoute: PerfilRoute,
   ProRoute: ProRoute,
   RankingRoute: RankingRoute,
