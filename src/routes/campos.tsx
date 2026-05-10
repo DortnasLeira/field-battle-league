@@ -369,6 +369,11 @@ function VenueSubFields({
                         <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
                       )}
                     </div>
+                    {date && time && (
+                      <div className="sm:col-span-2">
+                        <SlotAvailabilityBadge state={availability} />
+                      </div>
+                    )}
                   </div>
                 )}
               </button>
