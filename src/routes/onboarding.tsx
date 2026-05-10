@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, User, Shield, MapPin } from "lucide-react";
+import { Check, ChevronRight, User, Shield, MapPin, Briefcase, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,10 @@ import {
   PROFILE_TYPE_LABEL,
   PRESET_AVATARS_BY_TYPE,
   PRESET_COLORS,
+  ALLOWED_PROFILE_TYPES,
+  ACCOUNT_TYPE_LABEL,
   type ProfileType,
+  type AccountType,
 } from "@/lib/auth";
 
 export const Route = createFileRoute("/onboarding")({
@@ -27,11 +30,29 @@ const TYPES: { id: ProfileType; icon: typeof User; desc: string }[] = [
   { id: "field", icon: MapPin, desc: "Sou dono ou gestor de um campo e quero anunciar horários." },
 ];
 
+const ACCOUNT_OPTIONS: { id: AccountType; icon: typeof User; title: string; desc: string; allowed: string }[] = [
+  {
+    id: "sportist",
+    icon: Trophy,
+    title: "Perfil Esportista",
+    desc: "Para quem joga ou capitaneia um time. Permite criar perfis de Jogador e Time.",
+    allowed: "Jogador + Time",
+  },
+  {
+    id: "business",
+    icon: Briefcase,
+    title: "Perfil Business",
+    desc: "Para proprietários e gestores de complexos esportivos. Permite criar perfil de Campo.",
+    allowed: "Campo",
+  },
+];
+
 function OnboardingPage() {
-  const { session, profiles, loading, upsertProfile } = useAuth();
+  const { session, profiles, loading, upsertProfile, accountType, setAccountType } = useAuth();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<ProfileType[]>([]);
-  const [step, setStep] = useState<"choose" | "fill">("choose");
+  const [step, setStep] = useState<"kind" | "choose" | "fill">(accountType ? "choose" : "kind");
+  const [savingKind, setSavingKind] = useState<AccountType | null>(null);
   const [forms, setForms] = useState<Record<ProfileType, { name: string; nickname: string; city: string; avatar: string; color: string }>>({
     player: { name: "", nickname: "", city: "", avatar: "⚽", color: "#F59E0B" },
     team: { name: "", nickname: "", city: "", avatar: "🦁", color: "#EF4444" },
@@ -42,7 +63,41 @@ function OnboardingPage() {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
+  useEffect(() => {
+    if (accountType && step === "kind") setStep("choose");
+  }, [accountType, step]);
+
+  const allowedTypes = accountType ? ALLOWED_PROFILE_TYPES[accountType] : [];
+  const visibleTypes = TYPES.filter((t) => allowedTypes.includes(t.id));
   const existingTypes = new Set(profiles.map((p) => p.type));
+
+  const chooseKind = async (t: AccountType) => {
+    setSavingKind(t);
+    try {
+      await setAccountType(t);
+      setStep("choose");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao definir tipo de conta");
+    } finally {
+      setSavingKind(null);
+    }
+  };
+
+  const toggleType = (t: ProfileType) => {
+    if (!allowedTypes.includes(t)) {
+      toast.error(
+        `Sua conta ${accountType ? ACCOUNT_TYPE_LABEL[accountType] : ""} não permite criar perfil de ${PROFILE_TYPE_LABEL[t]}.`,
+      );
+      return;
+    }
+    if (existingTypes.has(t)) {
+      toast.error(
+        `Você já possui um perfil de ${PROFILE_TYPE_LABEL[t]}. Edite o perfil existente em vez de criar outro.`,
+      );
+      return;
+    }
+    setSelected((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
+  };
 
   const toggleType = (t: ProfileType) => {
     if (existingTypes.has(t)) {
