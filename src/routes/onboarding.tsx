@@ -60,6 +60,7 @@ function OnboardingPage() {
     team: { name: "", nickname: "", city: "", avatar: "🦁", color: "#EF4444" },
     field: { name: "", nickname: "", city: "", avatar: "🏟️", color: "#10B981" },
   });
+  const [venueForm, setVenueForm] = useState({ address: "", phone: "", bio: "" });
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
