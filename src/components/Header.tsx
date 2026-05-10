@@ -114,7 +114,7 @@ export function Header() {
 }
 
 function ProfileSwitcher() {
-  const { session, profiles, activeProfile, setActive, signOut } = useAuth();
+  const { session, profiles, activeProfile, accountType, setActive, signOut } = useAuth();
   const navigate = useNavigate();
 
   if (!session) {
@@ -132,6 +132,8 @@ function ProfileSwitcher() {
       </Button>
     );
   }
+
+  const isBusiness = accountType === "business";
 
   return (
     <div className="flex items-center gap-1">
@@ -157,57 +159,87 @@ function ProfileSwitcher() {
         <DropdownMenuTrigger asChild>
           <button
             className="flex h-9 items-center justify-center rounded-md border border-border bg-surface px-2 transition hover:border-primary/40"
-            title="Trocar perfil"
+            title={isBusiness ? "Menu" : "Trocar perfil"}
           >
             <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          Trocar perfil
-        </DropdownMenuLabel>
-        {profiles.map((p) => (
-          <DropdownMenuItem
-            key={p.id}
-            onClick={() => {
-              setActive(p.id);
-              toast.success(`Perfil ${PROFILE_TYPE_LABEL[p.type]} ativado.`);
-            }}
-            className="gap-3"
-          >
-            <div
-              className={cn("flex h-8 w-8 items-center justify-center rounded-md text-base", frameClass(p.frame))}
-              style={{ background: p.color + "22", color: p.color }}
-            >
-              {p.avatar ?? PROFILE_TYPE_EMOJI[p.type]}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold">{p.nickname || p.name}</div>
-              <div className="font-mono text-[9px] uppercase text-muted-foreground">{PROFILE_TYPE_LABEL[p.type]}</div>
-            </div>
-            {p.id === activeProfile.id && <span className="text-[10px] text-primary">●</span>}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
-          <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
-          <Settings className="mr-2 h-4 w-4" /> Editar perfis
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={async () => {
-            await signOut();
-            toast.success("Sessão encerrada.");
-            navigate({ to: "/auth" });
-          }}
-          className="text-destructive focus:text-destructive"
-        >
-          <LogOut className="mr-2 h-4 w-4" /> Sair
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <DropdownMenuContent align="end" className="w-64">
+          {isBusiness ? (
+            <>
+              <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Business
+              </DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigate({ to: "/painel" })}>
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Painel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate({ to: "/complexo" })}>
+                <Plus className="mr-2 h-4 w-4" /> Adicionar campos
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
+                <Settings className="mr-2 h-4 w-4" /> Editar perfil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut();
+                  toast.success("Sessão encerrada.");
+                  navigate({ to: "/auth" });
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Sair
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Trocar perfil
+              </DropdownMenuLabel>
+              {profiles.map((p) => (
+                <DropdownMenuItem
+                  key={p.id}
+                  onClick={() => {
+                    setActive(p.id);
+                    toast.success(`Perfil ${PROFILE_TYPE_LABEL[p.type]} ativado.`);
+                  }}
+                  className="gap-3"
+                >
+                  <div
+                    className={cn("flex h-8 w-8 items-center justify-center rounded-md text-base", frameClass(p.frame))}
+                    style={{ background: p.color + "22", color: p.color }}
+                  >
+                    {p.avatar ?? PROFILE_TYPE_EMOJI[p.type]}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold">{p.nickname || p.name}</div>
+                    <div className="font-mono text-[9px] uppercase text-muted-foreground">{PROFILE_TYPE_LABEL[p.type]}</div>
+                  </div>
+                  {p.id === activeProfile.id && <span className="text-[10px] text-primary">●</span>}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
+                <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
+                <Settings className="mr-2 h-4 w-4" /> Editar perfis
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut();
+                  toast.success("Sessão encerrada.");
+                  navigate({ to: "/auth" });
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Sair
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
