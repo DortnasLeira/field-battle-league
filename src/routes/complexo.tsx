@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Building2, Plus, Trash2, Save, ImagePlus, Loader2, MapPin, Phone, DollarSign } from "lucide-react";
+import { Building2, Plus, Trash2, Save, ImagePlus, Loader2, MapPin, Phone, DollarSign, Clock, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import type { PricingRule } from "@/lib/pricing";
 
 export const Route = createFileRoute("/complexo")({
   head: () => ({
