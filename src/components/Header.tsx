@@ -27,14 +27,18 @@ const authLinks = [
   { to: "/pro", label: "PRO", icon: Trophy },
 ] as const;
 
-const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem"]);
+const businessLink = { to: "/complexo", label: "Complexo", icon: Building2 } as const;
+
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { session } = useAuth();
+  const { session, accountType } = useAuth();
   const navigate = useNavigate();
   const isActive = (to: string) => pathname.startsWith(to);
-  const links = session ? [...publicLinks, ...authLinks] : publicLinks;
+  const links = session
+    ? [...publicLinks, ...authLinks, ...(accountType === "business" ? [businessLink] : [])]
+    : publicLinks;
   const cols = links.length;
 
   const handleNav = (to: string) => (e: React.MouseEvent) => {
