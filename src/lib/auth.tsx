@@ -3,6 +3,17 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ProfileType = "player" | "team" | "field";
+export type AccountType = "sportist" | "business";
+
+export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
+  sportist: "Esportista",
+  business: "Business",
+};
+
+export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
+  sportist: ["player", "team"],
+  business: ["field"],
+};
 
 export type UserProfile = {
   id: string;
