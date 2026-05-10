@@ -29,7 +29,6 @@ const authLinks = [
 
 const businessLinks = [
   { to: "/complexo", label: "Complexo", icon: Building2 },
-  { to: "/painel", label: "Painel", icon: LayoutDashboard },
 ] as const;
 
 const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo", "/painel"]);
