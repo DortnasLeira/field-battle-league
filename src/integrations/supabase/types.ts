@@ -1001,8 +1001,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_pending_bookings: { Args: never; Returns: number }
       has_active_team_pro: {
         Args: { _env?: string; _team_id: string }
+        Returns: boolean
+      }
+      is_sub_field_slot_available: {
+        Args: { _scheduled_at: string; _sub_field_id: string }
         Returns: boolean
       }
       is_team_member: {

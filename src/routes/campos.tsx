@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Search, Building2, Clock, ChevronRight, Loader2 } from "lucide-react";
+import { MapPin, Search, Building2, Clock, ChevronRight, Loader2, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -212,6 +212,49 @@ function VenueSubFields({
       });
   }, [venue.id]);
 
+  const scheduledAt = useMemo(() => {
+    if (!date || !time) return "";
+    return new Date(`${date}T${time}:00`).toISOString();
+  }, [date, time]);
+
+  const priced = useMemo(() => {
+    if (!selected || !scheduledAt) return null;
+    return computeSlotPrice(Number(selected.price_per_hour), selected.pricing_rules ?? [], scheduledAt);
+  }, [selected, scheduledAt]);
+
+  // ───── Trava de disponibilidade em tempo real ─────
+  // "unknown" enquanto consulta; "available" libera o checkout; "locked" bloqueia.
+  const [availability, setAvailability] = useState<"unknown" | "checking" | "available" | "locked">("unknown");
+
+  useEffect(() => {
+    if (!selected || !scheduledAt) { setAvailability("unknown"); return; }
+    let cancelled = false;
+    setAvailability("checking");
+    supabase
+      .rpc("is_sub_field_slot_available" as never, {
+        _sub_field_id: selected.id,
+        _scheduled_at: scheduledAt,
+      } as never)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { setAvailability("unknown"); return; }
+        setAvailability(data ? "available" : "locked");
+      });
+    // Re-checa a cada 20s caso o slot acabe de ser bloqueado por outra pessoa
+    const id = window.setInterval(() => {
+      supabase
+        .rpc("is_sub_field_slot_available" as never, {
+          _sub_field_id: selected.id,
+          _scheduled_at: scheduledAt,
+        } as never)
+        .then(({ data, error }) => {
+          if (cancelled || error) return;
+          setAvailability(data ? "available" : "locked");
+        });
+    }, 20_000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [selected?.id, scheduledAt]);
+
   const startCheckout = () => {
     if (!authed) return onLogin();
     if (!canBook) {
@@ -222,18 +265,16 @@ function VenueSubFields({
       toast.error("Selecione campo, data e horário.");
       return;
     }
+    if (availability === "locked") {
+      toast.error("Este horário acabou de ser bloqueado por outra pessoa. Escolha outro slot.");
+      return;
+    }
+    if (availability !== "available") {
+      toast.error("Aguarde a verificação de disponibilidade.");
+      return;
+    }
     setShowCheckout(true);
   };
-
-  const scheduledAt = useMemo(() => {
-    if (!date || !time) return "";
-    return new Date(`${date}T${time}:00`).toISOString();
-  }, [date, time]);
-
-  const priced = useMemo(() => {
-    if (!selected || !scheduledAt) return null;
-    return computeSlotPrice(Number(selected.price_per_hour), selected.pricing_rules ?? [], scheduledAt);
-  }, [selected, scheduledAt]);
 
   if (showCheckout && selected && scheduledAt) {
     const final = priced?.price ?? Number(selected.price_per_hour);
@@ -328,6 +369,11 @@ function VenueSubFields({
                         <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
                       )}
                     </div>
+                    {date && time && (
+                      <div className="sm:col-span-2">
+                        <SlotAvailabilityBadge state={availability} />
+                      </div>
+                    )}
                   </div>
                 )}
               </button>
@@ -362,13 +408,48 @@ function VenueSubFields({
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
           <Button
             onClick={startCheckout}
-            disabled={!selected || !date || !time}
+            disabled={
+              !selected || !date || !time ||
+              availability === "checking" || availability === "locked"
+            }
             className="bg-gradient-primary text-primary-foreground"
           >
-            Reservar e pagar
+            {availability === "locked"
+              ? <><Lock className="mr-1 h-4 w-4" /> Slot indisponível</>
+              : availability === "checking"
+                ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Verificando…</>
+                : "Reservar e pagar"}
           </Button>
         </div>
       </div>
     </div>
   );
+}
+
+function SlotAvailabilityBadge({ state }: { state: "unknown" | "checking" | "available" | "locked" }) {
+  if (state === "checking") {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Verificando disponibilidade do slot…
+      </div>
+    );
+  }
+  if (state === "available") {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
+        <CheckCircle2 className="h-3.5 w-3.5" />
+        Horário disponível — pronto para reservar.
+      </div>
+    );
+  }
+  if (state === "locked") {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <Lock className="h-3.5 w-3.5" />
+        Slot bloqueado por outra pessoa. Escolha outro horário.
+      </div>
+    );
+  }
+  return null;
 }
