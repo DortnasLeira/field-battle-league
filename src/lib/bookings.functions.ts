@@ -43,7 +43,7 @@ export const createBookingCheckout = createServerFn({ method: "POST" })
       line_items: [{
         price_data: {
           currency: "brl",
-          product_data: { name: `${venueName} — ${sub.name} (1h)` },
+          product_data: { name: `${venueName} — ${sub.name} (1h)${ruleSuffix}` },
           unit_amount: amountCents,
         },
         quantity: 1,
