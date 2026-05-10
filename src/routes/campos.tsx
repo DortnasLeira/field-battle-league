@@ -46,6 +46,7 @@ type SubField = {
   price_per_hour: number;
   available_days: string[];
   available_times: string[];
+  pricing_rules: PricingRule[];
   photo_url: string | null;
   active: boolean;
 };
