@@ -15,6 +15,7 @@ import {
   Trophy,
   Inbox,
   Calendar,
+  Settings,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { frameClass, type UserProfile } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { FIELD_ACHIEVEMENTS } from "@/lib/fieldAchievements";
+import { computeFieldAchievements, type FieldStats } from "@/lib/fieldAchievements";
 import { toast } from "sonner";
 
 type Venue = {
@@ -33,6 +34,7 @@ type Venue = {
   phone: string | null;
   bio: string | null;
   photo_url: string | null;
+  verified?: boolean | null;
 };
 type SubField = {
   id: string;
