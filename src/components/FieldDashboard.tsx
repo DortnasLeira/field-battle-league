@@ -325,7 +325,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
           </span>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {FIELD_ACHIEVEMENTS.map((a) => (
+          {achievements.map((a) => (
             <div
               key={a.id}
               className={cn(
