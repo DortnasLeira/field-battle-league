@@ -29,7 +29,9 @@ import { Route as TimeIdRouteImport } from './routes/time.$id'
 import { Route as SumulaMatchIdRouteImport } from './routes/sumula.$matchId'
 import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
+import { Route as ComplexoEditarRouteImport } from './routes/complexo_.editar'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as CampoIdRouteImport } from './routes/campo.$id'
 import { Route as ArbitroIdRouteImport } from './routes/arbitro.$id'
 import { Route as TimeIdTransferirRouteImport } from './routes/time_.$id.transferir'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -134,9 +136,19 @@ const JogadorIdRoute = JogadorIdRouteImport.update({
   path: '/jogador/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComplexoEditarRoute = ComplexoEditarRouteImport.update({
+  id: '/complexo_/editar',
+  path: '/complexo/editar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampoIdRoute = CampoIdRouteImport.update({
+  id: '/campo/$id',
+  path: '/campo/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArbitroIdRoute = ArbitroIdRouteImport.update({
@@ -174,7 +186,9 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
+  '/campo/$id': typeof CampoIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
@@ -200,7 +214,9 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
+  '/campo/$id': typeof CampoIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
@@ -227,7 +243,9 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
+  '/campo/$id': typeof CampoIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/complexo_/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil_/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
@@ -255,7 +273,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/vagas'
     | '/arbitro/$id'
+    | '/campo/$id'
     | '/checkout/return'
+    | '/complexo/editar'
     | '/jogador/$id'
     | '/perfil/editar'
     | '/sumula/$matchId'
@@ -281,7 +301,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/vagas'
     | '/arbitro/$id'
+    | '/campo/$id'
     | '/checkout/return'
+    | '/complexo/editar'
     | '/jogador/$id'
     | '/perfil/editar'
     | '/sumula/$matchId'
@@ -307,7 +329,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/vagas'
     | '/arbitro/$id'
+    | '/campo/$id'
     | '/checkout/return'
+    | '/complexo_/editar'
     | '/jogador/$id'
     | '/perfil_/editar'
     | '/sumula/$matchId'
@@ -334,7 +358,9 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   VagasRoute: typeof VagasRoute
   ArbitroIdRoute: typeof ArbitroIdRoute
+  CampoIdRoute: typeof CampoIdRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ComplexoEditarRoute: typeof ComplexoEditarRoute
   JogadorIdRoute: typeof JogadorIdRoute
   PerfilEditarRoute: typeof PerfilEditarRoute
   SumulaMatchIdRoute: typeof SumulaMatchIdRoute
@@ -485,11 +511,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JogadorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/complexo_/editar': {
+      id: '/complexo_/editar'
+      path: '/complexo/editar'
+      fullPath: '/complexo/editar'
+      preLoaderRoute: typeof ComplexoEditarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campo/$id': {
+      id: '/campo/$id'
+      path: '/campo/$id'
+      fullPath: '/campo/$id'
+      preLoaderRoute: typeof CampoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/arbitro/$id': {
@@ -534,7 +574,9 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   VagasRoute: VagasRoute,
   ArbitroIdRoute: ArbitroIdRoute,
+  CampoIdRoute: CampoIdRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  ComplexoEditarRoute: ComplexoEditarRoute,
   JogadorIdRoute: JogadorIdRoute,
   PerfilEditarRoute: PerfilEditarRoute,
   SumulaMatchIdRoute: SumulaMatchIdRoute,
