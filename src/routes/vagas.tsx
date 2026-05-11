@@ -75,8 +75,20 @@ function VagasPage() {
     acceptApplication,
     rejectApplication,
   } = useStore();
-  const { session, activeProfile } = useAuth();
+  const { session, activeProfile, accountType } = useAuth();
   const navigate = useNavigate();
+
+  // Perfis Business (Campo) não têm acesso a Vagas
+  if (accountType === "business") {
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        toast.error("Vagas são exclusivas de perfis Esportista.");
+        navigate({ to: "/perfil" });
+      }, 0);
+    }
+    return null;
+  }
+
   const requireLogin = () => { toast.error("Faça login para continuar."); navigate({ to: "/auth", search: { redirect: "/vagas" } }); };
   const isTeamProfile = activeProfile?.type === "team";
   const isPlayerProfile = activeProfile?.type === "player";

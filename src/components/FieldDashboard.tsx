@@ -15,6 +15,7 @@ import {
   Trophy,
   Inbox,
   Calendar,
+  Settings,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { frameClass, type UserProfile } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { FIELD_ACHIEVEMENTS } from "@/lib/fieldAchievements";
+import { computeFieldAchievements, type FieldStats } from "@/lib/fieldAchievements";
 import { toast } from "sonner";
 
 type Venue = {
@@ -33,6 +34,7 @@ type Venue = {
   phone: string | null;
   bio: string | null;
   photo_url: string | null;
+  verified?: boolean | null;
 };
 type SubField = {
   id: string;
@@ -58,6 +60,8 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [bookingsTotal, setBookingsTotal] = useState(0);
   const [bookingsPending, setBookingsPending] = useState(0);
+  const [bookingsConfirmed, setBookingsConfirmed] = useState(0);
+  const [saturdayConfirmed, setSaturdayConfirmed] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -86,12 +90,18 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
         if (ids.length) {
           const { data: bks } = await supabase
             .from("bookings" as never)
-            .select("id,status")
+            .select("id,status,scheduled_at")
             .in("sub_field_id", ids);
-          const arr = (bks as { id: string; status: string }[] | null) ?? [];
+          const arr =
+            (bks as { id: string; status: string; scheduled_at: string }[] | null) ?? [];
           if (cancel) return;
           setBookingsTotal(arr.length);
           setBookingsPending(arr.filter((b) => b.status === "pending").length);
+          const confirmed = arr.filter((b) => b.status === "confirmed");
+          setBookingsConfirmed(confirmed.length);
+          setSaturdayConfirmed(
+            confirmed.filter((b) => new Date(b.scheduled_at).getDay() === 6).length,
+          );
         }
       }
       setLoading(false);
@@ -101,13 +111,37 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
     };
   }, [profile.user_id]);
 
-  const unlocked = FIELD_ACHIEVEMENTS.filter((a) => a.unlocked).length;
-  const total = FIELD_ACHIEVEMENTS.length;
-
   const cheapest = useMemo(() => {
     const prices = subFields.map((s) => Number(s.price_per_hour) || 0).filter((p) => p > 0);
     return prices.length ? Math.min(...prices) : 0;
   }, [subFields]);
+
+  const stats: FieldStats = useMemo(() => {
+    const days = new Set<string>();
+    let saturdaySlots = 0;
+    for (const sf of subFields) {
+      for (const d of sf.available_days ?? []) days.add(d);
+      if ((sf.available_days ?? []).includes("sat")) {
+        saturdaySlots += (sf.available_times ?? []).length;
+      }
+    }
+    return {
+      fieldsCount: subFields.length,
+      bookingsConfirmed,
+      hasPricingRule: subFields.some(
+        (s) => Array.isArray(s.pricing_rules) && s.pricing_rules.length > 0,
+      ),
+      daysCovered: days,
+      saturdaySlotsTotal: saturdaySlots,
+      saturdayBookingsConfirmed: saturdayConfirmed,
+      verified: !!venue?.verified,
+      hasFiveStarReview: false,
+    };
+  }, [subFields, bookingsConfirmed, saturdayConfirmed, venue]);
+
+  const achievements = useMemo(() => computeFieldAchievements(stats), [stats]);
+  const unlocked = achievements.filter((a) => a.unlocked).length;
+  const total = achievements.length;
 
   const share = async () => {
     const url = window.location.href;
@@ -174,6 +208,11 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
             <Button variant="outline" size="sm" onClick={share}>
               <Share2 className="mr-1 h-4 w-4" /> Compartilhar
             </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/complexo/editar">
+                <Settings className="mr-1 h-4 w-4" /> Editar complexo
+              </Link>
+            </Button>
             <Button asChild size="sm" className="bg-gradient-primary text-primary-foreground">
               <Link to="/complexo">
                 <Plus className="mr-1 h-4 w-4" /> Adicionar campos
@@ -235,9 +274,11 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {subFields.map((sf) => (
-              <div
+              <Link
                 key={sf.id}
-                className="overflow-hidden rounded-lg border border-border bg-surface"
+                to="/campo/$id"
+                params={{ id: sf.id }}
+                className="overflow-hidden rounded-lg border border-border bg-surface transition hover:border-primary/40 hover:shadow-glow"
               >
                 <div
                   className="aspect-video w-full bg-muted"
@@ -273,7 +314,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
                     </Badge>
                   )}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
@@ -291,7 +332,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
           </span>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {FIELD_ACHIEVEMENTS.map((a) => (
+          {achievements.map((a) => (
             <div
               key={a.id}
               className={cn(
