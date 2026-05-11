@@ -58,6 +58,8 @@ function RankingPage() {
       navigate({ to: "/perfil" });
     }
   }, [accountType, navigate]);
+
+  useEffect(() => {
     (async () => {
       const [{ data: ts }, { data: ms }] = await Promise.all([
         supabase
