@@ -208,6 +208,11 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
             <Button variant="outline" size="sm" onClick={share}>
               <Share2 className="mr-1 h-4 w-4" /> Compartilhar
             </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/complexo/editar">
+                <Settings className="mr-1 h-4 w-4" /> Editar complexo
+              </Link>
+            </Button>
             <Button asChild size="sm" className="bg-gradient-primary text-primary-foreground">
               <Link to="/complexo">
                 <Plus className="mr-1 h-4 w-4" /> Adicionar campos
