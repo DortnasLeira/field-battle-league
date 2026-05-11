@@ -21,6 +21,13 @@ const publicLinks = [
   { to: "/vagas", label: "Vagas", icon: UserPlus },
 ] as const;
 
+// Links restritos ao Business (sem Vagas e Ranking, que são contexto Esportista)
+const businessPublicLinks = [
+  { to: "/buscar", label: "Buscar", icon: Search },
+  { to: "/ligas", label: "Ligas", icon: Trophy },
+  { to: "/campos", label: "Campos", icon: MapPin },
+] as const;
+
 const authLinks = [
   { to: "/desafios", label: "Desafios", icon: Swords },
   { to: "/arbitragem", label: "Arbitragem", icon: Award },
@@ -38,8 +45,11 @@ export function Header() {
   const { session, accountType } = useAuth();
   const navigate = useNavigate();
   const isActive = (to: string) => pathname.startsWith(to);
+  const isBusiness = accountType === "business";
   const links = session
-    ? [...publicLinks, ...authLinks, ...(accountType === "business" ? businessLinks : [])]
+    ? isBusiness
+      ? [...businessPublicLinks, ...authLinks, ...businessLinks]
+      : [...publicLinks, ...authLinks]
     : publicLinks;
   const cols = links.length;
 
