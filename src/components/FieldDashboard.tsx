@@ -274,9 +274,11 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {subFields.map((sf) => (
-              <div
+              <Link
                 key={sf.id}
-                className="overflow-hidden rounded-lg border border-border bg-surface"
+                to="/campo/$id"
+                params={{ id: sf.id }}
+                className="overflow-hidden rounded-lg border border-border bg-surface transition hover:border-primary/40 hover:shadow-glow"
               >
                 <div
                   className="aspect-video w-full bg-muted"
