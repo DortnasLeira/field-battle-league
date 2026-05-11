@@ -314,7 +314,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
                     </Badge>
                   )}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
