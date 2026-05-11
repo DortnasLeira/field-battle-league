@@ -1,10 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy, TrendingUp, TrendingDown, Minus, Crown, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/ranking")({
   head: () => ({
@@ -44,11 +46,18 @@ function tier(r: number) {
 }
 
 function RankingPage() {
+  const { accountType } = useAuth();
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<TeamRow[]>([]);
   const [matchesByTeam, setMatchesByTeam] = useState<Record<string, MatchRow[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (accountType === "business") {
+      toast.error("Ranking é exclusivo de perfis Esportista.");
+      navigate({ to: "/perfil" });
+    }
+  }, [accountType, navigate]);
     (async () => {
       const [{ data: ts }, { data: ms }] = await Promise.all([
         supabase
