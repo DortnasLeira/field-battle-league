@@ -115,7 +115,9 @@ function FieldDetailsPage() {
         </Button>
         {isOwner && (
           <Button asChild size="sm" variant="outline">
-            <Link to="/complexo"><Edit className="mr-1 h-4 w-4" /> Editar campo</Link>
+            <Link to="/campo/$id/editar" params={{ id: sf.id }}>
+              <Edit className="mr-1 h-4 w-4" /> Editar campo
+            </Link>
           </Button>
         )}
       </div>

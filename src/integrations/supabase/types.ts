@@ -1006,6 +1006,7 @@ export type Database = {
         Args: { _env?: string; _team_id: string }
         Returns: boolean
       }
+      is_business_account: { Args: { _uid: string }; Returns: boolean }
       is_sub_field_slot_available: {
         Args: { _scheduled_at: string; _sub_field_id: string }
         Returns: boolean

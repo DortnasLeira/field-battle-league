@@ -34,6 +34,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as CampoIdRouteImport } from './routes/campo.$id'
 import { Route as ArbitroIdRouteImport } from './routes/arbitro.$id'
 import { Route as TimeIdTransferirRouteImport } from './routes/time_.$id.transferir'
+import { Route as CampoIdEditarRouteImport } from './routes/campo.$id.editar'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const VagasRoute = VagasRouteImport.update({
@@ -161,6 +162,11 @@ const TimeIdTransferirRoute = TimeIdTransferirRouteImport.update({
   path: '/time/$id/transferir',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampoIdEditarRoute = CampoIdEditarRouteImport.update({
+  id: '/editar',
+  path: '/editar',
+  getParentRoute: () => CampoIdRoute,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -186,13 +192,14 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
-  '/campo/$id': typeof CampoIdRoute
+  '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
   '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
+  '/campo/$id/editar': typeof CampoIdEditarRoute
   '/time/$id/transferir': typeof TimeIdTransferirRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -214,13 +221,14 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
-  '/campo/$id': typeof CampoIdRoute
+  '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
   '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
+  '/campo/$id/editar': typeof CampoIdEditarRoute
   '/time/$id/transferir': typeof TimeIdTransferirRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -243,13 +251,14 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
   '/arbitro/$id': typeof ArbitroIdRoute
-  '/campo/$id': typeof CampoIdRoute
+  '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
   '/complexo_/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil_/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
+  '/campo/$id/editar': typeof CampoIdEditarRoute
   '/time_/$id/transferir': typeof TimeIdTransferirRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/perfil/editar'
     | '/sumula/$matchId'
     | '/time/$id'
+    | '/campo/$id/editar'
     | '/time/$id/transferir'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/perfil/editar'
     | '/sumula/$matchId'
     | '/time/$id'
+    | '/campo/$id/editar'
     | '/time/$id/transferir'
     | '/api/public/payments/webhook'
   id:
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/perfil_/editar'
     | '/sumula/$matchId'
     | '/time/$id'
+    | '/campo/$id/editar'
     | '/time_/$id/transferir'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -358,7 +370,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   VagasRoute: typeof VagasRoute
   ArbitroIdRoute: typeof ArbitroIdRoute
-  CampoIdRoute: typeof CampoIdRoute
+  CampoIdRoute: typeof CampoIdRouteWithChildren
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ComplexoEditarRoute: typeof ComplexoEditarRoute
   JogadorIdRoute: typeof JogadorIdRoute
@@ -546,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimeIdTransferirRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/campo/$id/editar': {
+      id: '/campo/$id/editar'
+      path: '/editar'
+      fullPath: '/campo/$id/editar'
+      preLoaderRoute: typeof CampoIdEditarRouteImport
+      parentRoute: typeof CampoIdRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -555,6 +574,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface CampoIdRouteChildren {
+  CampoIdEditarRoute: typeof CampoIdEditarRoute
+}
+
+const CampoIdRouteChildren: CampoIdRouteChildren = {
+  CampoIdEditarRoute: CampoIdEditarRoute,
+}
+
+const CampoIdRouteWithChildren =
+  CampoIdRoute._addFileChildren(CampoIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -574,7 +604,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   VagasRoute: VagasRoute,
   ArbitroIdRoute: ArbitroIdRoute,
-  CampoIdRoute: CampoIdRoute,
+  CampoIdRoute: CampoIdRouteWithChildren,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ComplexoEditarRoute: ComplexoEditarRoute,
   JogadorIdRoute: JogadorIdRoute,

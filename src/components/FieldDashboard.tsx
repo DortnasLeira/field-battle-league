@@ -20,6 +20,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { frameClass, type UserProfile } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -331,32 +332,61 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
             {unlocked}/{total} desbloqueadas
           </span>
         </div>
+
+        {/* Progresso geral */}
+        <div className="mb-4 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-mono uppercase tracking-wider text-muted-foreground">
+              Progresso geral
+            </span>
+            <span className="font-mono text-primary">
+              {Math.round((unlocked / Math.max(1, total)) * 100)}%
+            </span>
+          </div>
+          <Progress value={(unlocked / Math.max(1, total)) * 100} className="h-2" />
+        </div>
+
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {achievements.map((a) => (
             <div
               key={a.id}
               className={cn(
-                "flex items-start gap-3 rounded-lg border p-3 transition",
+                "flex flex-col gap-2 rounded-lg border p-3 transition",
                 a.unlocked
                   ? "border-primary/30 bg-primary/5"
-                  : "border-border bg-surface opacity-60",
+                  : "border-border bg-surface",
               )}
             >
-              <div
-                className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-xl",
-                  a.unlocked ? "bg-primary/15" : "bg-muted",
-                )}
-              >
-                {a.unlocked ? a.emoji : <Lock className="h-4 w-4 text-muted-foreground" />}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 text-sm font-semibold">
-                  {a.title}
-                  {a.unlocked && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+              <div className="flex items-start gap-3">
+                <div
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-xl",
+                    a.unlocked ? "bg-primary/15" : "bg-muted",
+                  )}
+                >
+                  {a.unlocked ? a.emoji : <Lock className="h-4 w-4 text-muted-foreground" />}
                 </div>
-                <p className="text-xs text-muted-foreground">{a.description}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-sm font-semibold">
+                    {a.title}
+                    {a.unlocked && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{a.description}</p>
+                </div>
+                <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                  {a.current}/{a.target}
+                </span>
               </div>
+              <Progress
+                value={a.progress * 100}
+                className={cn("h-1.5", !a.unlocked && "opacity-70")}
+              />
+              {!a.unlocked && (
+                <p className="text-[11px] text-muted-foreground">
+                  <span className="font-mono uppercase tracking-wider text-primary/80">Falta:</span>{" "}
+                  {a.remaining}
+                </p>
+              )}
             </div>
           ))}
         </div>
