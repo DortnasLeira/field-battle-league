@@ -66,9 +66,30 @@ function OnboardingPage() {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
+  // Retomar onboarding: se já está concluído para o tipo de conta, redireciona.
   useEffect(() => {
-    if (accountType && step === "kind") setStep("choose");
-  }, [accountType, step]);
+    if (loading || !session || !accountType) return;
+    const allowed = ALLOWED_PROFILE_TYPES[accountType];
+    const hasAll = allowed.every((t) => profiles.some((p) => p.type === t));
+    if (hasAll) {
+      navigate({ to: accountType === "business" ? "/complexo" : "/perfil" });
+    }
+  }, [loading, session, accountType, profiles, navigate]);
+
+  // Avança automaticamente conforme estado já salvo no banco.
+  useEffect(() => {
+    if (loading) return;
+    if (!accountType && step !== "kind") setStep("kind");
+    else if (accountType && step === "kind") setStep("choose");
+  }, [accountType, step, loading]);
+
+  // Pré-seleciona automaticamente os tipos que ainda faltam para o accountType.
+  useEffect(() => {
+    if (!accountType) return;
+    const allowed = ALLOWED_PROFILE_TYPES[accountType];
+    const missing = allowed.filter((t) => !profiles.some((p) => p.type === t));
+    setSelected((prev) => (prev.length === 0 ? missing : prev));
+  }, [accountType, profiles]);
 
   const allowedTypes = accountType ? ALLOWED_PROFILE_TYPES[accountType] : [];
   const visibleTypes = TYPES.filter((t) => allowedTypes.includes(t.id));
