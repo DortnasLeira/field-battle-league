@@ -191,6 +191,7 @@ function ProfileEditor({
       preferred_foot: type === "player" ? form.preferred_foot || null : null,
       field_types: type === "player" ? (form.field_types.length ? form.field_types : null) : null,
       photo_url: form.photo_url || null,
+      preferred_field: type === "team" ? (form.preferred_field || null) : null,
     });
   };
 
