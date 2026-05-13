@@ -131,6 +131,7 @@ function ProfileEditor({
     preferred_foot: p.preferred_foot ?? "",
     field_types: (p.field_types ?? []) as string[],
     photo_url: p.photo_url ?? "",
+    preferred_field: p.preferred_field ?? "",
   });
   const [form, setForm] = useState(() => initial(profile));
   const [uploading, setUploading] = useState(false);
