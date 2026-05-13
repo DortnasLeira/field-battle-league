@@ -897,6 +897,7 @@ export type Database = {
           nickname: string | null
           photo_url: string | null
           position: string | null
+          preferred_field: string | null
           preferred_foot: string | null
           price_per_hour: number | null
           type: Database["public"]["Enums"]["profile_type"]
@@ -923,6 +924,7 @@ export type Database = {
           nickname?: string | null
           photo_url?: string | null
           position?: string | null
+          preferred_field?: string | null
           preferred_foot?: string | null
           price_per_hour?: number | null
           type: Database["public"]["Enums"]["profile_type"]
@@ -949,6 +951,7 @@ export type Database = {
           nickname?: string | null
           photo_url?: string | null
           position?: string | null
+          preferred_field?: string | null
           preferred_foot?: string | null
           price_per_hour?: number | null
           type?: Database["public"]["Enums"]["profile_type"]
