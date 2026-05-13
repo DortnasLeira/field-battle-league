@@ -7,6 +7,9 @@ export type Team = {
   founded: number;
   preferredDays: string[]; // Mon, Tue...
   preferredTimes: string[]; // "19:00"
+  preferredFieldName?: string; // campo de preferência
+  rating?: number; // 0-5
+  reviews?: number;
 };
 
 export type League = {
