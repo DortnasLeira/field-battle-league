@@ -274,7 +274,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {subFields.map((sf) => (
               <Link
                 key={sf.id}
@@ -283,35 +283,35 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
                 className="overflow-hidden rounded-lg border border-border bg-surface transition hover:border-primary/40 hover:shadow-glow"
               >
                 <div
-                  className="aspect-video w-full bg-muted"
+                  className="aspect-[16/7] w-full bg-muted"
                   style={
                     sf.photo_url
                       ? { backgroundImage: `url(${sf.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
                       : undefined
                   }
                 />
-                <div className="space-y-2 p-3">
+                <div className="space-y-1 p-2">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="font-display text-base uppercase tracking-wide">{sf.name}</div>
-                    <Badge variant="outline" className="border-primary/40 text-primary">
+                    <div className="font-display text-sm uppercase tracking-wide truncate">{sf.name}</div>
+                    <Badge variant="outline" className="border-primary/40 text-primary text-[10px]">
                       {TYPE_LABEL[sf.field_type] ?? sf.field_type}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <DollarSign className="h-3.5 w-3.5" />
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <DollarSign className="h-3 w-3" />
                     R$ {Number(sf.price_per_hour).toFixed(2)}/h
                     {Array.isArray(sf.pricing_rules) && sf.pricing_rules.length > 0 && (
                       <span className="inline-flex items-center gap-1 text-primary">
-                        <Sparkles className="h-3 w-3" /> dinâmico
+                        <Sparkles className="h-2.5 w-2.5" /> dinâmico
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    {sf.available_times.length} horários · {sf.available_days.length} dias
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {sf.available_times.length} hor. · {sf.available_days.length} dias
                   </div>
                   {!sf.active && (
-                    <Badge variant="outline" className="border-amber-500/40 text-amber-500">
+                    <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
                       Inativo
                     </Badge>
                   )}
