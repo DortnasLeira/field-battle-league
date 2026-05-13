@@ -137,14 +137,14 @@ export type FieldRental = {
 };
 
 export const teams: Team[] = [
-  { id: "t1", name: "Leões da Vila", shield: "🦁", captain: "Você", city: "São Paulo", founded: 2018, preferredDays: ["Sáb", "Dom"], preferredTimes: ["18:00", "20:00"] },
-  { id: "t2", name: "Águias FC", shield: "🦅", captain: "Carlos M.", city: "São Paulo", founded: 2015, preferredDays: ["Sex", "Sáb"], preferredTimes: ["19:00", "21:00"] },
-  { id: "t3", name: "Tubarões United", shield: "🦈", captain: "Rafael S.", city: "São Paulo", founded: 2019, preferredDays: ["Qua", "Sáb"], preferredTimes: ["20:00"] },
-  { id: "t4", name: "Lobos da Mooca", shield: "🐺", captain: "Diego F.", city: "São Paulo", founded: 2012, preferredDays: ["Dom"], preferredTimes: ["10:00", "16:00"] },
-  { id: "t5", name: "Falcões Negros", shield: "🦇", captain: "Pedro L.", city: "São Paulo", founded: 2020, preferredDays: ["Sex"], preferredTimes: ["21:00"] },
-  { id: "t6", name: "Touros do Norte", shield: "🐂", captain: "André B.", city: "São Paulo", founded: 2014, preferredDays: ["Sáb"], preferredTimes: ["17:00"] },
-  { id: "t7", name: "Cobras FC", shield: "🐍", captain: "Lucas T.", city: "São Paulo", founded: 2017, preferredDays: ["Qui", "Sáb"], preferredTimes: ["20:00"] },
-  { id: "t8", name: "Panteras", shield: "🐆", captain: "Marcelo P.", city: "São Paulo", founded: 2016, preferredDays: ["Dom"], preferredTimes: ["09:00", "15:00"] },
+  { id: "t1", name: "Leões da Vila", shield: "🦁", captain: "Você", city: "São Paulo", founded: 2018, preferredDays: ["Sáb", "Dom"], preferredTimes: ["18:00", "20:00"], preferredFieldName: "Arena Central", rating: 4.7, reviews: 58 },
+  { id: "t2", name: "Águias FC", shield: "🦅", captain: "Carlos M.", city: "São Paulo", founded: 2015, preferredDays: ["Sex", "Sáb"], preferredTimes: ["19:00", "21:00"], preferredFieldName: "Estádio Municipal", rating: 4.5, reviews: 73 },
+  { id: "t3", name: "Tubarões United", shield: "🦈", captain: "Rafael S.", city: "São Paulo", founded: 2019, preferredDays: ["Qua", "Sáb"], preferredTimes: ["20:00"], preferredFieldName: "Society Park", rating: 4.4, reviews: 41 },
+  { id: "t4", name: "Lobos da Mooca", shield: "🐺", captain: "Diego F.", city: "São Paulo", founded: 2012, preferredDays: ["Dom"], preferredTimes: ["10:00", "16:00"], preferredFieldName: "Campo Vila Nova", rating: 4.8, reviews: 92 },
+  { id: "t5", name: "Falcões Negros", shield: "🦇", captain: "Pedro L.", city: "São Paulo", founded: 2020, preferredDays: ["Sex"], preferredTimes: ["21:00"], preferredFieldName: "Arena Central", rating: 4.2, reviews: 27 },
+  { id: "t6", name: "Touros do Norte", shield: "🐂", captain: "André B.", city: "São Paulo", founded: 2014, preferredDays: ["Sáb"], preferredTimes: ["17:00"], preferredFieldName: "Estádio Municipal", rating: 4.3, reviews: 36 },
+  { id: "t7", name: "Cobras FC", shield: "🐍", captain: "Lucas T.", city: "São Paulo", founded: 2017, preferredDays: ["Qui", "Sáb"], preferredTimes: ["20:00"], preferredFieldName: "Society Park", rating: 4.6, reviews: 49 },
+  { id: "t8", name: "Panteras", shield: "🐆", captain: "Marcelo P.", city: "São Paulo", founded: 2016, preferredDays: ["Dom"], preferredTimes: ["09:00", "15:00"], preferredFieldName: "Campo Vila Nova", rating: 4.5, reviews: 55 },
 ];
 
 export const leagues: League[] = [
