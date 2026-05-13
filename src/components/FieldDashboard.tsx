@@ -163,35 +163,34 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
       {/* Hero */}
       <Card className="overflow-hidden border-border bg-card">
         <div
-          className="relative h-44 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent sm:h-56"
+          className="relative h-56 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent sm:h-72"
           style={
             venue?.photo_url
               ? { backgroundImage: `url(${venue.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
               : undefined
           }
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
-        </div>
-        <div className="-mt-14 flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-end gap-4">
+          {/* Dark overlay so name + avatar legíveis em cima da foto */}
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/10" />
+          <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 p-5">
             <div
               className={cn(
-                "flex h-24 w-24 items-center justify-center rounded-2xl text-5xl shadow-glow",
+                "flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-4xl shadow-glow ring-2 ring-card/80 sm:h-24 sm:w-24 sm:text-5xl",
                 frameClass(profile.frame),
               )}
               style={{ background: profile.color + "22", color: profile.color }}
             >
               {profile.avatar ?? "🏟️"}
             </div>
-            <div>
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="min-w-0 flex-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+              <div className="flex items-center gap-2 text-foreground/80">
                 <Building2 className="h-4 w-4 text-primary" />
                 <span className="font-mono text-[10px] uppercase tracking-wider">Estabelecimento</span>
               </div>
-              <h1 className="font-display text-3xl uppercase tracking-wider sm:text-4xl">
+              <h1 className="font-display text-2xl uppercase tracking-wider text-foreground sm:text-4xl">
                 {venue?.name ?? profile.name}
               </h1>
-              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-foreground/85">
                 {venue?.city && (
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> {venue.city}
@@ -205,6 +204,8 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
               </div>
             </div>
           </div>
+        </div>
+        <div className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={share}>
               <Share2 className="mr-1 h-4 w-4" /> Compartilhar
