@@ -38,6 +38,7 @@ export type UserProfile = {
   preferred_foot: string | null;
   field_types: string[] | null;
   photo_url?: string | null;
+  preferred_field?: string | null;
 };
 
 type AuthContextValue = {
