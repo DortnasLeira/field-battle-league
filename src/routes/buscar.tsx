@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { TeamBadge } from "@/components/TeamBadge";
-import { teams as mockTeams, referees as mockReferees, type Referee } from "@/lib/mockData";
+import { teams as mockTeams, referees as mockReferees, matches as mockMatches, type Referee } from "@/lib/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, frameClass, type UserProfile } from "@/lib/auth";
 import { toast } from "sonner";
