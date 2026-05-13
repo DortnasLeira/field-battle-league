@@ -131,6 +131,7 @@ function ProfileEditor({
     preferred_foot: p.preferred_foot ?? "",
     field_types: (p.field_types ?? []) as string[],
     photo_url: p.photo_url ?? "",
+    preferred_field: p.preferred_field ?? "",
   });
   const [form, setForm] = useState(() => initial(profile));
   const [uploading, setUploading] = useState(false);
@@ -190,6 +191,7 @@ function ProfileEditor({
       preferred_foot: type === "player" ? form.preferred_foot || null : null,
       field_types: type === "player" ? (form.field_types.length ? form.field_types : null) : null,
       photo_url: form.photo_url || null,
+      preferred_field: type === "team" ? (form.preferred_field || null) : null,
     });
   };
 
@@ -373,6 +375,11 @@ function ProfileEditor({
               <div>
                 <Label>Fundado em</Label>
                 <Input type="number" value={form.founded} onChange={(e) => setForm({ ...form, founded: e.target.value })} placeholder="Ex: 2018" />
+              </div>
+              <div className="sm:col-span-2">
+                <Label>Campo preferido</Label>
+                <Input value={form.preferred_field} onChange={(e) => setForm({ ...form, preferred_field: e.target.value })} placeholder="Ex: Arena Central (deixe vazio se for visitante)" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Se não informar, seu time aparecerá como <strong>VISITANTE</strong> na busca.</p>
               </div>
             </>
           )}

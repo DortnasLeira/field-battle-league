@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { TeamBadge } from "@/components/TeamBadge";
-import { teams as mockTeams, referees as mockReferees, type Referee } from "@/lib/mockData";
+import { teams as mockTeams, referees as mockReferees, matches as mockMatches, type Referee } from "@/lib/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, frameClass, type UserProfile } from "@/lib/auth";
 import { toast } from "sonner";
@@ -254,44 +254,67 @@ function BuscarPage() {
             <EmptyState text="Nenhum time encontrado." />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredTeams.map((t) => (
-                <Card key={t.id} className="flex flex-col gap-3 border-border bg-card p-4">
-                  <div className="flex items-start gap-3">
-                    <TeamBadge teamId={t.id} size="md" />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-display text-base uppercase tracking-wide truncate">{t.name}</div>
-                      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground truncate">
-                        <MapPin className="mr-0.5 inline h-3 w-3" /> {t.city}
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                        {typeof t.rating === "number" && (
-                          <span className="inline-flex items-center gap-0.5 text-primary">
-                            <Star className="h-3 w-3 fill-current" /> {t.rating.toFixed(1)}
-                            {t.reviews ? <span className="text-muted-foreground">({t.reviews})</span> : null}
+              {filteredTeams.map((t) => {
+                const yr = new Date().getFullYear();
+                const played = mockMatches.filter(
+                  (m) => m.status === "completed" && (m.homeId === t.id || m.awayId === t.id) && new Date(m.date).getFullYear() === yr,
+                );
+                let w = 0, d = 0;
+                played.forEach((m) => {
+                  const home = m.homeId === t.id;
+                  const my = home ? m.homeScore! : m.awayScore!;
+                  const opp = home ? m.awayScore! : m.homeScore!;
+                  if (my > opp) w++; else if (my === opp) d++;
+                });
+                const pct = played.length ? Math.round(((w * 3 + d) / (played.length * 3)) * 100) : 0;
+                const fieldLabel = t.preferredFieldName || "VISITANTE";
+                return (
+                  <Card key={t.id} className="flex flex-col gap-3 border-border bg-card p-4">
+                    <div className="flex items-start gap-3">
+                      <TeamBadge teamId={t.id} size="md" />
+                      <div className="flex-1 min-w-0 space-y-1">
+                        {/* Linha 1: nome */}
+                        <div className="font-display text-base uppercase tracking-wide truncate">{t.name}</div>
+                        {/* Linha 2: cidade · aproveitamento · desde */}
+                        <div className="flex flex-wrap items-center gap-x-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                          <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" /> {t.city}</span>
+                          <span>·</span>
+                          <span className="inline-flex items-center gap-0.5 text-foreground">
+                            {played.length ? `${pct}% em ${yr}` : `Sem jogos em ${yr}`}
                           </span>
-                        )}
-                        <span className="inline-flex items-center gap-0.5 font-mono text-[11px] text-muted-foreground">
-                          <Calendar className="h-3 w-3" /> desde {t.founded}
-                        </span>
-                      </div>
-                      {t.preferredFieldName && (
-                        <div className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                          <Star className="h-3 w-3 text-primary" /> Campo: {t.preferredFieldName}
+                          <span>·</span>
+                          <span className="inline-flex items-center gap-0.5"><Calendar className="h-3 w-3" /> Desde {t.founded}</span>
                         </div>
-                      )}
+                        {/* Linha 3: nota · campo preferido */}
+                        <div className="flex flex-wrap items-center gap-x-1.5 text-xs">
+                          {typeof t.rating === "number" && (
+                            <span className="inline-flex items-center gap-0.5 text-primary">
+                              <Star className="h-3 w-3 fill-current" /> {t.rating.toFixed(1)}
+                              {t.reviews ? <span className="text-muted-foreground">({t.reviews})</span> : null}
+                            </span>
+                          )}
+                          <span className="text-muted-foreground">·</span>
+                          <span className={cn(
+                            "inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider",
+                            t.preferredFieldName ? "text-foreground" : "text-primary",
+                          )}>
+                            <Star className="h-3 w-3" /> {fieldLabel}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => (session ? navigate({ to: "/time/$id", params: { id: t.id } }) : requireLogin())}
-                    title={!session ? "Faça login para ver o perfil" : "Ver perfil"}
-                  >
-                    {session ? <Eye className="mr-1 h-3.5 w-3.5" /> : <Lock className="mr-1 h-3.5 w-3.5" />}
-                    Perfil
-                  </Button>
-                </Card>
-              ))}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => (session ? navigate({ to: "/time/$id", params: { id: t.id } }) : requireLogin())}
+                      title={!session ? "Faça login para ver o perfil" : "Ver perfil"}
+                    >
+                      {session ? <Eye className="mr-1 h-3.5 w-3.5" /> : <Lock className="mr-1 h-3.5 w-3.5" />}
+                      Perfil
+                    </Button>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </section>
