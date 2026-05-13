@@ -376,6 +376,11 @@ function ProfileEditor({
                 <Label>Fundado em</Label>
                 <Input type="number" value={form.founded} onChange={(e) => setForm({ ...form, founded: e.target.value })} placeholder="Ex: 2018" />
               </div>
+              <div className="sm:col-span-2">
+                <Label>Campo preferido</Label>
+                <Input value={form.preferred_field} onChange={(e) => setForm({ ...form, preferred_field: e.target.value })} placeholder="Ex: Arena Central (deixe vazio se for visitante)" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Se não informar, seu time aparecerá como <strong>VISITANTE</strong> na busca.</p>
+              </div>
             </>
           )}
           {type === "field" && (
