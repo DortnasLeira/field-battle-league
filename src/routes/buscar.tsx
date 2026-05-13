@@ -255,15 +255,30 @@ function BuscarPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filteredTeams.map((t) => (
-                <Card key={t.id} className="flex items-center gap-3 border-border bg-card p-4">
-                  <TeamBadge teamId={t.id} size="md" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-display text-base uppercase tracking-wide truncate">{t.name}</div>
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground truncate">
-                      <MapPin className="mr-0.5 inline h-3 w-3" /> {t.city} · Cap. {t.captain}
-                    </div>
-                    <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <Star className="h-3 w-3 text-primary" /> Desde {t.founded}
+                <Card key={t.id} className="flex flex-col gap-3 border-border bg-card p-4">
+                  <div className="flex items-start gap-3">
+                    <TeamBadge teamId={t.id} size="md" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display text-base uppercase tracking-wide truncate">{t.name}</div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground truncate">
+                        <MapPin className="mr-0.5 inline h-3 w-3" /> {t.city}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                        {typeof t.rating === "number" && (
+                          <span className="inline-flex items-center gap-0.5 text-primary">
+                            <Star className="h-3 w-3 fill-current" /> {t.rating.toFixed(1)}
+                            {t.reviews ? <span className="text-muted-foreground">({t.reviews})</span> : null}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-0.5 font-mono text-[11px] text-muted-foreground">
+                          <Calendar className="h-3 w-3" /> desde {t.founded}
+                        </span>
+                      </div>
+                      {t.preferredFieldName && (
+                        <div className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                          <Star className="h-3 w-3 text-primary" /> Campo: {t.preferredFieldName}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Button
