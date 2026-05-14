@@ -303,15 +303,32 @@ function BuscarPage() {
                         </div>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => (session ? navigate({ to: "/time/$id", params: { id: t.id } }) : requireLogin())}
-                      title={!session ? "Faça login para ver o perfil" : "Ver perfil"}
-                    >
-                      {session ? <Eye className="mr-1 h-3.5 w-3.5" /> : <Lock className="mr-1 h-3.5 w-3.5" />}
-                      Perfil
-                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => (session ? navigate({ to: "/time/$id", params: { id: t.id } }) : requireLogin())}
+                        title={!session ? "Faça login para ver o perfil" : "Ver perfil"}
+                      >
+                        {session ? <Eye className="mr-1 h-3.5 w-3.5" /> : <Lock className="mr-1 h-3.5 w-3.5" />}
+                        Perfil
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-gradient-primary text-primary-foreground"
+                        onClick={() => {
+                          if (!session) return requireLogin();
+                          if (activeProfile?.type !== "team") {
+                            toast.error("Apenas perfis de Time podem desafiar outro time.");
+                            return;
+                          }
+                          navigate({ to: "/desafios" });
+                        }}
+                        title="Desafiar este time"
+                      >
+                        <Swords className="mr-1 h-3.5 w-3.5" /> Desafiar
+                      </Button>
+                    </div>
                   </Card>
                 );
               })}
