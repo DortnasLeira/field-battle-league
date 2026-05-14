@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PublicTeamDashboard } from "@/components/PublicTeamDashboard";
-import { teams as mockTeams, matches as mockMatches, type Team } from "@/lib/mockData";
+import { teams as mockTeams, matches as mockMatches, fields as mockFields, type Team } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 
 type TeamRow = {
