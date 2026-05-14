@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Award, Check, X, FileSignature } from "lucide-react";
+import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
+import { REFEREE_ACHIEVEMENTS } from "@/lib/refereeAchievements";
+import { cn } from "@/lib/utils";
 import type { Challenge } from "@/lib/mockData";
 
 export const Route = createFileRoute("/arbitragem")({
