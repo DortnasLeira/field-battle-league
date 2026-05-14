@@ -102,6 +102,39 @@ function ArbitragemPage() {
         </div>
       </Section>
 
+      <Card className="border-border bg-card p-6">
+        <div>
+          <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-referee" /> Conquistas de árbitro
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {REFEREE_ACHIEVEMENTS.filter((a) => a.unlocked).length} de {REFEREE_ACHIEVEMENTS.length} desbloqueadas
+          </p>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {REFEREE_ACHIEVEMENTS.map((a) => (
+            <div
+              key={a.id}
+              className={cn(
+                "flex items-start gap-3 rounded-lg border p-3 transition",
+                a.unlocked ? "border-referee/40 bg-referee/5" : "border-dashed border-border bg-surface/40 opacity-70",
+              )}
+            >
+              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl", a.unlocked ? "bg-referee/15" : "bg-muted")}>
+                {a.unlocked ? a.emoji : <Lock className="h-4 w-4 text-muted-foreground" />}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1 text-sm font-semibold">
+                  {a.title}
+                  {a.unlocked && <CheckCircle2 className="h-3.5 w-3.5 text-referee" />}
+                </div>
+                <div className="text-[11px] text-muted-foreground">{a.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
       {me && (
         <Card className="border-border bg-surface/50 p-3 text-[11px] text-muted-foreground">
           Demo: você está atuando como <strong className="text-referee">{me.name}</strong>. Use o seletor acima para
