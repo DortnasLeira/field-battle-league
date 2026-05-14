@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { Trophy, Calendar, MapPin, Star, History, Shield, Users } from "lucide-react";
+import { Trophy, Calendar, MapPin, Star, History, Shield, Users, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/lib/store";
 import { TeamBadge } from "@/components/TeamBadge";
+import { TEAM_ACHIEVEMENTS } from "@/lib/teamAchievements";
 import { cn } from "@/lib/utils";
 import type { Team } from "@/lib/mockData";
 
