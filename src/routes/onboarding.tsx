@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, User, Shield, MapPin, Briefcase, Trophy, Phone, Building2 } from "lucide-react";
+import { Check, ChevronRight, User, Shield, MapPin, Briefcase, Trophy, Phone, Building2, Award } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
