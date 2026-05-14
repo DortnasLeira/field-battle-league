@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Users, User, MapPin, Star, Eye, Lock, Flag as Whistle, Calendar, Clock, DollarSign, Award, Lock as LockIcon } from "lucide-react";
+import { Search, Users, User, MapPin, Star, Eye, Lock, Flag as Whistle, Calendar, Clock, DollarSign, Award, Lock as LockIcon, Swords } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
