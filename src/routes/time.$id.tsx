@@ -191,6 +191,41 @@ function MockTeamDetails({ team }: { team: Team }) {
         </div>
       </Card>
 
+      <Card className={cn(
+        "border-border p-5",
+        preferredField ? "bg-gradient-to-br from-primary/10 via-card to-card" : "bg-card",
+      )}>
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <MapPin className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Campo preferido</div>
+            {preferredField ? (
+              <>
+                <div className="mt-0.5 truncate font-display text-xl uppercase tracking-wide">{preferredField.name}</div>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {preferredField.address}</span>
+                  <span>·</span>
+                  <span>{preferredField.surface}</span>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-1 text-primary"><Star className="h-3 w-3 fill-current" /> {preferredField.rating.toFixed(1)}</span>
+                  <span>·</span>
+                  <span className="font-mono">R$ {preferredField.pricePerHour}/h</span>
+                </div>
+              </>
+            ) : team.preferredFieldName ? (
+              <div className="mt-0.5 font-display text-xl uppercase tracking-wide">{team.preferredFieldName}</div>
+            ) : (
+              <>
+                <div className="mt-0.5 font-display text-xl uppercase tracking-wide text-primary">VISITANTE</div>
+                <p className="mt-1 text-xs text-muted-foreground">Este time joga fora — sem campo fixo de mando.</p>
+              </>
+            )}
+          </div>
+        </div>
+      </Card>
+
       <Card className="border-border bg-card p-6">
         <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
           <Trophy className="h-5 w-5 text-primary" /> Estatísticas
