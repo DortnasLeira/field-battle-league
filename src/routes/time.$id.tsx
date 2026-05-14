@@ -132,7 +132,14 @@ function MockTeamDetails({ team }: { team: Team }) {
     });
     return inYr.length ? Math.round(((w * 3 + d) / (inYr.length * 3)) * 100) : null;
   }, [completed, team.id, yr]);
-  const fieldLabel = team.preferredFieldName || "VISITANTE";
+  const preferredField = useMemo(() => {
+    if (!team.preferredFieldName) return null;
+    const needle = team.preferredFieldName.trim().toLowerCase();
+    return mockFields.find((f) => f.name.toLowerCase() === needle)
+      ?? mockFields.find((f) => f.name.toLowerCase().includes(needle) || needle.includes(f.name.toLowerCase()))
+      ?? null;
+  }, [team.preferredFieldName]);
+  const fieldLabel = preferredField?.name || team.preferredFieldName || "VISITANTE";
 
   return (
     <div className="space-y-6">
