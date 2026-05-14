@@ -30,6 +30,7 @@ const TYPES: { id: ProfileType; icon: typeof User; desc: string }[] = [
   { id: "player", icon: User, desc: "Quero jogar pelada, entrar em times e me candidatar a vagas." },
   { id: "team", icon: Shield, desc: "Sou capitão de um time e quero gerenciar elenco e desafios." },
   { id: "field", icon: MapPin, desc: "Sou dono ou gestor de um campo e quero anunciar horários." },
+  { id: "referee", icon: Award, desc: "Sou árbitro e quero oferecer arbitragem para times e campos." },
 ];
 
 const ACCOUNT_OPTIONS: { id: AccountType; icon: typeof User; title: string; desc: string; allowed: string }[] = [
@@ -44,8 +45,8 @@ const ACCOUNT_OPTIONS: { id: AccountType; icon: typeof User; title: string; desc
     id: "business",
     icon: Briefcase,
     title: "Perfil Business",
-    desc: "Para proprietários e gestores de complexos esportivos. Permite criar perfil de Campo.",
-    allowed: "Campo",
+    desc: "Para proprietários, gestores de complexos e árbitros profissionais. Permite criar perfis de Campo e Árbitro.",
+    allowed: "Campo + Árbitro",
   },
 ];
 
@@ -59,6 +60,7 @@ function OnboardingPage() {
     player: { name: "", nickname: "", city: "", avatar: "⚽", color: "#F59E0B" },
     team: { name: "", nickname: "", city: "", avatar: "🦁", color: "#EF4444" },
     field: { name: "", nickname: "", city: "", avatar: "🏟️", color: "#10B981" },
+    referee: { name: "", nickname: "", city: "", avatar: "🟨", color: "#EAB308" },
   });
   const [venueForm, setVenueForm] = useState({ address: "", phone: "", bio: "" });
 
