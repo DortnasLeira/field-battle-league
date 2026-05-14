@@ -173,7 +173,12 @@ function OnboardingPage() {
         }
       }
       toast.success("Perfis criados!");
-      navigate({ to: selected.includes("field") ? "/complexo" : "/" });
+      const dest = selected.includes("field")
+        ? "/complexo"
+        : selected.includes("referee")
+        ? "/arbitragem"
+        : "/";
+      navigate({ to: dest });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar perfis");
     }
