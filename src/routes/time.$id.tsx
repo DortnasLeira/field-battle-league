@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PublicTeamDashboard } from "@/components/PublicTeamDashboard";
-import { teams as mockTeams, matches as mockMatches, type Team } from "@/lib/mockData";
+import { teams as mockTeams, matches as mockMatches, fields as mockFields, type Team } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 
 type TeamRow = {
@@ -132,7 +132,14 @@ function MockTeamDetails({ team }: { team: Team }) {
     });
     return inYr.length ? Math.round(((w * 3 + d) / (inYr.length * 3)) * 100) : null;
   }, [completed, team.id, yr]);
-  const fieldLabel = team.preferredFieldName || "VISITANTE";
+  const preferredField = useMemo(() => {
+    if (!team.preferredFieldName) return null;
+    const needle = team.preferredFieldName.trim().toLowerCase();
+    return mockFields.find((f) => f.name.toLowerCase() === needle)
+      ?? mockFields.find((f) => f.name.toLowerCase().includes(needle) || needle.includes(f.name.toLowerCase()))
+      ?? null;
+  }, [team.preferredFieldName]);
+  const fieldLabel = preferredField?.name || team.preferredFieldName || "VISITANTE";
 
   return (
     <div className="space-y-6">
@@ -166,10 +173,12 @@ function MockTeamDetails({ team }: { team: Team }) {
               )}
               <span className="text-muted-foreground">·</span>
               <span className={cn(
-                "inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider",
-                team.preferredFieldName ? "text-foreground" : "text-primary",
+                "inline-flex items-center gap-1 text-sm",
+                team.preferredFieldName ? "text-foreground" : "font-mono text-[11px] uppercase tracking-wider text-primary",
               )}>
-                <Star className="h-3 w-3" /> Campo: {fieldLabel}
+                <Star className="h-3.5 w-3.5 text-primary" />
+                <span className="text-muted-foreground">Campo:</span>
+                <span className="font-semibold">{fieldLabel}</span>
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -178,6 +187,41 @@ function MockTeamDetails({ team }: { team: Team }) {
               <InfoPill label="Aprov. geral" value={`${stats.pct}%`} />
               <InfoPill label="Jogos" value={String(stats.j)} />
             </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className={cn(
+        "border-border p-5",
+        preferredField ? "bg-gradient-to-br from-primary/10 via-card to-card" : "bg-card",
+      )}>
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <MapPin className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Campo preferido</div>
+            {preferredField ? (
+              <>
+                <div className="mt-0.5 truncate font-display text-xl uppercase tracking-wide">{preferredField.name}</div>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {preferredField.address}</span>
+                  <span>·</span>
+                  <span>{preferredField.surface}</span>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-1 text-primary"><Star className="h-3 w-3 fill-current" /> {preferredField.rating.toFixed(1)}</span>
+                  <span>·</span>
+                  <span className="font-mono">R$ {preferredField.pricePerHour}/h</span>
+                </div>
+              </>
+            ) : team.preferredFieldName ? (
+              <div className="mt-0.5 font-display text-xl uppercase tracking-wide">{team.preferredFieldName}</div>
+            ) : (
+              <>
+                <div className="mt-0.5 font-display text-xl uppercase tracking-wide text-primary">VISITANTE</div>
+                <p className="mt-1 text-xs text-muted-foreground">Este time joga fora — sem campo fixo de mando.</p>
+              </>
+            )}
           </div>
         </div>
       </Card>
