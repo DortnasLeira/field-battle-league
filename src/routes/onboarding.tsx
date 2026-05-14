@@ -68,13 +68,15 @@ function OnboardingPage() {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
-  // Retomar onboarding: se já está concluído para o tipo de conta, redireciona.
+  // Retomar onboarding: se já tem ao menos um perfil dos permitidos, considera concluído.
   useEffect(() => {
     if (loading || !session || !accountType) return;
     const allowed = ALLOWED_PROFILE_TYPES[accountType];
-    const hasAll = allowed.every((t) => profiles.some((p) => p.type === t));
-    if (hasAll) {
-      navigate({ to: accountType === "business" ? "/complexo" : "/perfil" });
+    const hasAny = allowed.some((t) => profiles.some((p) => p.type === t));
+    if (hasAny) {
+      const onlyReferee =
+        profiles.some((p) => p.type === "referee") && !profiles.some((p) => p.type === "field");
+      navigate({ to: accountType === "business" ? (onlyReferee ? "/arbitragem" : "/complexo") : "/perfil" });
     }
   }, [loading, session, accountType, profiles, navigate]);
 
@@ -85,10 +87,11 @@ function OnboardingPage() {
     else if (accountType && step === "kind") setStep("choose");
   }, [accountType, step, loading]);
 
-  // Pré-seleciona automaticamente os tipos que ainda faltam para o accountType.
+  // Não pré-seleciona automaticamente quando há múltiplos tipos permitidos (ex: Business → Campo + Árbitro).
   useEffect(() => {
     if (!accountType) return;
     const allowed = ALLOWED_PROFILE_TYPES[accountType];
+    if (allowed.length > 1) return;
     const missing = allowed.filter((t) => !profiles.some((p) => p.type === t));
     setSelected((prev) => (prev.length === 0 ? missing : prev));
   }, [accountType, profiles]);
