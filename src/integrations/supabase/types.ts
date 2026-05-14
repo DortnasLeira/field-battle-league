@@ -1043,7 +1043,7 @@ export type Database = {
         | "cancelled"
       opening_application_status: "pending" | "accepted" | "rejected"
       payout_status: "held" | "released" | "refunded"
-      profile_type: "player" | "team" | "field"
+      profile_type: "player" | "team" | "field" | "referee"
       referee_tier: "bronze" | "silver" | "gold"
       sub_field_type: "society" | "areia" | "sintetico" | "salao"
       team_role: "owner" | "admin"
@@ -1184,7 +1184,7 @@ export const Constants = {
       ],
       opening_application_status: ["pending", "accepted", "rejected"],
       payout_status: ["held", "released", "refunded"],
-      profile_type: ["player", "team", "field"],
+      profile_type: ["player", "team", "field", "referee"],
       referee_tier: ["bronze", "silver", "gold"],
       sub_field_type: ["society", "areia", "sintetico", "salao"],
       team_role: ["owner", "admin"],
