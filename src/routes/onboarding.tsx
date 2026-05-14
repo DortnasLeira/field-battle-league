@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, User, Shield, MapPin, Briefcase, Trophy, Phone, Building2 } from "lucide-react";
+import { Check, ChevronRight, User, Shield, MapPin, Briefcase, Trophy, Phone, Building2, Award } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ const TYPES: { id: ProfileType; icon: typeof User; desc: string }[] = [
   { id: "player", icon: User, desc: "Quero jogar pelada, entrar em times e me candidatar a vagas." },
   { id: "team", icon: Shield, desc: "Sou capitão de um time e quero gerenciar elenco e desafios." },
   { id: "field", icon: MapPin, desc: "Sou dono ou gestor de um campo e quero anunciar horários." },
+  { id: "referee", icon: Award, desc: "Sou árbitro e quero oferecer arbitragem para times e campos." },
 ];
 
 const ACCOUNT_OPTIONS: { id: AccountType; icon: typeof User; title: string; desc: string; allowed: string }[] = [
@@ -44,8 +45,8 @@ const ACCOUNT_OPTIONS: { id: AccountType; icon: typeof User; title: string; desc
     id: "business",
     icon: Briefcase,
     title: "Perfil Business",
-    desc: "Para proprietários e gestores de complexos esportivos. Permite criar perfil de Campo.",
-    allowed: "Campo",
+    desc: "Para proprietários, gestores de complexos e árbitros profissionais. Permite criar perfis de Campo e Árbitro.",
+    allowed: "Campo + Árbitro",
   },
 ];
 
@@ -59,6 +60,7 @@ function OnboardingPage() {
     player: { name: "", nickname: "", city: "", avatar: "⚽", color: "#F59E0B" },
     team: { name: "", nickname: "", city: "", avatar: "🦁", color: "#EF4444" },
     field: { name: "", nickname: "", city: "", avatar: "🏟️", color: "#10B981" },
+    referee: { name: "", nickname: "", city: "", avatar: "🟨", color: "#EAB308" },
   });
   const [venueForm, setVenueForm] = useState({ address: "", phone: "", bio: "" });
 
@@ -66,13 +68,15 @@ function OnboardingPage() {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
-  // Retomar onboarding: se já está concluído para o tipo de conta, redireciona.
+  // Retomar onboarding: se já tem ao menos um perfil dos permitidos, considera concluído.
   useEffect(() => {
     if (loading || !session || !accountType) return;
     const allowed = ALLOWED_PROFILE_TYPES[accountType];
-    const hasAll = allowed.every((t) => profiles.some((p) => p.type === t));
-    if (hasAll) {
-      navigate({ to: accountType === "business" ? "/complexo" : "/perfil" });
+    const hasAny = allowed.some((t) => profiles.some((p) => p.type === t));
+    if (hasAny) {
+      const onlyReferee =
+        profiles.some((p) => p.type === "referee") && !profiles.some((p) => p.type === "field");
+      navigate({ to: accountType === "business" ? (onlyReferee ? "/arbitragem" : "/complexo") : "/perfil" });
     }
   }, [loading, session, accountType, profiles, navigate]);
 
@@ -83,10 +87,11 @@ function OnboardingPage() {
     else if (accountType && step === "kind") setStep("choose");
   }, [accountType, step, loading]);
 
-  // Pré-seleciona automaticamente os tipos que ainda faltam para o accountType.
+  // Não pré-seleciona automaticamente quando há múltiplos tipos permitidos (ex: Business → Campo + Árbitro).
   useEffect(() => {
     if (!accountType) return;
     const allowed = ALLOWED_PROFILE_TYPES[accountType];
+    if (allowed.length > 1) return;
     const missing = allowed.filter((t) => !profiles.some((p) => p.type === t));
     setSelected((prev) => (prev.length === 0 ? missing : prev));
   }, [accountType, profiles]);
@@ -168,7 +173,12 @@ function OnboardingPage() {
         }
       }
       toast.success("Perfis criados!");
-      navigate({ to: selected.includes("field") ? "/complexo" : "/" });
+      const dest = selected.includes("field")
+        ? "/complexo"
+        : selected.includes("referee")
+        ? "/arbitragem"
+        : "/";
+      navigate({ to: dest });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar perfis");
     }

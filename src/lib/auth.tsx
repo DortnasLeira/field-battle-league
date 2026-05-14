@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type ProfileType = "player" | "team" | "field";
+export type ProfileType = "player" | "team" | "field" | "referee";
 export type AccountType = "sportist" | "business";
 
 export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
@@ -12,7 +12,7 @@ export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
 
 export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
   sportist: ["player", "team"],
-  business: ["field"],
+  business: ["field", "referee"],
 };
 
 export type UserProfile = {
@@ -209,12 +209,14 @@ export const PROFILE_TYPE_LABEL: Record<ProfileType, string> = {
   player: "Jogador",
   team: "Time",
   field: "Campo",
+  referee: "Árbitro",
 };
 
 export const PROFILE_TYPE_EMOJI: Record<ProfileType, string> = {
   player: "⚽",
   team: "🛡️",
   field: "🏟️",
+  referee: "🟨",
 };
 
 export const FRAMES = [
@@ -238,4 +240,5 @@ export const PRESET_AVATARS_BY_TYPE: Record<ProfileType, string[]> = {
   player: ["⚽", "🏃", "👟", "🥅", "🧤", "💪", "🔥", "⭐", "🎯", "🏆"],
   team: ["🦁", "🦅", "🦈", "🐺", "🐂", "🐆", "🐍", "🦇", "🐉", "👑"],
   field: ["🏟️", "🌿", "🥅", "📍", "🏞️", "⛳", "🌳", "💚", "🔆", "🏗️"],
+  referee: ["🟨", "🟥", "📣", "🎽", "🧑‍⚖️", "⏱️", "📋", "🏁", "👁️", "🔔"],
 };

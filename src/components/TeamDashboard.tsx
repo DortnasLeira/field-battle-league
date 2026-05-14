@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { Trophy, Calendar, MapPin, Star, History, Shield, Users } from "lucide-react";
+import { Trophy, Calendar, MapPin, Star, History, Shield, Users, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/lib/store";
 import { TeamBadge } from "@/components/TeamBadge";
+import { TEAM_ACHIEVEMENTS } from "@/lib/teamAchievements";
 import { cn } from "@/lib/utils";
 import type { Team } from "@/lib/mockData";
 
@@ -157,6 +158,41 @@ export function TeamDashboard({ team }: { team: Team }) {
               </div>
             );
           })}
+        </div>
+      </Card>
+
+      <Card className="border-border bg-card p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" /> Conquistas do time
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {TEAM_ACHIEVEMENTS.filter((a) => a.unlocked).length} de {TEAM_ACHIEVEMENTS.length} desbloqueadas
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {TEAM_ACHIEVEMENTS.map((a) => (
+            <div
+              key={a.id}
+              className={cn(
+                "flex items-start gap-3 rounded-lg border p-3 transition",
+                a.unlocked ? "border-primary/30 bg-primary/5" : "border-dashed border-border bg-surface/40 opacity-70",
+              )}
+            >
+              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl", a.unlocked ? "bg-primary/15" : "bg-muted")}>
+                {a.unlocked ? a.emoji : <Lock className="h-4 w-4 text-muted-foreground" />}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1 text-sm font-semibold">
+                  {a.title}
+                  {a.unlocked && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                </div>
+                <div className="text-[11px] text-muted-foreground">{a.description}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
 
