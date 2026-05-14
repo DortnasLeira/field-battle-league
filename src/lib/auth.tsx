@@ -209,12 +209,14 @@ export const PROFILE_TYPE_LABEL: Record<ProfileType, string> = {
   player: "Jogador",
   team: "Time",
   field: "Campo",
+  referee: "Árbitro",
 };
 
 export const PROFILE_TYPE_EMOJI: Record<ProfileType, string> = {
   player: "⚽",
   team: "🛡️",
   field: "🏟️",
+  referee: "🟨",
 };
 
 export const FRAMES = [
@@ -238,4 +240,5 @@ export const PRESET_AVATARS_BY_TYPE: Record<ProfileType, string[]> = {
   player: ["⚽", "🏃", "👟", "🥅", "🧤", "💪", "🔥", "⭐", "🎯", "🏆"],
   team: ["🦁", "🦅", "🦈", "🐺", "🐂", "🐆", "🐍", "🦇", "🐉", "👑"],
   field: ["🏟️", "🌿", "🥅", "📍", "🏞️", "⛳", "🌳", "💚", "🔆", "🏗️"],
+  referee: ["🟨", "🟥", "📣", "🎽", "🧑‍⚖️", "⏱️", "📋", "🏁", "👁️", "🔔"],
 };
