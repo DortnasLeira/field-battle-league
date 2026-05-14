@@ -173,10 +173,12 @@ function MockTeamDetails({ team }: { team: Team }) {
               )}
               <span className="text-muted-foreground">·</span>
               <span className={cn(
-                "inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider",
-                team.preferredFieldName ? "text-foreground" : "text-primary",
+                "inline-flex items-center gap-1 text-sm",
+                team.preferredFieldName ? "text-foreground" : "font-mono text-[11px] uppercase tracking-wider text-primary",
               )}>
-                <Star className="h-3 w-3" /> Campo: {fieldLabel}
+                <Star className="h-3.5 w-3.5 text-primary" />
+                <span className="text-muted-foreground">Campo:</span>
+                <span className="font-semibold">{fieldLabel}</span>
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
