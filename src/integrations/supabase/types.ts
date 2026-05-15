@@ -447,24 +447,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string | null
+          business_kind: string | null
           created_at: string
           display_name: string | null
           email: string | null
           id: string
+          onboarding_step: number
           updated_at: string
         }
         Insert: {
+          account_type?: string | null
+          business_kind?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id: string
+          onboarding_step?: number
           updated_at?: string
         }
         Update: {
+          account_type?: string | null
+          business_kind?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          onboarding_step?: number
           updated_at?: string
         }
         Relationships: []
