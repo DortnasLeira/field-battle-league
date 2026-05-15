@@ -25,23 +25,18 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { session, onboardingStep, accountType, loading } = useAuth();
+  const { session, profiles, loading } = useAuth();
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
 
   useEffect(() => {
     if (loading) return;
     if (session) {
-      if (onboardingStep < 100) {
-        navigate({ to: "/onboarding" });
-      } else if (redirect && redirect.startsWith("/")) {
-        window.location.replace(redirect);
-      } else {
-        const dest = accountType === "business" ? "/complexo" : accountType === "team" ? "/painel" : "/perfil";
-        navigate({ to: dest });
-      }
+      if (profiles.length === 0) navigate({ to: "/onboarding" });
+      else if (redirect && redirect.startsWith("/")) window.location.replace(redirect);
+      else navigate({ to: "/" });
     }
-  }, [session, onboardingStep, accountType, loading, navigate, redirect]);
+  }, [session, profiles, loading, navigate, redirect]);
 
   return (
     <div className="mx-auto max-w-md py-10">

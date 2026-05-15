@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
 import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
-import { computeRefereeAchievements, type RefereeStats } from "@/lib/refereeAchievements";
+import { REFEREE_ACHIEVEMENTS } from "@/lib/refereeAchievements";
 import { cn } from "@/lib/utils";
 import type { Challenge } from "@/lib/mockData";
 
@@ -32,19 +31,6 @@ function ArbitragemPage() {
   const toSign = myMatches.filter((m) => !m.signedByReferee);
 
   const me = referees.find((r) => r.id === currentRefereeId);
-
-  const refStats: RefereeStats = useMemo(() => {
-    return {
-      isRegistered: !!me,
-      firstHireReceived: myRequests.length > 0,
-      gamesOfficiated: myMatches.length,
-      sumulasSigned: myMatches.filter(m => m.signedByReferee).length,
-      has5StarReview: (me?.score ?? 0) === 5 && (me?.reviews ?? 0) > 0,
-      tier: me?.tier || "Bronze",
-    };
-  }, [me, myRequests.length, myMatches]);
-
-  const achievements = useMemo(() => computeRefereeAchievements(refStats), [refStats]);
 
   return (
     <div className="space-y-6">
@@ -122,11 +108,11 @@ function ArbitragemPage() {
             <Trophy className="h-5 w-5 text-referee" /> Conquistas de árbitro
           </h2>
           <p className="text-xs text-muted-foreground">
-            {achievements.filter((a) => a.unlocked).length} de {achievements.length} desbloqueadas
+            {REFEREE_ACHIEVEMENTS.filter((a) => a.unlocked).length} de {REFEREE_ACHIEVEMENTS.length} desbloqueadas
           </p>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {achievements.map((a) => (
+          {REFEREE_ACHIEVEMENTS.map((a) => (
             <div
               key={a.id}
               className={cn(
@@ -143,11 +129,6 @@ function ArbitragemPage() {
                   {a.unlocked && <CheckCircle2 className="h-3.5 w-3.5 text-referee" />}
                 </div>
                 <div className="text-[11px] text-muted-foreground">{a.description}</div>
-                {!a.unlocked && (
-                  <div className="mt-1 text-[10px] font-medium text-muted-foreground">
-                    {a.remaining} ({a.current}/{a.target})
-                  </div>
-                )}
               </div>
             </div>
           ))}

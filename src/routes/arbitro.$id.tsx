@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, MapPin, Star, DollarSign, Award, Calendar, Clock, Flag as Whistle, History, Trophy, Lock as LockIcon, X, CheckCircle2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { computeRefereeAchievements, type RefereeStats } from "@/lib/refereeAchievements";
 
 type HireRow = {
   id: string;
@@ -136,21 +135,6 @@ function RefereeProfilePage() {
   const completed = referee.hireHistory.filter((h) => h.status === "completed");
   const upcoming = referee.hireHistory.filter((h) => h.status === "scheduled");
 
-  const isMe = activeProfile?.id === referee.id || session?.user.id === referee.id;
-
-  const refStats: RefereeStats = useMemo(() => {
-    return {
-      isRegistered: true,
-      firstHireReceived: referee.hireHistory.length > 0,
-      gamesOfficiated: completed.length,
-      sumulasSigned: completed.length,
-      has5StarReview: referee.score === 5 && referee.reviews > 0,
-      tier: referee.tier,
-    };
-  }, [referee, completed.length]);
-
-  const achievements = useMemo(() => computeRefereeAchievements(refStats), [refStats]);
-
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
@@ -183,16 +167,10 @@ function RefereeProfilePage() {
               <span className="text-[11px] text-muted-foreground">{tier.description}</span>
             </div>
           </div>
-          {isMe ? (
-            <Button size="lg" asChild variant="outline" className="border-referee/50 text-referee bg-card/50">
-              <Link to="/perfil/editar">Editar Perfil</Link>
-            </Button>
-          ) : (
-            <Button size="lg" onClick={onHire} className="bg-referee text-referee-foreground hover:bg-referee/90">
-              {!session || canHire ? <Whistle className="mr-1 h-4 w-4" /> : <LockIcon className="mr-1 h-4 w-4" />}
-              Contratar
-            </Button>
-          )}
+          <Button size="lg" onClick={onHire} className="bg-referee text-referee-foreground hover:bg-referee/90">
+            {!session || canHire ? <Whistle className="mr-1 h-4 w-4" /> : <LockIcon className="mr-1 h-4 w-4" />}
+            Contratar
+          </Button>
         </div>
       </Card>
 
@@ -308,46 +286,6 @@ function RefereeProfilePage() {
             ))}
           </ul>
         )}
-      </Card>
-
-      {/* Conquistas */}
-      <Card className="border-border bg-card p-5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-referee" />
-            <h2 className="font-display text-lg uppercase tracking-wide">Conquistas</h2>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {achievements.filter((a) => a.unlocked).length} de {achievements.length} desbloqueadas
-          </span>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {achievements.map((a) => (
-            <div
-              key={a.id}
-              className={cn(
-                "flex items-start gap-3 rounded-lg border p-3 transition",
-                a.unlocked ? "border-referee/40 bg-referee/5" : "border-dashed border-border bg-surface/40 opacity-70",
-              )}
-            >
-              <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl", a.unlocked ? "bg-referee/15" : "bg-muted")}>
-                {a.unlocked ? a.emoji : <LockIcon className="h-4 w-4 text-muted-foreground" />}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1 text-sm font-semibold">
-                  {a.title}
-                  {a.unlocked && <CheckCircle2 className="h-3.5 w-3.5 text-referee" />}
-                </div>
-                <div className="text-[11px] text-muted-foreground">{a.description}</div>
-                {!a.unlocked && (
-                  <div className="mt-1 text-[10px] font-medium text-muted-foreground">
-                    {a.remaining} ({a.current}/{a.target})
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       </Card>
 
       {/* My hire requests */}

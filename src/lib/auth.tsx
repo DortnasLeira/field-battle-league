@@ -3,21 +3,17 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ProfileType = "player" | "team" | "field" | "referee";
-export type AccountType = "player" | "team" | "business";
+export type AccountType = "sportist" | "business";
 
 export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
-  player: "Jogador",
-  team: "Time",
-  business: "Complexo / Árbitro",
+  sportist: "Esportista",
+  business: "Business",
 };
 
 export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
-  player: ["player"],
-  team: ["team"],
+  sportist: ["player", "team"],
   business: ["field", "referee"],
 };
-
-export type BusinessKind = "field" | "referee";
 
 export type UserProfile = {
   id: string;
@@ -51,15 +47,13 @@ type AuthContextValue = {
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
   accountType: AccountType | null;
-  businessKind: BusinessKind | null;
-  onboardingStep: number;
   refreshProfiles: () => Promise<void>;
   setActive: (profileId: string) => Promise<void>;
   signOut: () => Promise<void>;
   upsertProfile: (p: Partial<UserProfile> & { type: ProfileType; name: string }) => Promise<UserProfile | null>;
   updateProfile: (id: string, patch: Partial<UserProfile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
-  updateOnboardingProgress: (step: number, role?: AccountType, businessKind?: BusinessKind) => Promise<void>;
+  setAccountType: (t: AccountType) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -70,7 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [accountType, setAccountTypeState] = useState<AccountType | null>(null);
-  const [onboardingStep, setOnboardingStep] = useState<number>(0);
 
   // Bootstrap session
   useEffect(() => {
@@ -84,29 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const [businessKind, setBusinessKindState] = useState<BusinessKind | null>(null);
-
   const refreshProfiles = useCallback(async () => {
     if (!session?.user) {
       setProfiles([]);
       setActiveId(null);
       setAccountTypeState(null);
-      setBusinessKindState(null);
-      setOnboardingStep(0);
       return;
     }
-    const [{ data: profs }, { data: act }, { data: profileRow }] = await Promise.all([
+    const [{ data: profs }, { data: act }, { data: acct }] = await Promise.all([
       supabase.from("user_profiles").select("*").eq("user_id", session.user.id).order("created_at"),
       supabase.from("active_profile").select("profile_id").eq("user_id", session.user.id).maybeSingle(),
-      supabase.from("profiles").select("account_type, onboarding_step, business_kind").eq("id", session.user.id).maybeSingle(),
+      supabase.from("user_account_types" as never).select("account_type").eq("user_id", session.user.id).maybeSingle(),
     ]);
     const list = (profs ?? []) as UserProfile[];
     setProfiles(list);
-    const row = profileRow as { account_type?: string | null; onboarding_step?: number | null; business_kind?: string | null } | null;
-    setAccountTypeState((row?.account_type as AccountType) ?? null);
-    setBusinessKindState((row?.business_kind as BusinessKind) ?? null);
-    setOnboardingStep(row?.onboarding_step ?? 0);
-    
+    setAccountTypeState(((acct as { account_type?: AccountType } | null)?.account_type) ?? null);
     if (act?.profile_id && list.some((p) => p.id === act.profile_id)) {
       setActiveId(act.profile_id);
     } else if (list.length > 0) {
@@ -135,28 +120,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfiles([]);
     setActiveId(null);
     setAccountTypeState(null);
-    setBusinessKindState(null);
-    setOnboardingStep(0);
   }, []);
 
-  const updateOnboardingProgress = useCallback(
-    async (step: number, role?: AccountType, kind?: BusinessKind) => {
+  const setAccountType = useCallback(
+    async (t: AccountType) => {
       if (!session?.user) throw new Error("Não autenticado");
-      const patch: { onboarding_step: number; account_type?: AccountType; business_kind?: BusinessKind } = { onboarding_step: step };
-      if (role) patch.account_type = role;
-      if (kind) patch.business_kind = kind;
-      
+      if (accountType && accountType !== t) {
+        throw new Error("Tipo de conta já definido e não pode ser alterado.");
+      }
       const { error } = await supabase
-        .from("profiles")
-        .update(patch as never)
-        .eq("id", session.user.id);
-        
-      if (error) throw error;
-      setOnboardingStep(step);
-      if (role) setAccountTypeState(role);
-      if (kind) setBusinessKindState(kind);
+        .from("user_account_types" as never)
+        .insert({ user_id: session.user.id, account_type: t } as never);
+      if (error && !/duplicate|already/i.test(error.message)) throw error;
+      setAccountTypeState(t);
     },
-    [session]
+    [session, accountType],
   );
 
   const upsertProfile = useCallback<AuthContextValue["upsertProfile"]>(
@@ -209,15 +187,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profiles,
     activeProfile,
     accountType,
-    businessKind,
-    onboardingStep,
     refreshProfiles,
     setActive,
     signOut,
     upsertProfile,
     updateProfile,
     deleteProfile,
-    updateOnboardingProgress,
+    setAccountType,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

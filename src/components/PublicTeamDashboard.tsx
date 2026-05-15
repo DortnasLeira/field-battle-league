@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { computeTeamAchievements, type TeamStats } from "@/lib/teamAchievements";
 import { cn } from "@/lib/utils";
 
 type TeamRow = {
@@ -132,27 +131,6 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
     return { j, w, d, l, gf, ga, sg: gf - ga, pct };
   }, [completed, team.id]);
 
-  const teamStats: TeamStats = useMemo(() => ({
-    playersCount: 0,
-    matchesPlayed: stats.j,
-    wins: stats.w,
-    cleanSheets: completed.filter(m => (m.home_team_id === team.id ? m.away_score : m.home_score) === 0).length,
-    maxGoalDiff: completed.reduce((acc, m) => {
-      const my = m.home_team_id === team.id ? m.home_score! : m.away_score!;
-      const opp = m.home_team_id === team.id ? m.away_score! : m.home_score!;
-      return Math.max(acc, my - opp);
-    }, 0),
-    winStreak: 0,
-    challengesCreated: 0,
-    leaguesJoined: 0,
-    leagueTitles: 0,
-    fairPlay: Number(team.fair_play ?? 100),
-    has5StarReview: false,
-    verified: !!team.verified,
-  }), [stats, completed, team]);
-
-  const achievements = useMemo(() => computeTeamAchievements(teamStats), [teamStats]);
-
   return (
     <div className="space-y-6">
       <Card className="border-border bg-gradient-hero p-5 sm:p-6">
@@ -176,16 +154,7 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
                 </Badge>
               )}
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h1 className="font-display text-2xl uppercase tracking-wide sm:text-3xl">{team.name}</h1>
-              {!isOwner && (
-                <Button asChild className="bg-gradient-primary text-primary-foreground shadow-glow w-full sm:w-auto">
-                  <Link to="/desafios" search={{ challengeTeam: team.id }}>
-                    ⚔️ Desafiar
-                  </Link>
-                </Button>
-              )}
-            </div>
+            <h1 className="font-display text-2xl uppercase tracking-wide sm:text-3xl">{team.name}</h1>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <InfoPill label="Cidade" value={team.city || "—"} />
               <InfoPill label="Capitão" value={team.captain || "—"} />
@@ -284,7 +253,7 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
           <Users className="h-5 w-5 text-primary" /> Conquistas
         </h2>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {achievements.map((a) => (
+          {computeTeamAchievements(stats).map((a) => (
             <div key={a.id} className={cn(
               "flex items-start gap-3 rounded-lg border p-3 transition",
               a.unlocked ? "border-primary/30 bg-primary/5" : "border-dashed border-border bg-surface/40 opacity-70",
@@ -293,11 +262,6 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
               <div className="min-w-0">
                 <div className="text-sm font-semibold">{a.title}</div>
                 <div className="text-[11px] text-muted-foreground">{a.description}</div>
-                {!a.unlocked && (
-                  <div className="mt-1 text-[10px] font-medium text-muted-foreground">
-                    {a.remaining} ({a.current}/{a.target})
-                  </div>
-                )}
               </div>
             </div>
           ))}
@@ -380,6 +344,16 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
   );
 }
 
+function computeTeamAchievements(s: { j: number; w: number; sg: number }) {
+  return [
+    { id: "first_match", title: "Primeira partida", description: "Disputou ao menos 1 partida", emoji: "🌱", unlocked: s.j >= 1 },
+    { id: "ten_matches", title: "Caminhada", description: "10 partidas disputadas", emoji: "🔥", unlocked: s.j >= 10 },
+    { id: "first_win", title: "Primeira vitória", description: "Venceu ao menos 1 partida", emoji: "🏆", unlocked: s.w >= 1 },
+    { id: "five_wins", title: "Time vencedor", description: "5 vitórias acumuladas", emoji: "👑", unlocked: s.w >= 5 },
+    { id: "positive_sg", title: "Saldo positivo", description: "Saldo de gols positivo", emoji: "📈", unlocked: s.sg > 0 },
+    { id: "hundred", title: "Centenário", description: "100 partidas disputadas", emoji: "💯", unlocked: s.j >= 100 },
+  ];
+}
 
 function ratingTier(r: number) {
   if (r >= 1900) return "Elite";

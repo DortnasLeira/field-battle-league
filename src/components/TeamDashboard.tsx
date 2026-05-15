@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/lib/store";
 import { TeamBadge } from "@/components/TeamBadge";
-import { computeTeamAchievements, type TeamStats } from "@/lib/teamAchievements";
+import { TEAM_ACHIEVEMENTS } from "@/lib/teamAchievements";
 import { cn } from "@/lib/utils";
 import type { Team } from "@/lib/mockData";
 
@@ -34,27 +34,6 @@ export function TeamDashboard({ team }: { team: Team }) {
     const pct = j ? Math.round((w * 3 + d) / (j * 3) * 100) : 0;
     return { j, w, d, l, gf, ga, sg: gf - ga, pct };
   }, [completed, team.id]);
-
-  const teamStats: TeamStats = useMemo(() => ({
-    playersCount: 0,
-    matchesPlayed: stats.j,
-    wins: stats.w,
-    cleanSheets: completed.filter(m => (m.homeId === team.id ? m.awayScore : m.homeScore) === 0).length,
-    maxGoalDiff: completed.reduce((acc, m) => {
-      const my = m.homeId === team.id ? m.homeScore! : m.awayScore!;
-      const opp = m.homeId === team.id ? m.awayScore! : m.homeScore!;
-      return Math.max(acc, my - opp);
-    }, 0),
-    winStreak: 0,
-    challengesCreated: 0,
-    leaguesJoined: 0,
-    leagueTitles: 0,
-    fairPlay: 100,
-    has5StarReview: false,
-    verified: false,
-  }), [stats, completed, team.id]);
-
-  const achievements = useMemo(() => computeTeamAchievements(teamStats), [teamStats]);
 
   return (
     <div className="space-y-6">
@@ -189,12 +168,12 @@ export function TeamDashboard({ team }: { team: Team }) {
               <Trophy className="h-5 w-5 text-primary" /> Conquistas do time
             </h2>
             <p className="text-xs text-muted-foreground">
-              {achievements.filter((a) => a.unlocked).length} de {achievements.length} desbloqueadas
+              {TEAM_ACHIEVEMENTS.filter((a) => a.unlocked).length} de {TEAM_ACHIEVEMENTS.length} desbloqueadas
             </p>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {achievements.map((a) => (
+          {TEAM_ACHIEVEMENTS.map((a) => (
             <div
               key={a.id}
               className={cn(
@@ -211,11 +190,6 @@ export function TeamDashboard({ team }: { team: Team }) {
                   {a.unlocked && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
                 </div>
                 <div className="text-[11px] text-muted-foreground">{a.description}</div>
-                {!a.unlocked && (
-                  <div className="mt-1 text-[10px] font-medium text-muted-foreground">
-                    {a.remaining} ({a.current}/{a.target})
-                  </div>
-                )}
               </div>
             </div>
           ))}

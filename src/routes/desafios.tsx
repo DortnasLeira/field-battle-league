@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { z } from "zod";
 import { useMemo, useState } from "react";
 import { Swords, Inbox, Send, Check, X, Flame, Award, Gavel } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -24,17 +23,11 @@ export const Route = createFileRoute("/desafios")({
       { name: "description", content: "Desafios entre times: enviados, recebidos e aceitos." },
     ],
   }),
-  validateSearch: z.object({
-    challengeTeam: z.string().optional(),
-  }),
   component: DesafiosPage,
 });
 
 function DesafiosPage() {
-  const { challengeTeam } = Route.useSearch();
-  const navigate = Route.useNavigate();
   const { challenges, currentTeamId } = useStore();
-  const [newChallengeOpen, setNewChallengeOpen] = useState(!!challengeTeam);
   const [fStatus, setFStatus] = useState<string>("all");
   const [fDate, setFDate] = useState("");
   const [fTimeFrom, setFTimeFrom] = useState("");
@@ -63,15 +56,6 @@ function DesafiosPage() {
           </h1>
           <p className="text-sm text-muted-foreground">Desafios pendentes, lançados e confrontos confirmados.</p>
         </div>
-        <Button 
-          className="bg-gradient-primary text-primary-foreground shadow-glow"
-          onClick={() => {
-            if (!currentTeamId) return toast.error("Acesso restrito: atue como um time para desafiar.");
-            setNewChallengeOpen(true);
-          }}
-        >
-          <Swords className="mr-2 h-4 w-4" /> Nova Batalha
-        </Button>
       </div>
 
       <FiltersPanel
@@ -118,16 +102,6 @@ function DesafiosPage() {
           <ChallengeGrid items={accepted} mode="accepted" empty="Sem batalhas marcadas no momento." />
         </TabsContent>
       </Tabs>
-
-      <NewChallengeDialog 
-        open={newChallengeOpen} 
-        onOpenChange={(v) => {
-          setNewChallengeOpen(v);
-          if (!v && challengeTeam) navigate({ search: {} });
-        }} 
-        initialTeamId={challengeTeam}
-        canChallenge={!!currentTeamId}
-      />
     </div>
   );
 }
@@ -349,89 +323,6 @@ function AttachRefereeDialog({
           <Button className="bg-gradient-referee text-background shadow-glow-referee" onClick={submit}>
             Enviar pedido
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function NewChallengeDialog({ open, onOpenChange, initialTeamId, canChallenge }: { open: boolean, onOpenChange: (v: boolean) => void, initialTeamId?: string, canChallenge: boolean }) {
-  const { teams, currentTeamId, createChallenge } = useStore();
-  const [targetTeam, setTargetTeam] = useState(initialTeamId || "");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [fieldId, setFieldId] = useState("");
-  const [message, setMessage] = useState("");
-
-  if (!canChallenge) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Acesso restrito</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">Você precisa estar ativo como um time para criar desafios.</p>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const submit = () => {
-    if (!targetTeam || !date || !time || !message) return toast.error("Preencha todos os campos obrigatórios.");
-    createChallenge({
-      fromTeamId: currentTeamId!,
-      toTeamId: targetTeam,
-      date,
-      time,
-      fieldId: fieldId || "custom", // simplified
-      message,
-    });
-    toast.success("Desafio lançado com sucesso! 🔥");
-    onOpenChange(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Swords className="h-5 w-5 text-primary" /> Lançar Desafio
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Adversário</label>
-            <Select value={targetTeam} onValueChange={setTargetTeam}>
-              <SelectTrigger><SelectValue placeholder="Selecione o time" /></SelectTrigger>
-              <SelectContent>
-                {teams.filter(t => t.id !== currentTeamId).map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.shield} {t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Data</label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Hora</label>
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Mensagem (Provocação)</label>
-            <Input 
-              value={message} 
-              onChange={(e) => setMessage(e.target.value)} 
-              placeholder="Ex: Prepara a zaga!"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button className="bg-gradient-primary text-primary-foreground shadow-glow" onClick={submit}>Desafiar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
