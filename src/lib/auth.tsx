@@ -17,6 +17,8 @@ export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
   business: ["field", "referee"],
 };
 
+export type BusinessKind = "field" | "referee";
+
 export type UserProfile = {
   id: string;
   user_id: string;
@@ -49,6 +51,7 @@ type AuthContextValue = {
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
   accountType: AccountType | null;
+  businessKind: BusinessKind | null;
   onboardingStep: number;
   refreshProfiles: () => Promise<void>;
   setActive: (profileId: string) => Promise<void>;
@@ -56,7 +59,7 @@ type AuthContextValue = {
   upsertProfile: (p: Partial<UserProfile> & { type: ProfileType; name: string }) => Promise<UserProfile | null>;
   updateProfile: (id: string, patch: Partial<UserProfile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
-  updateOnboardingProgress: (step: number, role?: AccountType) => Promise<void>;
+  updateOnboardingProgress: (step: number, role?: AccountType, businessKind?: BusinessKind) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
