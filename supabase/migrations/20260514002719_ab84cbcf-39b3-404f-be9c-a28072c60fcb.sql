@@ -1,1 +1,0 @@
-ALTER TYPE profile_type ADD VALUE IF NOT EXISTS 'referee';
