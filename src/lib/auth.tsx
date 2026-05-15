@@ -209,6 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profiles,
     activeProfile,
     accountType,
+    businessKind,
     onboardingStep,
     refreshProfiles,
     setActive,
