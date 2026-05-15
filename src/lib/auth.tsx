@@ -17,6 +17,8 @@ export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
   business: ["field", "referee"],
 };
 
+export type BusinessKind = "field" | "referee";
+
 export type UserProfile = {
   id: string;
   user_id: string;
@@ -49,6 +51,7 @@ type AuthContextValue = {
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
   accountType: AccountType | null;
+  businessKind: BusinessKind | null;
   onboardingStep: number;
   refreshProfiles: () => Promise<void>;
   setActive: (profileId: string) => Promise<void>;
@@ -56,7 +59,7 @@ type AuthContextValue = {
   upsertProfile: (p: Partial<UserProfile> & { type: ProfileType; name: string }) => Promise<UserProfile | null>;
   updateProfile: (id: string, patch: Partial<UserProfile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
-  updateOnboardingProgress: (step: number, role?: AccountType) => Promise<void>;
+  updateOnboardingProgress: (step: number, role?: AccountType, businessKind?: BusinessKind) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -81,23 +84,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const [businessKind, setBusinessKindState] = useState<BusinessKind | null>(null);
+
   const refreshProfiles = useCallback(async () => {
     if (!session?.user) {
       setProfiles([]);
       setActiveId(null);
       setAccountTypeState(null);
+      setBusinessKindState(null);
       setOnboardingStep(0);
       return;
     }
     const [{ data: profs }, { data: act }, { data: profileRow }] = await Promise.all([
       supabase.from("user_profiles").select("*").eq("user_id", session.user.id).order("created_at"),
       supabase.from("active_profile").select("profile_id").eq("user_id", session.user.id).maybeSingle(),
-      supabase.from("profiles").select("account_type, onboarding_step").eq("id", session.user.id).maybeSingle(),
+      supabase.from("profiles").select("account_type, onboarding_step, business_kind").eq("id", session.user.id).maybeSingle(),
     ]);
     const list = (profs ?? []) as UserProfile[];
     setProfiles(list);
-    setAccountTypeState((profileRow?.account_type as AccountType) ?? null);
-    setOnboardingStep(profileRow?.onboarding_step ?? 0);
+    const row = profileRow as { account_type?: string | null; onboarding_step?: number | null; business_kind?: string | null } | null;
+    setAccountTypeState((row?.account_type as AccountType) ?? null);
+    setBusinessKindState((row?.business_kind as BusinessKind) ?? null);
+    setOnboardingStep(row?.onboarding_step ?? 0);
     
     if (act?.profile_id && list.some((p) => p.id === act.profile_id)) {
       setActiveId(act.profile_id);
@@ -127,23 +135,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfiles([]);
     setActiveId(null);
     setAccountTypeState(null);
+    setBusinessKindState(null);
     setOnboardingStep(0);
   }, []);
 
   const updateOnboardingProgress = useCallback(
-    async (step: number, role?: AccountType) => {
+    async (step: number, role?: AccountType, kind?: BusinessKind) => {
       if (!session?.user) throw new Error("Não autenticado");
-      const patch: { onboarding_step: number; account_type?: AccountType } = { onboarding_step: step };
+      const patch: { onboarding_step: number; account_type?: AccountType; business_kind?: BusinessKind } = { onboarding_step: step };
       if (role) patch.account_type = role;
+      if (kind) patch.business_kind = kind;
       
       const { error } = await supabase
         .from("profiles")
-        .update(patch)
+        .update(patch as never)
         .eq("id", session.user.id);
         
       if (error) throw error;
       setOnboardingStep(step);
       if (role) setAccountTypeState(role);
+      if (kind) setBusinessKindState(kind);
     },
     [session]
   );
@@ -198,6 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profiles,
     activeProfile,
     accountType,
+    businessKind,
+    onboardingStep,
     refreshProfiles,
     setActive,
     signOut,
