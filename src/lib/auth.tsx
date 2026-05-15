@@ -1,0 +1,255 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+
+export type ProfileType = "player" | "team" | "field" | "referee";
+export type AccountType = "player" | "team" | "business";
+
+export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
+  player: "Jogador",
+  team: "Time",
+  business: "Complexo / Árbitro",
+};
+
+export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
+  player: ["player"],
+  team: ["team"],
+  business: ["field", "referee"],
+};
+
+export type UserProfile = {
+  id: string;
+  user_id: string;
+  type: ProfileType;
+  name: string;
+  nickname: string | null;
+  bio: string | null;
+  city: string | null;
+  avatar: string | null;
+  color: string;
+  frame: string;
+  position: string | null;
+  level: string | null;
+  founded: number | null;
+  capacity: number | null;
+  field_type: string | null;
+  price_per_hour: number | null;
+  address: string | null;
+  age: number | null;
+  gender: string | null;
+  preferred_foot: string | null;
+  field_types: string[] | null;
+  photo_url?: string | null;
+  preferred_field?: string | null;
+};
+
+type AuthContextValue = {
+  session: Session | null;
+  loading: boolean;
+  profiles: UserProfile[];
+  activeProfile: UserProfile | null;
+  accountType: AccountType | null;
+  onboardingStep: number;
+  refreshProfiles: () => Promise<void>;
+  setActive: (profileId: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  upsertProfile: (p: Partial<UserProfile> & { type: ProfileType; name: string }) => Promise<UserProfile | null>;
+  updateProfile: (id: string, patch: Partial<UserProfile>) => Promise<void>;
+  deleteProfile: (id: string) => Promise<void>;
+  updateOnboardingProgress: (step: number, role?: AccountType) => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [accountType, setAccountTypeState] = useState<AccountType | null>(null);
+  const [onboardingStep, setOnboardingStep] = useState<number>(0);
+
+  // Bootstrap session
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
+      setSession(s);
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const refreshProfiles = useCallback(async () => {
+    if (!session?.user) {
+      setProfiles([]);
+      setActiveId(null);
+      setAccountTypeState(null);
+      setOnboardingStep(0);
+      return;
+    }
+    const [{ data: profs }, { data: act }, { data: profileRow }] = await Promise.all([
+      supabase.from("user_profiles").select("*").eq("user_id", session.user.id).order("created_at"),
+      supabase.from("active_profile").select("profile_id").eq("user_id", session.user.id).maybeSingle(),
+      supabase.from("profiles").select("account_type, onboarding_step").eq("id", session.user.id).maybeSingle(),
+    ]);
+    const list = (profs ?? []) as UserProfile[];
+    setProfiles(list);
+    setAccountTypeState((profileRow?.account_type as AccountType) ?? null);
+    setOnboardingStep(profileRow?.onboarding_step ?? 0);
+    
+    if (act?.profile_id && list.some((p) => p.id === act.profile_id)) {
+      setActiveId(act.profile_id);
+    } else if (list.length > 0) {
+      setActiveId(list[0].id);
+      await supabase.from("active_profile").upsert({ user_id: session.user.id, profile_id: list[0].id });
+    } else {
+      setActiveId(null);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    refreshProfiles();
+  }, [refreshProfiles]);
+
+  const setActive = useCallback(
+    async (profileId: string) => {
+      if (!session?.user) return;
+      setActiveId(profileId);
+      await supabase.from("active_profile").upsert({ user_id: session.user.id, profile_id: profileId });
+    },
+    [session],
+  );
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setProfiles([]);
+    setActiveId(null);
+    setAccountTypeState(null);
+    setOnboardingStep(0);
+  }, []);
+
+  const updateOnboardingProgress = useCallback(
+    async (step: number, role?: AccountType) => {
+      if (!session?.user) throw new Error("Não autenticado");
+      const patch: { onboarding_step: number; account_type?: AccountType } = { onboarding_step: step };
+      if (role) patch.account_type = role;
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update(patch)
+        .eq("id", session.user.id);
+        
+      if (error) throw error;
+      setOnboardingStep(step);
+      if (role) setAccountTypeState(role);
+    },
+    [session]
+  );
+
+  const upsertProfile = useCallback<AuthContextValue["upsertProfile"]>(
+    async (p) => {
+      if (!session?.user) return null;
+      const exists = profiles.some((existing) => existing.type === p.type);
+      if (exists) {
+        throw new Error(
+          `Você já possui um perfil de ${PROFILE_TYPE_LABEL[p.type]}. Edite o existente em vez de criar outro.`,
+        );
+      }
+      const payload = { ...p, user_id: session.user.id };
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .upsert(payload as never, { onConflict: "user_id,type" })
+        .select()
+        .single();
+      if (error) throw error;
+      await refreshProfiles();
+      return data as UserProfile;
+    },
+    [session, profiles, refreshProfiles],
+  );
+
+  const updateProfile = useCallback(
+    async (id: string, patch: Partial<UserProfile>) => {
+      const { error } = await supabase.from("user_profiles").update(patch as never).eq("id", id);
+      if (error) throw error;
+      await refreshProfiles();
+    },
+    [refreshProfiles],
+  );
+
+  const deleteProfile = useCallback(
+    async (id: string) => {
+      await supabase.from("user_profiles").delete().eq("id", id);
+      await refreshProfiles();
+    },
+    [refreshProfiles],
+  );
+
+  const activeProfile = useMemo(
+    () => profiles.find((p) => p.id === activeId) ?? null,
+    [profiles, activeId],
+  );
+
+  const value: AuthContextValue = {
+    session,
+    loading,
+    profiles,
+    activeProfile,
+    accountType,
+    refreshProfiles,
+    setActive,
+    signOut,
+    upsertProfile,
+    updateProfile,
+    deleteProfile,
+    updateOnboardingProgress,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
+
+export const PROFILE_TYPE_LABEL: Record<ProfileType, string> = {
+  player: "Jogador",
+  team: "Time",
+  field: "Campo",
+  referee: "Árbitro",
+};
+
+export const PROFILE_TYPE_EMOJI: Record<ProfileType, string> = {
+  player: "⚽",
+  team: "🛡️",
+  field: "🏟️",
+  referee: "🟨",
+};
+
+export const FRAMES = [
+  { id: "classic", label: "Clássico", ring: "ring-2 ring-border" },
+  { id: "gold", label: "Ouro", ring: "ring-2 ring-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.5)]" },
+  { id: "neon", label: "Neon", ring: "ring-2 ring-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.5)]" },
+  { id: "fire", label: "Fogo", ring: "ring-2 ring-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.6)]" },
+  { id: "ice", label: "Gelo", ring: "ring-2 ring-blue-300 shadow-[0_0_20px_rgba(147,197,253,0.5)]" },
+] as const;
+
+export function frameClass(frame: string) {
+  return FRAMES.find((f) => f.id === frame)?.ring ?? FRAMES[0].ring;
+}
+
+export const PRESET_COLORS = [
+  "#F59E0B", "#EF4444", "#10B981", "#3B82F6", "#8B5CF6",
+  "#EC4899", "#06B6D4", "#F97316", "#84CC16", "#6366F1",
+];
+
+export const PRESET_AVATARS_BY_TYPE: Record<ProfileType, string[]> = {
+  player: ["⚽", "🏃", "👟", "🥅", "🧤", "💪", "🔥", "⭐", "🎯", "🏆"],
+  team: ["🦁", "🦅", "🦈", "🐺", "🐂", "🐆", "🐍", "🦇", "🐉", "👑"],
+  field: ["🏟️", "🌿", "🥅", "📍", "🏞️", "⛳", "🌳", "💚", "🔆", "🏗️"],
+  referee: ["🟨", "🟥", "📣", "🎽", "🧑‍⚖️", "⏱️", "📋", "🏁", "👁️", "🔔"],
+};
