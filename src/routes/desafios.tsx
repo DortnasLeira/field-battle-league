@@ -102,13 +102,31 @@ function DesafiosPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl flex items-center gap-3">
             <Swords className="h-8 w-8 text-primary" /> Batalhas
           </h1>
           <p className="text-sm text-muted-foreground">Desafios pendentes, lançados e confrontos confirmados.</p>
         </div>
+        <Button
+          className="bg-gradient-primary text-primary-foreground shadow-glow"
+          onClick={() => {
+            if (!session) {
+              toast.error("Faça login para criar um desafio.");
+              navigate({ to: "/auth", search: { redirect: "/desafios" } });
+              return;
+            }
+            if (activeProfile?.type !== "team") {
+              toast.error("Apenas perfis de Time podem criar desafios.");
+              return;
+            }
+            setOpponentId(undefined);
+            setCreateOpen(true);
+          }}
+        >
+          <Plus className="mr-1.5 h-4 w-4" /> Novo desafio
+        </Button>
       </div>
 
       <FiltersPanel
@@ -131,7 +149,7 @@ function DesafiosPage() {
         </div>
       </FiltersPanel>
 
-      <Tabs defaultValue="received">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-surface">
           <TabsTrigger value="received" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-glow">
             <Inbox className="mr-2 h-4 w-4" /> Recebidos
@@ -155,7 +173,145 @@ function DesafiosPage() {
           <ChallengeGrid items={accepted} mode="accepted" empty="Sem batalhas marcadas no momento." />
         </TabsContent>
       </Tabs>
+
+      <CreateChallengeDialog
+        open={createOpen}
+        onOpenChange={(v) => {
+          setCreateOpen(v);
+          if (!v && search.opponent) navigate({ to: "/desafios", search: {}, replace: true });
+        }}
+        teams={teams}
+        fields={fields}
+        currentTeamId={currentTeamId}
+        lockedOpponentId={opponentId}
+        canCreate={activeProfile?.type === "team"}
+        onSubmit={handleCreate}
+      />
     </div>
+  );
+}
+
+function CreateChallengeDialog({
+  open,
+  onOpenChange,
+  teams,
+  fields,
+  currentTeamId,
+  lockedOpponentId,
+  canCreate,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  teams: { id: string; name: string }[];
+  fields: { id: string; name: string }[];
+  currentTeamId: string;
+  lockedOpponentId?: string;
+  canCreate: boolean;
+  onSubmit: (p: { toTeamId: string; fieldId: string; date: string; time: string; message: string }) => void;
+}) {
+  const [toTeamId, setToTeamId] = useState<string>(lockedOpponentId ?? "");
+  const [fieldId, setFieldId] = useState<string>(fields[0]?.id ?? "");
+  const [date, setDate] = useState<string>("");
+  const [time, setTime] = useState<string>("20:00");
+  const [message, setMessage] = useState<string>("");
+
+  useEffect(() => {
+    if (open) {
+      setToTeamId(lockedOpponentId ?? "");
+      setFieldId(fields[0]?.id ?? "");
+      setMessage("");
+    }
+  }, [open, lockedOpponentId, fields]);
+
+  const opponent = teams.find((t) => t.id === toTeamId);
+  const opponentOptions = teams.filter((t) => t.id !== currentTeamId);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display uppercase tracking-wide flex items-center gap-2">
+            <Swords className="h-5 w-5 text-primary" /> Novo desafio
+          </DialogTitle>
+          <DialogDescription>
+            {lockedOpponentId && opponent
+              ? <>Você vai desafiar <strong>{opponent.name}</strong>.</>
+              : "Escolha o adversário e marque o confronto."}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!canCreate ? (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            Apenas perfis de <strong>Time</strong> podem criar desafios. Ative o perfil de Time no header.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Adversário</Label>
+              {lockedOpponentId ? (
+                <div className="mt-1 rounded-md border border-primary/40 bg-primary/5 p-2.5">
+                  <TeamBadge teamId={lockedOpponentId} size="md" />
+                </div>
+              ) : (
+                <Select value={toTeamId} onValueChange={setToTeamId}>
+                  <SelectTrigger><SelectValue placeholder="Escolha um time" /></SelectTrigger>
+                  <SelectContent>
+                    {opponentOptions.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div>
+              <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Campo</Label>
+              <Select value={fieldId} onValueChange={setFieldId}>
+                <SelectTrigger><SelectValue placeholder="Escolha um campo" /></SelectTrigger>
+                <SelectContent>
+                  {fields.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Data</Label>
+                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              </div>
+              <div>
+                <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Horário</Label>
+                <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              </div>
+            </div>
+
+            <div>
+              <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Mensagem (opcional)</Label>
+              <Textarea
+                placeholder="Bora pra cima!"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button
+            className="bg-gradient-primary text-primary-foreground shadow-glow"
+            disabled={!canCreate}
+            onClick={() => onSubmit({ toTeamId, fieldId, date, time, message })}
+          >
+            Enviar desafio
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
