@@ -20,6 +20,9 @@ import { REFEREE_TIER_INFO } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/desafios")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    opponent: typeof s.opponent === "string" ? s.opponent : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Batalhas — PeladaPro" },
@@ -30,11 +33,35 @@ export const Route = createFileRoute("/desafios")({
 });
 
 function DesafiosPage() {
-  const { challenges, currentTeamId } = useStore();
+  const { challenges, currentTeamId, teams, fields, createChallenge } = useStore();
+  const { activeProfile, session } = useAuth();
+  const navigate = useNavigate();
+  const search = Route.useSearch();
   const [fStatus, setFStatus] = useState<string>("all");
   const [fDate, setFDate] = useState("");
   const [fTimeFrom, setFTimeFrom] = useState("");
   const [fTimeTo, setFTimeTo] = useState("");
+  const [tab, setTab] = useState<string>("received");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [opponentId, setOpponentId] = useState<string | undefined>(search.opponent);
+
+  // Reage à navegação vinda de /buscar com ?opponent=...
+  useEffect(() => {
+    if (!search.opponent) return;
+    if (!session) {
+      toast.error("Faça login para criar um desafio.");
+      navigate({ to: "/auth", search: { redirect: "/desafios" } });
+      return;
+    }
+    if (activeProfile?.type !== "team") {
+      toast.error("Apenas perfis de Time podem criar desafios. Ative o perfil de Time no header.");
+      // limpa o param para evitar reabrir
+      navigate({ to: "/desafios", search: {}, replace: true });
+      return;
+    }
+    setOpponentId(search.opponent);
+    setCreateOpen(true);
+  }, [search.opponent, session, activeProfile?.type, navigate]);
 
   const apply = (c: Challenge) => {
     if (fStatus !== "all" && c.status !== fStatus) return false;
@@ -49,6 +76,29 @@ function DesafiosPage() {
   const accepted = challenges.filter((c) =>
     (c.fromTeamId === currentTeamId || c.toTeamId === currentTeamId) && c.status === "accepted",
   ).filter(apply);
+
+  const handleCreate = (payload: { toTeamId: string; fieldId: string; date: string; time: string; message: string }) => {
+    if (activeProfile?.type !== "team") {
+      toast.error("Apenas perfis de Time podem criar desafios.");
+      return;
+    }
+    if (!payload.toTeamId || !payload.fieldId || !payload.date || !payload.time) {
+      toast.error("Preencha campo, data e horário.");
+      return;
+    }
+    createChallenge({
+      fromTeamId: currentTeamId,
+      toTeamId: payload.toTeamId,
+      fieldId: payload.fieldId,
+      date: payload.date,
+      time: payload.time,
+      message: payload.message || "Bora pra cima!",
+    });
+    toast.success("Desafio enviado! 🔥");
+    setCreateOpen(false);
+    setTab("sent");
+    navigate({ to: "/desafios", search: {}, replace: true });
+  };
 
   return (
     <div className="space-y-6">
