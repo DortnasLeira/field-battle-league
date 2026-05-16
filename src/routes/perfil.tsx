@@ -47,6 +47,7 @@ function PerfilPage() {
     return <TeamDashboard team={team} />;
   }
   if (activeProfile.type === "field") return <FieldDashboard profile={activeProfile} />;
+  if (activeProfile.type === "referee") return <RefereeDashboard profile={activeProfile} />;
   return <PlaceholderDashboard type={activeProfile.type} />;
 }
 
