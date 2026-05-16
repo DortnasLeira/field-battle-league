@@ -322,7 +322,7 @@ function BuscarPage() {
                             toast.error("Apenas perfis de Time podem desafiar outro time.");
                             return;
                           }
-                          navigate({ to: "/desafios" });
+                          navigate({ to: "/desafios", search: { opponent: t.id } });
                         }}
                         title="Desafiar este time"
                       >
