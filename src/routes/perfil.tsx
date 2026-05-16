@@ -7,6 +7,7 @@ import { useAuth, PROFILE_TYPE_EMOJI, PROFILE_TYPE_LABEL, type ProfileType } fro
 import { PlayerDashboard } from "@/components/PlayerDashboard";
 import { TeamDashboard } from "@/components/TeamDashboard";
 import { FieldDashboard } from "@/components/FieldDashboard";
+import { RefereeDashboard } from "@/components/RefereeDashboard";
 import { teams as mockTeams } from "@/lib/mockData";
 
 export const Route = createFileRoute("/perfil")({
