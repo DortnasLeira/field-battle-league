@@ -166,6 +166,8 @@ function ProfileSwitcher() {
   }
 
   const isBusiness = accountType === "business";
+  const hasFieldProfile = profiles.some((p) => p.type === "field");
+  const hasRefereeProfile = profiles.some((p) => p.type === "referee");
 
   return (
     <div className="flex items-center gap-1">
@@ -205,9 +207,16 @@ function ProfileSwitcher() {
               <DropdownMenuItem onClick={() => navigate({ to: "/painel" })}>
                 <LayoutDashboard className="mr-2 h-4 w-4" /> Painel
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate({ to: "/complexo" })}>
-                <Plus className="mr-2 h-4 w-4" /> Adicionar campos
-              </DropdownMenuItem>
+              {hasFieldProfile && (
+                <DropdownMenuItem onClick={() => navigate({ to: "/complexo" })}>
+                  <Building2 className="mr-2 h-4 w-4" /> Meu complexo
+                </DropdownMenuItem>
+              )}
+              {hasRefereeProfile && (
+                <DropdownMenuItem onClick={() => navigate({ to: "/arbitragem" })}>
+                  <Award className="mr-2 h-4 w-4" /> Arbitragem
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
                 <Settings className="mr-2 h-4 w-4" /> Editar perfil
               </DropdownMenuItem>
