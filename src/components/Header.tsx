@@ -19,7 +19,7 @@ const loggedOutLinks = [
   { to: "/campos", label: "Campos", icon: MapPin },
 ] as const;
 
-// Esportista logado
+// Esportista logado (não vê /arbitragem nem /complexo)
 const sportistLinks = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/ligas", label: "Ligas", icon: Trophy },
@@ -27,27 +27,31 @@ const sportistLinks = [
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
   { to: "/desafios", label: "Desafios", icon: Swords },
-  { to: "/arbitragem", label: "Arbitragem", icon: Award },
   { to: "/pro", label: "PRO", icon: Trophy },
 ] as const;
 
-// Business com perfil de Campo: Buscar, Ligas, Campos, Arbitragem, Desafios + Complexo
+// Business com perfil Campo (NÃO vê /arbitragem)
 const fieldBusinessLinks = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/desafios", label: "Desafios", icon: Swords },
-  { to: "/arbitragem", label: "Arbitragem", icon: Award },
   { to: "/complexo", label: "Complexo", icon: Building2 },
 ] as const;
 
-// Business sem perfil de Campo (ex.: Árbitro)
-const businessFallbackLinks = [
+// Business com perfil Árbitro (exclusivo: vê /arbitragem, NÃO vê /complexo)
+const refereeBusinessLinks = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/desafios", label: "Desafios", icon: Swords },
   { to: "/arbitragem", label: "Arbitragem", icon: Award },
+] as const;
+
+// Business sem perfil definido ainda
+const businessFallbackLinks = [
+  { to: "/buscar", label: "Buscar", icon: Search },
+  { to: "/campos", label: "Campos", icon: MapPin },
 ] as const;
 
 const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo", "/painel", "/ligas", "/ranking", "/pro"]);
@@ -59,12 +63,15 @@ export function Header() {
   const isActive = (to: string) => pathname.startsWith(to);
   const isBusiness = accountType === "business";
   const hasFieldProfile = profiles.some((p) => p.type === "field");
+  const hasRefereeProfile = profiles.some((p) => p.type === "referee");
   const links = !session
     ? loggedOutLinks
     : isBusiness
-      ? hasFieldProfile
-        ? fieldBusinessLinks
-        : businessFallbackLinks
+      ? hasRefereeProfile && !hasFieldProfile
+        ? refereeBusinessLinks
+        : hasFieldProfile
+          ? fieldBusinessLinks
+          : businessFallbackLinks
       : sportistLinks;
   const cols = links.length;
 
@@ -159,6 +166,8 @@ function ProfileSwitcher() {
   }
 
   const isBusiness = accountType === "business";
+  const hasFieldProfile = profiles.some((p) => p.type === "field");
+  const hasRefereeProfile = profiles.some((p) => p.type === "referee");
 
   return (
     <div className="flex items-center gap-1">
@@ -198,9 +207,16 @@ function ProfileSwitcher() {
               <DropdownMenuItem onClick={() => navigate({ to: "/painel" })}>
                 <LayoutDashboard className="mr-2 h-4 w-4" /> Painel
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate({ to: "/complexo" })}>
-                <Plus className="mr-2 h-4 w-4" /> Adicionar campos
-              </DropdownMenuItem>
+              {hasFieldProfile && (
+                <DropdownMenuItem onClick={() => navigate({ to: "/complexo" })}>
+                  <Building2 className="mr-2 h-4 w-4" /> Meu complexo
+                </DropdownMenuItem>
+              )}
+              {hasRefereeProfile && (
+                <DropdownMenuItem onClick={() => navigate({ to: "/arbitragem" })}>
+                  <Award className="mr-2 h-4 w-4" /> Arbitragem
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
                 <Settings className="mr-2 h-4 w-4" /> Editar perfil
               </DropdownMenuItem>
