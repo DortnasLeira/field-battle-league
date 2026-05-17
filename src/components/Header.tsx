@@ -13,44 +13,59 @@ import { Button } from "@/components/ui/button";
 import { useAuth, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/lib/auth";
 import { toast } from "sonner";
 
-const publicLinks = [
+// Não logado: apenas Buscar e Campos
+const loggedOutLinks = [
+  { to: "/buscar", label: "Buscar", icon: Search },
+  { to: "/campos", label: "Campos", icon: MapPin },
+] as const;
+
+// Esportista logado
+const sportistLinks = [
   { to: "/buscar", label: "Buscar", icon: Search },
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/ranking", label: "Ranking", icon: BarChart3 },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/vagas", label: "Vagas", icon: UserPlus },
-] as const;
-
-// Links restritos ao Business (sem Vagas e Ranking, que são contexto Esportista)
-const businessPublicLinks = [
-  { to: "/buscar", label: "Buscar", icon: Search },
-  { to: "/ligas", label: "Ligas", icon: Trophy },
-  { to: "/campos", label: "Campos", icon: MapPin },
-] as const;
-
-const authLinks = [
   { to: "/desafios", label: "Desafios", icon: Swords },
   { to: "/arbitragem", label: "Arbitragem", icon: Award },
   { to: "/pro", label: "PRO", icon: Trophy },
 ] as const;
 
-const businessLinks = [
+// Business com perfil de Campo: Buscar, Ligas, Campos, Arbitragem, Desafios + Complexo
+const fieldBusinessLinks = [
+  { to: "/buscar", label: "Buscar", icon: Search },
+  { to: "/ligas", label: "Ligas", icon: Trophy },
+  { to: "/campos", label: "Campos", icon: MapPin },
+  { to: "/desafios", label: "Desafios", icon: Swords },
+  { to: "/arbitragem", label: "Arbitragem", icon: Award },
   { to: "/complexo", label: "Complexo", icon: Building2 },
 ] as const;
 
-const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo", "/painel"]);
+// Business sem perfil de Campo (ex.: Árbitro)
+const businessFallbackLinks = [
+  { to: "/buscar", label: "Buscar", icon: Search },
+  { to: "/ligas", label: "Ligas", icon: Trophy },
+  { to: "/campos", label: "Campos", icon: MapPin },
+  { to: "/desafios", label: "Desafios", icon: Swords },
+  { to: "/arbitragem", label: "Arbitragem", icon: Award },
+] as const;
+
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo", "/painel", "/ligas", "/ranking", "/pro"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { session, accountType } = useAuth();
+  const { session, accountType, profiles } = useAuth();
   const navigate = useNavigate();
   const isActive = (to: string) => pathname.startsWith(to);
   const isBusiness = accountType === "business";
-  const links = session
-    ? isBusiness
-      ? [...businessPublicLinks, ...authLinks, ...businessLinks]
-      : [...publicLinks, ...authLinks]
-    : publicLinks;
+  const hasFieldProfile = profiles.some((p) => p.type === "field");
+  const links = !session
+    ? loggedOutLinks
+    : isBusiness
+      ? hasFieldProfile
+        ? fieldBusinessLinks
+        : businessFallbackLinks
+      : sportistLinks;
   const cols = links.length;
 
   const handleNav = (to: string) => (e: React.MouseEvent) => {
