@@ -3,10 +3,10 @@ import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2 } from "luci
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { REFEREE_ACHIEVEMENTS } from "@/lib/refereeAchievements";
 import { cn } from "@/lib/utils";
 import type { Challenge } from "@/lib/mockData";
@@ -22,15 +22,34 @@ export const Route = createFileRoute("/arbitragem")({
 });
 
 function ArbitragemPage() {
-  const { challenges, matches, referees, currentRefereeId, setCurrentReferee, acceptRefereeRequest, declineRefereeRequest } = useStore();
+  const { activeProfile, accountType, profiles } = useAuth();
+  const { challenges, matches, referees, currentRefereeId } = useStore();
 
-  const myRequests = challenges.filter((c) => c.refereeRequest?.refereeId === currentRefereeId);
+  const isReferee =
+    accountType === "business" && profiles.some((p) => p.type === "referee");
+
+  // O guard global já redireciona quem não é árbitro. Este fallback evita flash de conteúdo.
+  if (!isReferee) {
+    return (
+      <Card className="border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+        Esta área é exclusiva para árbitros.
+      </Card>
+    );
+  }
+
+  // Demo: usa o árbitro mock vinculado à conta. Em produção, viria do perfil ativo.
+  const me =
+    referees.find((r) => r.name === (activeProfile?.name ?? "")) ??
+    referees.find((r) => r.id === currentRefereeId);
+  const myRefId = me?.id ?? currentRefereeId;
+
+  const myRequests = challenges.filter((c) => c.refereeRequest?.refereeId === myRefId);
   const pending = myRequests.filter((c) => c.refereeRequest?.status === "pending");
   const accepted = myRequests.filter((c) => c.refereeRequest?.status === "accepted");
-  const myMatches = matches.filter((m) => m.refereeId === currentRefereeId);
+  const myMatches = matches.filter((m) => m.refereeId === myRefId);
   const toSign = myMatches.filter((m) => !m.signedByReferee);
 
-  const me = referees.find((r) => r.id === currentRefereeId);
+  const { acceptRefereeRequest, declineRefereeRequest } = useStore.getState();
 
   return (
     <div className="space-y-6">
@@ -43,17 +62,15 @@ function ArbitragemPage() {
             Pedidos de contratação, jogos confirmados e súmulas para assinar.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Atuando como</span>
-          <Select value={currentRefereeId} onValueChange={setCurrentReferee}>
-            <SelectTrigger className="min-w-[200px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {referees.map((r) => (
-                <SelectItem key={r.id} value={r.id}>{r.avatar} {r.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {me && (
+          <div className="hidden items-center gap-2 rounded-md border border-referee/30 bg-referee/5 px-3 py-2 sm:flex">
+            <span className="text-lg">{me.avatar}</span>
+            <div className="leading-tight">
+              <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Atuando como</div>
+              <div className="text-sm font-semibold text-referee">{me.name}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Section title="Pedidos pendentes" count={pending.length} empty="Nenhum pedido novo. Você está livre.">
