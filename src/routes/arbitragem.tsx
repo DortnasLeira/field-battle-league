@@ -152,12 +152,6 @@ function ArbitragemPage() {
         </div>
       </Card>
 
-      {me && (
-        <Card className="border-border bg-surface/50 p-3 text-[11px] text-muted-foreground">
-          Demo: você está atuando como <strong className="text-referee">{me.name}</strong>. Use o seletor acima para
-          simular outro árbitro.
-        </Card>
-      )}
     </div>
   );
 }
