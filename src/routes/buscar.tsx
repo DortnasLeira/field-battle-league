@@ -68,38 +68,39 @@ function BuscarPage() {
   }, [activeProfile]);
 
   const q = query.trim().toLowerCase();
+  const cityKey = normalizeCity(city);
 
   const filteredTeams = useMemo(() => {
     return mockTeams.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q) && !t.captain.toLowerCase().includes(q)) return false;
-      if (city && !t.city.toLowerCase().includes(city.toLowerCase())) return false;
+      if (cityKey && !normalizeCity(t.city).includes(cityKey)) return false;
       return true;
     });
-  }, [q, city]);
+  }, [q, cityKey]);
 
   const filteredPlayers = useMemo(() => {
     return players.filter((p) => {
       const name = (p.name || "").toLowerCase();
       const nick = (p.nickname || "").toLowerCase();
       if (q && !name.includes(q) && !nick.includes(q)) return false;
-      if (city && !(p.city || "").toLowerCase().includes(city.toLowerCase())) return false;
+      if (cityKey && !normalizeCity(p.city).includes(cityKey)) return false;
       if (position && p.position !== position) return false;
       if (level && p.level !== level) return false;
       return true;
     });
-  }, [players, q, city, position, level]);
+  }, [players, q, cityKey, position, level]);
 
   const filteredReferees = useMemo(() => {
     return mockReferees.filter((r) => {
       if (q && !r.name.toLowerCase().includes(q)) return false;
-      if (city && !r.city.toLowerCase().includes(city.toLowerCase())) return false;
+      if (cityKey && !normalizeCity(r.city).includes(cityKey)) return false;
       if (refMaxPrice && r.pricePerGame > Number(refMaxPrice)) return false;
       if (refMinScore && r.score < Number(refMinScore)) return false;
       if (refDate && !r.availableDays.includes(refDate)) return false;
       if (refTime && !r.availableTimes.includes(refTime)) return false;
       return true;
     });
-  }, [q, city, refMaxPrice, refMinScore, refDate, refTime]);
+  }, [q, cityKey, refMaxPrice, refMinScore, refDate, refTime]);
 
   const isReferees = kind === "referees";
   const filterCount = isReferees
