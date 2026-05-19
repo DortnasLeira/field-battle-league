@@ -69,13 +69,29 @@ function OnboardingPage() {
 
   const pickOption = (opt: Option) => {
     if (accountType && accountType !== opt.account) {
+      const allowedLabels = ALLOWED_PROFILE_TYPES[accountType]
+        .map((t) => PROFILE_TYPE_LABEL[t])
+        .join(" ou ");
       toast.error(
-        `Sua conta já é ${ACCOUNT_TYPE_LABEL[accountType]} e não permite criar perfil de ${PROFILE_TYPE_LABEL[opt.id]}.`,
+        `Sua conta é ${ACCOUNT_TYPE_LABEL[accountType]} e não pode criar um perfil ${ACCOUNT_TYPE_LABEL[opt.account]}.`,
+        {
+          description: `A escolha entre Esportista e Business é definitiva. Você só pode criar perfis de: ${allowedLabels}.`,
+          duration: 6000,
+        },
       );
       return;
     }
     if (existingTypes.has(opt.id)) {
-      toast.error(`Você já possui um perfil de ${PROFILE_TYPE_LABEL[opt.id]}.`);
+      const sameAccountOptions = OPTIONS.filter(
+        (o) => o.account === opt.account && !existingTypes.has(o.id),
+      );
+      const remaining = sameAccountOptions.map((o) => PROFILE_TYPE_LABEL[o.id]).join(" ou ");
+      toast.error(`Você já possui um perfil de ${PROFILE_TYPE_LABEL[opt.id]}.`, {
+        description: remaining
+          ? `Dentro de ${ACCOUNT_TYPE_LABEL[opt.account]} você ainda pode criar: ${remaining}.`
+          : `Você já criou todos os perfis disponíveis para a conta ${ACCOUNT_TYPE_LABEL[opt.account]}.`,
+        duration: 6000,
+      });
       return;
     }
     setSelected(opt.id);
