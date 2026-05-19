@@ -298,7 +298,7 @@ function ProfileEditor({
           </div>
           <div className="sm:col-span-2">
             <Label>Cidade</Label>
-            <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Cidade" />
+            <CityCombobox value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
           </div>
           <div className="sm:col-span-2">
             <Label>Bio</Label>
