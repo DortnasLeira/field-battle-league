@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { CityCombobox } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/complexo_/editar")({
   head: () => ({ meta: [{ title: "Editar estabelecimento — PeladaPro" }] }),
@@ -140,7 +141,7 @@ function EditVenuePage() {
           </div>
           <div>
             <Label>Cidade</Label>
-            <Input value={form.city} onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))} placeholder="São Paulo" />
+            <CityCombobox value={form.city} onChange={(v) => setForm((s) => ({ ...s, city: v }))} />
           </div>
           <div>
             <Label>Telefone</Label>

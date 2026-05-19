@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FRAME_UNLOCK, isFrameUnlocked } from "@/lib/achievements";
+import { CityCombobox } from "@/components/CityCombobox";
 import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/perfil_/editar")({
@@ -297,7 +298,7 @@ function ProfileEditor({
           </div>
           <div className="sm:col-span-2">
             <Label>Cidade</Label>
-            <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Cidade" />
+            <CityCombobox value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
           </div>
           <div className="sm:col-span-2">
             <Label>Bio</Label>

@@ -18,6 +18,7 @@ import {
   type ProfileType,
   type AccountType,
 } from "@/lib/auth";
+import { CityCombobox } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -298,10 +299,9 @@ function OnboardingPage() {
               </div>
               <div className="sm:col-span-3">
                 <Label>Cidade</Label>
-                <Input
+                <CityCombobox
                   value={form.city}
-                  onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))}
-                  placeholder="São Paulo"
+                  onChange={(v) => setForm((s) => ({ ...s, city: v }))}
                 />
               </div>
             </div>
