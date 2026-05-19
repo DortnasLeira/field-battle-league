@@ -18,6 +18,7 @@ import {
   type ProfileType,
   type AccountType,
 } from "@/lib/auth";
+import { CityCombobox } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
