@@ -141,7 +141,7 @@ function EditVenuePage() {
           </div>
           <div>
             <Label>Cidade</Label>
-            <Input value={form.city} onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))} placeholder="São Paulo" />
+            <CityCombobox value={form.city} onChange={(v) => setForm((s) => ({ ...s, city: v }))} />
           </div>
           <div>
             <Label>Telefone</Label>
