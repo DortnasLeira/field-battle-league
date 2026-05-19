@@ -190,6 +190,7 @@ export function CityCombobox({
                         setOpen(false);
                         setQuery("");
                       }}
+                      className="text-foreground data-[selected=true]:bg-[#f84713] data-[selected=true]:text-white aria-selected:bg-[#f84713] aria-selected:text-white"
                     >
                       <Check
                         className={cn(
