@@ -207,7 +207,7 @@ function BuscarPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
-                  <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex: São Paulo" className="mt-1" />
+                  <div className="mt-1"><CityCombobox value={city} onChange={setCity} placeholder="Ex: São Paulo/SP" /></div>
                 </div>
                 <div>
                   <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Posição</Label>
