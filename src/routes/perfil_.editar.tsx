@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FRAME_UNLOCK, isFrameUnlocked } from "@/lib/achievements";
+import { CityCombobox } from "@/components/CityCombobox";
 import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/perfil_/editar")({
