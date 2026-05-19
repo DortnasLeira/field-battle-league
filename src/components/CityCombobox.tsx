@@ -156,10 +156,13 @@ export function CityCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] p-0"
+        className="w-[--radix-popover-trigger-width] border-border/60 bg-[#11171c] p-0 text-foreground"
         align="start"
       >
-        <Command shouldFilter={false}>
+        <Command
+          shouldFilter={false}
+          className="bg-[#11171c] text-foreground"
+        >
           <CommandInput
             placeholder="Buscar cidade ou UF..."
             value={query}
@@ -187,6 +190,7 @@ export function CityCombobox({
                         setOpen(false);
                         setQuery("");
                       }}
+                      className="text-foreground data-[selected=true]:bg-[#f84713] data-[selected=true]:text-white aria-selected:bg-[#f84713] aria-selected:text-white"
                     >
                       <Check
                         className={cn(
