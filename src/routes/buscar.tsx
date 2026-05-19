@@ -170,7 +170,7 @@ function BuscarPage() {
                   <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     <MapPin className="mr-0.5 inline h-3 w-3" /> Cidade {activeProfile?.city && city === activeProfile.city && <span className="text-primary">(auto)</span>}
                   </Label>
-                  <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Sua cidade" className="mt-1" />
+                  <div className="mt-1"><CityCombobox value={city} onChange={setCity} placeholder="Sua cidade" /></div>
                 </div>
                 <div>
                   <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
