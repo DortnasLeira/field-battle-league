@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { CityCombobox } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/complexo_/editar")({
   head: () => ({ meta: [{ title: "Editar estabelecimento — PeladaPro" }] }),
