@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, frameClass, type UserProfile } from "@/lib/auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { CityCombobox, normalizeCity } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/buscar")({
   head: () => ({
