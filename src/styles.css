@@ -172,3 +172,38 @@
       repeating-linear-gradient(90deg, transparent 0 60px, oklch(1 0 0 / 0.02) 60px 61px);
   }
 }
+
+/* ============================================================
+ * Padronização global dos menus dropdown (Select, DropdownMenu,
+ * ContextMenu, Menubar, Command/Combobox).
+ * Fundo: #11171c · Hover/seleção: #f84713 com texto branco.
+ * ============================================================ */
+@layer components {
+  [data-radix-select-content],
+  [data-radix-menu-content],
+  [data-radix-popper-content-wrapper] [cmdk-root] {
+    background-color: #11171c !important;
+    color: var(--color-foreground);
+    border-color: color-mix(in oklab, #f84713 25%, transparent);
+  }
+
+  [data-radix-select-content] [role="option"],
+  [data-radix-menu-content] [role="menuitem"],
+  [data-radix-menu-content] [role="menuitemcheckbox"],
+  [data-radix-menu-content] [role="menuitemradio"],
+  [cmdk-root] [cmdk-item] {
+    color: var(--color-foreground);
+  }
+
+  [data-radix-select-content] [role="option"][data-highlighted],
+  [data-radix-select-content] [role="option"][data-state="checked"],
+  [data-radix-menu-content] [role="menuitem"][data-highlighted],
+  [data-radix-menu-content] [role="menuitemcheckbox"][data-highlighted],
+  [data-radix-menu-content] [role="menuitemradio"][data-highlighted],
+  [data-radix-menu-content] [data-state="open"][data-highlighted],
+  [cmdk-root] [cmdk-item][data-selected="true"],
+  [cmdk-root] [cmdk-item][aria-selected="true"] {
+    background-color: #f84713 !important;
+    color: #ffffff !important;
+  }
+}
