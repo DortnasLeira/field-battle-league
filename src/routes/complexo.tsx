@@ -4,6 +4,7 @@ import { Building2, Plus, Trash2, Save, ImagePlus, Loader2, MapPin, Phone, Dolla
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CityCombobox } from "@/components/CityCombobox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
