@@ -33,6 +33,7 @@ import { Route as ComplexoEditarRouteImport } from './routes/complexo_.editar'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as CampoIdRouteImport } from './routes/campo.$id'
 import { Route as ArbitroIdRouteImport } from './routes/arbitro.$id'
+import { Route as ArbitragemEditarRouteImport } from './routes/arbitragem_.editar'
 import { Route as TimeIdTransferirRouteImport } from './routes/time_.$id.transferir'
 import { Route as CampoIdEditarRouteImport } from './routes/campo.$id.editar'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -157,6 +158,11 @@ const ArbitroIdRoute = ArbitroIdRouteImport.update({
   path: '/arbitro/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArbitragemEditarRoute = ArbitragemEditarRouteImport.update({
+  id: '/arbitragem_/editar',
+  path: '/arbitragem/editar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TimeIdTransferirRoute = TimeIdTransferirRouteImport.update({
   id: '/time_/$id/transferir',
   path: '/time/$id/transferir',
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
+  '/arbitragem/editar': typeof ArbitragemEditarRoute
   '/arbitro/$id': typeof ArbitroIdRoute
   '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
+  '/arbitragem/editar': typeof ArbitragemEditarRoute
   '/arbitro/$id': typeof ArbitroIdRoute
   '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/vagas': typeof VagasRoute
+  '/arbitragem_/editar': typeof ArbitragemEditarRoute
   '/arbitro/$id': typeof ArbitroIdRoute
   '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/reset-password'
     | '/vagas'
+    | '/arbitragem/editar'
     | '/arbitro/$id'
     | '/campo/$id'
     | '/checkout/return'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/reset-password'
     | '/vagas'
+    | '/arbitragem/editar'
     | '/arbitro/$id'
     | '/campo/$id'
     | '/checkout/return'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/ranking'
     | '/reset-password'
     | '/vagas'
+    | '/arbitragem_/editar'
     | '/arbitro/$id'
     | '/campo/$id'
     | '/checkout/return'
@@ -369,6 +381,7 @@ export interface RootRouteChildren {
   RankingRoute: typeof RankingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   VagasRoute: typeof VagasRoute
+  ArbitragemEditarRoute: typeof ArbitragemEditarRoute
   ArbitroIdRoute: typeof ArbitroIdRoute
   CampoIdRoute: typeof CampoIdRouteWithChildren
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArbitroIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/arbitragem_/editar': {
+      id: '/arbitragem_/editar'
+      path: '/arbitragem/editar'
+      fullPath: '/arbitragem/editar'
+      preLoaderRoute: typeof ArbitragemEditarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/time_/$id/transferir': {
       id: '/time_/$id/transferir'
       path: '/time/$id/transferir'
@@ -603,6 +623,7 @@ const rootRouteChildren: RootRouteChildren = {
   RankingRoute: RankingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   VagasRoute: VagasRoute,
+  ArbitragemEditarRoute: ArbitragemEditarRoute,
   ArbitroIdRoute: ArbitroIdRoute,
   CampoIdRoute: CampoIdRouteWithChildren,
   CheckoutReturnRoute: CheckoutReturnRoute,

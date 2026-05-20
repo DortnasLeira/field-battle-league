@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2 } from "lucide-react";
+import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2, Settings } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,15 +62,20 @@ function ArbitragemPage() {
             Pedidos de contratação, jogos confirmados e súmulas para assinar.
           </p>
         </div>
-        {me && (
-          <div className="hidden items-center gap-2 rounded-md border border-referee/30 bg-referee/5 px-3 py-2 sm:flex">
-            <span className="text-lg">{me.avatar}</span>
-            <div className="leading-tight">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Atuando como</div>
-              <div className="text-sm font-semibold text-referee">{me.name}</div>
+        <div className="flex items-center gap-2">
+          {me && (
+            <div className="hidden items-center gap-2 rounded-md border border-referee/30 bg-referee/5 px-3 py-2 sm:flex">
+              <span className="text-lg">{me.avatar}</span>
+              <div className="leading-tight">
+                <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Atuando como</div>
+                <div className="text-sm font-semibold text-referee">{me.name}</div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+          <Button asChild variant="outline" size="sm" className="border-referee/40 text-referee hover:bg-referee/10">
+            <Link to="/arbitragem/editar"><Settings className="mr-1 h-4 w-4" /> Editar perfil</Link>
+          </Button>
+        </div>
       </div>
 
       <Section title="Pedidos pendentes" count={pending.length} empty="Nenhum pedido novo. Você está livre.">
