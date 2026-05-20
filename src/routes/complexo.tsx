@@ -242,7 +242,7 @@ function VenueForm({
           </div>
           <div>
             <Label>Cidade</Label>
-            <Input value={v.city} onChange={(e) => setV((s) => ({ ...s, city: e.target.value }))} placeholder="São Paulo" />
+            <CityCombobox value={v.city} onChange={(val) => setV((s) => ({ ...s, city: val }))} />
           </div>
           <div>
             <Label>Telefone</Label>
