@@ -110,7 +110,7 @@ function CamposPage() {
             />
           </div>
           <div className="sm:w-60">
-            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
+            <CityCombobox value={city} onChange={setCity} placeholder="Cidade" />
           </div>
         </div>
       </Card>
