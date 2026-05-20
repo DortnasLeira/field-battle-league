@@ -197,7 +197,7 @@ function VagasPage() {
                   {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input placeholder="Cidade" value={fCity} onChange={(e) => setFCity(e.target.value)} />
+              <CityCombobox value={fCity} onChange={setFCity} placeholder="Cidade" />
               <Select value={fStatus} onValueChange={setFStatus}>
                 <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
