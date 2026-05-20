@@ -17,6 +17,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CityCombobox } from "@/components/CityCombobox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -196,7 +197,7 @@ function VagasPage() {
                   {LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input placeholder="Cidade" value={fCity} onChange={(e) => setFCity(e.target.value)} />
+              <CityCombobox value={fCity} onChange={setFCity} placeholder="Cidade" />
               <Select value={fStatus} onValueChange={setFStatus}>
                 <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>

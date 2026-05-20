@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CityCombobox } from "@/components/CityCombobox";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -109,7 +110,7 @@ function CamposPage() {
             />
           </div>
           <div className="sm:w-60">
-            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
+            <CityCombobox value={city} onChange={setCity} placeholder="Cidade" />
           </div>
         </div>
       </Card>

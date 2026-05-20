@@ -4,6 +4,7 @@ import { Building2, Plus, Trash2, Save, ImagePlus, Loader2, MapPin, Phone, Dolla
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CityCombobox } from "@/components/CityCombobox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -241,7 +242,7 @@ function VenueForm({
           </div>
           <div>
             <Label>Cidade</Label>
-            <Input value={v.city} onChange={(e) => setV((s) => ({ ...s, city: e.target.value }))} placeholder="São Paulo" />
+            <CityCombobox value={v.city} onChange={(val) => setV((s) => ({ ...s, city: val }))} />
           </div>
           <div>
             <Label>Telefone</Label>
