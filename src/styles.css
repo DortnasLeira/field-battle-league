@@ -207,3 +207,21 @@
     color: #ffffff !important;
   }
 }
+
+/* Native <select> — alinha o popup ao mesmo padrão visual */
+select {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+select option,
+datalist option {
+  background-color: #11171c;
+  color: var(--color-foreground);
+}
+select option:hover,
+select option:focus,
+select option:checked,
+select option[selected] {
+  background: #f84713 linear-gradient(0deg, #f84713, #f84713) !important;
+  color: #ffffff !important;
+}
