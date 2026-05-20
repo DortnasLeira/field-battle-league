@@ -153,6 +153,26 @@ function OnboardingPage() {
         }
       }
 
+      if (selected === "referee" && session?.user) {
+        const { data: existingRef } = await supabase
+          .from("referees" as never)
+          .select("referee_id")
+          .eq("referee_id", session.user.id)
+          .maybeSingle();
+        if (!existingRef) {
+          const { error: refErr } = await supabase
+            .from("referees" as never)
+            .insert({
+              referee_id: session.user.id,
+              display_name: form.name,
+              city: form.city || null,
+              tier: "bronze",
+              active: true,
+            } as never);
+          if (refErr) throw refErr;
+        }
+      }
+
       toast.success("Perfil criado!");
       const dest =
         selected === "field" ? "/complexo" : selected === "referee" ? "/arbitragem" : "/perfil";
