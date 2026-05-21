@@ -33,7 +33,7 @@ function AuthPage() {
     if (loading) return;
     if (session) {
       if (profiles.length === 0) navigate({ to: "/onboarding" });
-      else if (redirect && redirect.startsWith("/")) window.location.replace(redirect);
+      else if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) window.location.replace(redirect);
       else navigate({ to: "/" });
     }
   }, [session, profiles, loading, navigate, redirect]);
