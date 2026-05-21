@@ -59,8 +59,18 @@ function ArbitragemPage() {
       </Card>
     );
   }
-
   // Demo: usa o árbitro mock vinculado à conta. Em produção, viria do perfil ativo.
+  const me =
+    referees.find((r) => r.name === (activeProfile?.name ?? "")) ??
+    referees.find((r) => r.id === currentRefereeId);
+  const myRefId = me?.id ?? currentRefereeId;
+
+  const myRequests = challenges.filter((c) => c.refereeRequest?.refereeId === myRefId);
+  const pending = myRequests.filter((c) => c.refereeRequest?.status === "pending");
+  const accepted = myRequests.filter((c) => c.refereeRequest?.status === "accepted");
+  const myMatches = matches.filter((m) => m.refereeId === myRefId);
+  const toSign = myMatches.filter((m) => !m.signedByReferee);
+
   const { acceptRefereeRequest, declineRefereeRequest } = useStore.getState();
 
   // ===== Pedidos reais (DB) + notificações em tempo real =====
@@ -69,7 +79,6 @@ function ArbitragemPage() {
   const [dbHires, setDbHires] = useState<DbHire[]>([]);
   const [avail, setAvail] = useState<RefereeAvail | null>(null);
 
-  // Carrega disponibilidade do árbitro logado para checar compatibilidade
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -103,7 +112,6 @@ function ArbitragemPage() {
 
   useEffect(() => { loadHires(); }, [userId]);
 
-  // Realtime: novos pedidos chegando
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
@@ -147,7 +155,13 @@ function ArbitragemPage() {
   };
 
   const dbPending = dbHires.filter((h) => h.status === "pending");
-  const dbConfirmed = dbHires.filter((h) => h.status === "confirmed");
+
+  const isCompatible = (h: DbHire) => {
+    const days = avail?.available_days ?? [];
+    const times = avail?.available_times ?? [];
+    return (days.length === 0 || days.includes(h.hire_date)) &&
+           (times.length === 0 || times.includes(h.hire_time));
+  };
 
   return (
     <div className="space-y-6">
@@ -162,29 +176,12 @@ function ArbitragemPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-2 rounded-md border border-referee/30 bg-referee/5 px-3 py-2 sm:flex">
-            <Bell className="h-4 w-4 text-referee" />
+            <Bell className="h-4 w-4 text-referee animate-pulse" />
             <div className="leading-tight">
               <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Tempo real</div>
               <div className="text-xs font-semibold text-referee">Notificações ativas</div>
             </div>
           </div>
-
-  const toSign = myMatches.filter((m) => !m.signedByReferee);
-
-  const { acceptRefereeRequest, declineRefereeRequest } = useStore.getState();
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl flex items-center gap-3">
-            <Award className="h-8 w-8 text-referee" /> Arbitragem
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Pedidos de contratação, jogos confirmados e súmulas para assinar.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
           {me && (
             <div className="hidden items-center gap-2 rounded-md border border-referee/30 bg-referee/5 px-3 py-2 sm:flex">
               <span className="text-lg">{me.avatar}</span>
@@ -199,6 +196,25 @@ function ArbitragemPage() {
           </Button>
         </div>
       </div>
+
+      <Section
+        title="Solicitações recebidas (tempo real)"
+        count={dbPending.length}
+        empty="Nenhuma solicitação direta no momento."
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          {dbPending.map((h) => (
+            <DbHireCard
+              key={h.id}
+              hire={h}
+              compatible={isCompatible(h)}
+              onAccept={() => updateHire(h.id, "confirmed")}
+              onDecline={() => updateHire(h.id, "cancelled")}
+            />
+          ))}
+        </div>
+      </Section>
+
 
       <Section title="Pedidos pendentes" count={pending.length} empty="Nenhum pedido novo. Você está livre.">
         <div className="grid gap-3 md:grid-cols-2">
