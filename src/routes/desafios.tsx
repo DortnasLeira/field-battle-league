@@ -470,7 +470,9 @@ function AttachRefereeDialog({
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
   const [onlySameCity, setOnlySameCity] = useState<boolean>(true);
 
-  const challengeCity = fields.find((f) => f.id === challenge.fieldId)?.city ?? "";
+  const field = fields.find((f) => f.id === challenge.fieldId);
+  const challengeCity = (field?.address?.split(",").pop() ?? "").trim();
+
 
   const DB_TIER_MAP: Record<string, "Bronze" | "Prata" | "Ouro"> = { bronze: "Bronze", silver: "Prata", gold: "Ouro" };
 
