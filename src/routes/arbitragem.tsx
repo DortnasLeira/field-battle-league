@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2, Settings, Bell, Clock, Calendar, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,29 @@ import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { REFEREE_ACHIEVEMENTS } from "@/lib/refereeAchievements";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import type { Challenge } from "@/lib/mockData";
+
+type DbHire = {
+  id: string;
+  referee_id: string;
+  referee_name: string;
+  requester_user_id: string;
+  requester_name: string | null;
+  requester_profile_type: string;
+  hire_date: string;
+  hire_time: string;
+  price: number | null;
+  message: string | null;
+  status: "pending" | "confirmed" | "cancelled";
+  created_at: string;
+};
+
+type RefereeAvail = {
+  city: string | null;
+  available_days: string[];
+  available_times: string[];
+};
 
 export const Route = createFileRoute("/arbitragem")({
   head: () => ({
