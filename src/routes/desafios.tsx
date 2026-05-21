@@ -489,7 +489,8 @@ function AttachRefereeDialog({
         .select("referee_id, display_name, city, tier, price_per_game, score, reviews_count, experience_years, certifications, available_days, available_times, bio, active")
         .eq("active", true);
       if (cancelled) return;
-      const mapped: Referee[] = (data ?? []).map((r) => ({
+      const mapped: Referee[] = (data ?? []).map((r: Record<string, unknown>) => ({
+
         id: r.referee_id,
         name: r.display_name,
         avatar: "🟨",
