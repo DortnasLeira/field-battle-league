@@ -462,14 +462,75 @@ function AttachRefereeDialog({
   onOpenChange: (v: boolean) => void;
   challenge: Challenge;
 }) {
-  const { referees, requestRefereeForChallenge } = useStore();
+  const { referees: mockRefs, fields, requestRefereeForChallenge } = useStore();
   const [selected, setSelected] = useState<string>("");
+  const [dbRefs, setDbRefs] = useState<Referee[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [filterTier, setFilterTier] = useState<string>("all");
+  const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
+  const [onlySameCity, setOnlySameCity] = useState<boolean>(true);
+
+  const challengeCity = fields.find((f) => f.id === challenge.fieldId)?.city ?? "";
+
+  const DB_TIER_MAP: Record<string, "Bronze" | "Prata" | "Ouro"> = { bronze: "Bronze", silver: "Prata", gold: "Ouro" };
+
+  // Carrega árbitros reais ao abrir
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("referees")
+        .select("referee_id, display_name, city, tier, price_per_game, score, reviews_count, experience_years, certifications, available_days, available_times, bio, active")
+        .eq("active", true);
+      if (cancelled) return;
+      const mapped: Referee[] = (data ?? []).map((r) => ({
+        id: r.referee_id,
+        name: r.display_name,
+        avatar: "🟨",
+        city: r.city ?? "",
+        pricePerGame: Number(r.price_per_game) || 0,
+        score: Number(r.score) || 0,
+        reviews: r.reviews_count ?? 0,
+        experienceYears: r.experience_years ?? 0,
+        tier: DB_TIER_MAP[r.tier as string] ?? "Bronze",
+        certifications: r.certifications ?? [],
+        availableDays: r.available_days ?? [],
+        availableTimes: r.available_times ?? [],
+        bio: r.bio ?? "",
+        hireHistory: [],
+      }));
+      setDbRefs(mapped);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
+
+  const allRefs = useMemo<Referee[]>(() => {
+    const byId = new Map<string, Referee>();
+    [...dbRefs, ...mockRefs].forEach((r) => { if (!byId.has(r.id)) byId.set(r.id, r); });
+    return Array.from(byId.values());
+  }, [dbRefs, mockRefs]);
+
+  const isCompat = (r: Referee) =>
+    r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time);
 
   const list = useMemo<Referee[]>(() => {
-    return referees
-      .filter((r) => r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time))
-      .concat(referees.filter((r) => !(r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time))));
-  }, [referees, challenge.date, challenge.time]);
+    let arr = allRefs.slice();
+    if (filterTier !== "all") arr = arr.filter((r) => r.tier === filterTier);
+    if (onlySameCity && challengeCity) {
+      arr = arr.filter((r) => r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase());
+    }
+    if (onlyCompatible) arr = arr.filter(isCompat);
+    // ordena: compatíveis + cidade igual primeiro, depois por score
+    return arr.sort((a, b) => {
+      const ac = (isCompat(a) ? 2 : 0) + (a.city.toLowerCase() === challengeCity.toLowerCase() ? 1 : 0);
+      const bc = (isCompat(b) ? 2 : 0) + (b.city.toLowerCase() === challengeCity.toLowerCase() ? 1 : 0);
+      if (ac !== bc) return bc - ac;
+      return b.score - a.score;
+    });
+  }, [allRefs, filterTier, onlyCompatible, onlySameCity, challengeCity, challenge.date, challenge.time]);
 
   const submit = () => {
     if (!selected) return toast.error("Selecione um árbitro.");
@@ -487,11 +548,43 @@ function AttachRefereeDialog({
           </DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
-          Para {new Date(challenge.date).toLocaleDateString("pt-BR")} · {challenge.time}. Disponíveis aparecem primeiro.
+          Para {new Date(challenge.date).toLocaleDateString("pt-BR")} · {challenge.time}
+          {challengeCity ? ` em ${challengeCity}` : ""}.
         </p>
+
+        <div className="grid gap-2 sm:grid-cols-3">
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
+            <Select value={filterTier} onValueChange={setFilterTier}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os níveis</SelectItem>
+                <SelectItem value="Bronze">Bronze</SelectItem>
+                <SelectItem value="Prata">Prata</SelectItem>
+                <SelectItem value="Ouro">Ouro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <label className="flex cursor-pointer items-end gap-2 text-xs">
+            <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlySameCity} onChange={(e) => setOnlySameCity(e.target.checked)} />
+            <span>Mesma cidade ({challengeCity || "—"})</span>
+          </label>
+          <label className="flex cursor-pointer items-end gap-2 text-xs">
+            <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlyCompatible} onChange={(e) => setOnlyCompatible(e.target.checked)} />
+            <span>Disponível no dia/horário</span>
+          </label>
+        </div>
+
         <div className="max-h-[360px] space-y-2 overflow-auto pr-1">
+          {loading && <p className="text-center text-xs text-muted-foreground">Carregando árbitros…</p>}
+          {!loading && list.length === 0 && (
+            <p className="rounded-md border border-dashed border-border bg-surface px-3 py-6 text-center text-xs text-muted-foreground">
+              Nenhum árbitro encontrado com esses filtros.
+            </p>
+          )}
           {list.map((r) => {
-            const available = r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time);
+            const available = isCompat(r);
+            const sameCity = r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase();
             const tier = REFEREE_TIER_INFO[r.tier];
             const isSel = selected === r.id;
             return (
@@ -505,15 +598,15 @@ function AttachRefereeDialog({
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-referee/10 text-xl">{r.avatar}</div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-referee/10 text-xl">🟨</div>
                   <div>
                     <div className="text-sm font-semibold">{r.name}</div>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
                       <span className={cn("rounded border px-1.5 py-0.5 font-mono uppercase tracking-wider", tier.tokenClass)}>
                         {tier.label}
                       </span>
                       <span>★ {r.score.toFixed(1)}</span>
-                      <span>{r.city}</span>
+                      <span className={sameCity ? "text-referee" : ""}>{r.city || "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -537,3 +630,4 @@ function AttachRefereeDialog({
     </Dialog>
   );
 }
+
