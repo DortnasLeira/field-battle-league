@@ -119,6 +119,7 @@ function RefereeProfilePage() {
       .eq("requester_user_id", session.user.id)
       .order("created_at", { ascending: false });
     setMyHires((data ?? []) as HireRow[]);
+  };
   useEffect(() => { loadHires(); }, [session?.user.id, referee?.id]);
 
 
@@ -138,7 +139,8 @@ function RefereeProfilePage() {
     );
   }
 
-  }
+  const refereeData = referee;
+
 
   const tier = REFEREE_TIER_INFO[referee.tier];
   const canHire = activeProfile?.type === "team" || activeProfile?.type === "field";
