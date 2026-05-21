@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2, Settings, Bell, Clock, Calendar, MapPin } from "lucide-react";
+import { Award, Check, X, FileSignature, Trophy, Lock, CheckCircle2, Settings, Bell, Clock, Calendar } from "lucide-react";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
