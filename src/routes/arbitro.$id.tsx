@@ -119,10 +119,16 @@ function RefereeProfilePage() {
       .eq("requester_user_id", session.user.id)
       .order("created_at", { ascending: false });
     setMyHires((data ?? []) as HireRow[]);
-  };
-
   useEffect(() => { loadHires(); }, [session?.user.id, referee?.id]);
 
+
+  if (loading) {
+    return (
+      <Card className="border-border bg-card p-8 text-center text-sm text-muted-foreground">
+        <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" /> Carregando perfil…
+      </Card>
+    );
+  }
 
   if (!referee) {
     return (
@@ -130,6 +136,8 @@ function RefereeProfilePage() {
         Árbitro não encontrado. <Link to="/buscar" className="text-primary underline">Voltar à busca</Link>
       </Card>
     );
+  }
+
   }
 
   const tier = REFEREE_TIER_INFO[referee.tier];
