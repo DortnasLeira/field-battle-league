@@ -378,3 +378,56 @@ function ConfirmedCard({ challenge }: { challenge: Challenge }) {
     </Card>
   );
 }
+
+function DbHireCard({
+  hire,
+  compatible,
+  onAccept,
+  onDecline,
+}: {
+  hire: DbHire;
+  compatible: boolean;
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  return (
+    <Card className={cn("p-4", compatible ? "border-referee/40 bg-referee/5 shadow-glow-referee" : "border-border bg-card")}>
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+            {hire.requester_profile_type === "field" ? "Campo" : "Time"} solicitante
+          </div>
+          <div className="text-sm font-semibold">{hire.requester_name ?? "—"}</div>
+        </div>
+        <Badge variant="outline" className={compatible ? "border-referee/40 text-referee" : "border-warning/40 text-warning"}>
+          {compatible ? "Compatível" : "Fora da disponibilidade"}
+        </Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded border border-border bg-surface p-2">
+          <div className="font-mono text-[9px] uppercase text-muted-foreground"><Calendar className="mr-0.5 inline h-3 w-3" /> Data</div>
+          <div>{new Date(hire.hire_date).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}</div>
+        </div>
+        <div className="rounded border border-border bg-surface p-2">
+          <div className="font-mono text-[9px] uppercase text-muted-foreground"><Clock className="mr-0.5 inline h-3 w-3" /> Horário</div>
+          <div>{hire.hire_time}</div>
+        </div>
+      </div>
+      {hire.price != null && (
+        <div className="mt-2 text-xs text-muted-foreground">Valor proposto: <span className="font-semibold text-foreground">R$ {Number(hire.price).toFixed(2)}</span></div>
+      )}
+      {hire.message && (
+        <p className="mt-2 rounded-md bg-surface px-2 py-1.5 text-xs italic text-muted-foreground">"{hire.message}"</p>
+      )}
+      <div className="mt-3 flex gap-2">
+        <Button variant="outline" size="sm" className="flex-1" onClick={onDecline}>
+          <X className="mr-1 h-4 w-4" /> Recusar
+        </Button>
+        <Button size="sm" className="flex-1 bg-gradient-referee text-background shadow-glow-referee" onClick={onAccept}>
+          <Check className="mr-1 h-4 w-4" /> Aceitar
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
