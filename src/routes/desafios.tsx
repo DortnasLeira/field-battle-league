@@ -505,8 +505,6 @@ function AttachRefereeDialog({
         bio: String(r.bio ?? ""),
         hireHistory: [],
       }));
-
-      }));
       setDbRefs(mapped);
       setLoading(false);
     })();
