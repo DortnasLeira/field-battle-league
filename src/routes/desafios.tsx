@@ -489,22 +489,23 @@ function AttachRefereeDialog({
         .select("referee_id, display_name, city, tier, price_per_game, score, reviews_count, experience_years, certifications, available_days, available_times, bio, active")
         .eq("active", true);
       if (cancelled) return;
-      const mapped: Referee[] = (data ?? []).map((r: Record<string, unknown>) => ({
-
-        id: r.referee_id,
-        name: r.display_name,
+      const mapped: Referee[] = (data ?? []).map((r: any) => ({
+        id: String(r.referee_id),
+        name: String(r.display_name ?? ""),
         avatar: "🟨",
-        city: r.city ?? "",
+        city: String(r.city ?? ""),
         pricePerGame: Number(r.price_per_game) || 0,
         score: Number(r.score) || 0,
-        reviews: r.reviews_count ?? 0,
-        experienceYears: r.experience_years ?? 0,
-        tier: DB_TIER_MAP[r.tier as string] ?? "Bronze",
-        certifications: r.certifications ?? [],
-        availableDays: r.available_days ?? [],
-        availableTimes: r.available_times ?? [],
-        bio: r.bio ?? "",
+        reviews: Number(r.reviews_count) || 0,
+        experienceYears: Number(r.experience_years) || 0,
+        tier: DB_TIER_MAP[String(r.tier)] ?? "Bronze",
+        certifications: (r.certifications as string[]) ?? [],
+        availableDays: (r.available_days as string[]) ?? [],
+        availableTimes: (r.available_times as string[]) ?? [],
+        bio: String(r.bio ?? ""),
         hireHistory: [],
+      }));
+
       }));
       setDbRefs(mapped);
       setLoading(false);
