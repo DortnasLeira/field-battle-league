@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { referees, REFEREE_TIER_INFO } from "@/lib/mockData";
+import { referees as mockReferees, REFEREE_TIER_INFO, type Referee, type RefereeTier } from "@/lib/mockData";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,6 +23,14 @@ type HireRow = {
   created_at: string;
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const DB_TIER_TO_LABEL: Record<string, RefereeTier> = {
+  bronze: "Bronze",
+  silver: "Prata",
+  gold: "Ouro",
+};
+
 export const Route = createFileRoute("/arbitro/$id")({
   head: () => ({ meta: [{ title: "Perfil do Árbitro — PeladaPro" }] }),
   component: RefereeProfilePage,
@@ -32,7 +40,9 @@ function RefereeProfilePage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { session, activeProfile } = useAuth();
-  const referee = referees.find((r) => r.id === id);
+  const [referee, setReferee] = useState<Referee | null>(null);
+  const [active, setActive] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [hireOpen, setHireOpen] = useState(false);
   const [hireDate, setHireDate] = useState<string>("");
   const [hireTime, setHireTime] = useState<string>("");
@@ -40,12 +50,65 @@ function RefereeProfilePage() {
   const [submitting, setSubmitting] = useState(false);
   const [myHires, setMyHires] = useState<HireRow[]>([]);
 
+  // Load referee: try DB by UUID first, then fallback to mock by id.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      if (UUID_RE.test(id)) {
+        const { data: r } = await supabase
+          .from("referees")
+          .select("*")
+          .eq("referee_id", id)
+          .maybeSingle();
+        if (r && !cancelled) {
+          const { data: prof } = await supabase
+            .from("user_profiles")
+            .select("avatar, name, city, nickname")
+            .eq("user_id", id)
+            .eq("type", "referee")
+            .maybeSingle();
+          const tierLabel = DB_TIER_TO_LABEL[r.tier as string] ?? "Bronze";
+          setReferee({
+            id: r.referee_id,
+            name: prof?.name || r.display_name,
+            avatar: prof?.avatar || "🟨",
+            city: r.city || prof?.city || "",
+            pricePerGame: Number(r.price_per_game) || 0,
+            score: Number(r.score) || 0,
+            reviews: r.reviews_count || 0,
+            experienceYears: r.experience_years || 0,
+            tier: tierLabel,
+            certifications: r.certifications || [],
+            availableDays: r.available_days || [],
+            availableTimes: r.available_times || [],
+            bio: r.bio || "",
+            hireHistory: [],
+          });
+          setActive(r.active);
+          setLoading(false);
+          return;
+        }
+      }
+      const m = mockReferees.find((r) => r.id === id) ?? null;
+      if (!cancelled) {
+        setReferee(m);
+        setActive(true);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   useEffect(() => {
     if (referee) {
       setHireDate(referee.availableDays[0] ?? "");
       setHireTime(referee.availableTimes[0] ?? "");
     }
   }, [referee?.id]);
+
 
   const loadHires = async () => {
     if (!session || !referee) return;
