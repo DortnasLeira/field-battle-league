@@ -61,15 +61,114 @@ function ArbitragemPage() {
   }
 
   // Demo: usa o árbitro mock vinculado à conta. Em produção, viria do perfil ativo.
-  const me =
-    referees.find((r) => r.name === (activeProfile?.name ?? "")) ??
-    referees.find((r) => r.id === currentRefereeId);
-  const myRefId = me?.id ?? currentRefereeId;
+  const { acceptRefereeRequest, declineRefereeRequest } = useStore.getState();
 
-  const myRequests = challenges.filter((c) => c.refereeRequest?.refereeId === myRefId);
-  const pending = myRequests.filter((c) => c.refereeRequest?.status === "pending");
-  const accepted = myRequests.filter((c) => c.refereeRequest?.status === "accepted");
-  const myMatches = matches.filter((m) => m.refereeId === myRefId);
+  // ===== Pedidos reais (DB) + notificações em tempo real =====
+  const { session } = useAuth();
+  const userId = session?.user.id;
+  const [dbHires, setDbHires] = useState<DbHire[]>([]);
+  const [avail, setAvail] = useState<RefereeAvail | null>(null);
+
+  // Carrega disponibilidade do árbitro logado para checar compatibilidade
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("referees")
+        .select("city, available_days, available_times")
+        .eq("referee_id", userId)
+        .maybeSingle();
+      if (!cancelled && data) {
+        setAvail({
+          city: data.city,
+          available_days: data.available_days ?? [],
+          available_times: data.available_times ?? [],
+        });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const loadHires = async () => {
+    if (!userId) return;
+    const { data } = await supabase
+      .from("referee_hires")
+      .select("*")
+      .eq("referee_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setDbHires((data ?? []) as DbHire[]);
+  };
+
+  useEffect(() => { loadHires(); }, [userId]);
+
+  // Realtime: novos pedidos chegando
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`referee_hires_${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "referee_hires", filter: `referee_id=eq.${userId}` },
+        (payload) => {
+          const h = payload.new as DbHire;
+          setDbHires((cur) => [h, ...cur.filter((x) => x.id !== h.id)]);
+          const days = avail?.available_days ?? [];
+          const times = avail?.available_times ?? [];
+          const compatible =
+            (days.length === 0 || days.includes(h.hire_date)) &&
+            (times.length === 0 || times.includes(h.hire_time));
+          if (compatible) {
+            toast.success("🟨 Novo pedido compatível!", {
+              description: `${h.requester_name ?? "Solicitante"} · ${new Date(h.hire_date).toLocaleDateString("pt-BR")} ${h.hire_time}`,
+            });
+          } else {
+            toast("Novo pedido recebido", {
+              description: `${h.requester_name ?? "Solicitante"} · ${new Date(h.hire_date).toLocaleDateString("pt-BR")} ${h.hire_time} (fora da sua disponibilidade)`,
+            });
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "referee_hires", filter: `referee_id=eq.${userId}` },
+        () => loadHires(),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, avail?.available_days?.join(","), avail?.available_times?.join(",")]);
+
+  const updateHire = async (id: string, status: "confirmed" | "cancelled") => {
+    const { error } = await supabase.from("referee_hires").update({ status }).eq("id", id);
+    if (error) return toast.error("Falha ao atualizar pedido.", { description: error.message });
+    toast.success(status === "confirmed" ? "Pedido aceito." : "Pedido recusado.");
+    loadHires();
+  };
+
+  const dbPending = dbHires.filter((h) => h.status === "pending");
+  const dbConfirmed = dbHires.filter((h) => h.status === "confirmed");
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl flex items-center gap-3">
+            <Award className="h-8 w-8 text-referee" /> Arbitragem
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Pedidos de contratação, jogos confirmados e súmulas para assinar.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 rounded-md border border-referee/30 bg-referee/5 px-3 py-2 sm:flex">
+            <Bell className="h-4 w-4 text-referee" />
+            <div className="leading-tight">
+              <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Tempo real</div>
+              <div className="text-xs font-semibold text-referee">Notificações ativas</div>
+            </div>
+          </div>
+
   const toSign = myMatches.filter((m) => !m.signedByReferee);
 
   const { acceptRefereeRequest, declineRefereeRequest } = useStore.getState();
