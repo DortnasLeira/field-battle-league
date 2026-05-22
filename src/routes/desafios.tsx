@@ -472,10 +472,19 @@ function AttachRefereeDialog({
   const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set());
   const [filterTier, setFilterTier] = useState<string>("all");
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
-  const [onlySameCity, setOnlySameCity] = useState<boolean>(true);
+  const [cityFilter, setCityFilter] = useState<string>("");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [minExperience, setMinExperience] = useState<string>("0");
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
   const field = fields.find((f) => f.id === challenge.fieldId);
   const challengeCity = (field?.address?.split(",").pop() ?? "").trim();
+
+  // Inicializa cidade com a do desafio quando abre
+  useEffect(() => {
+    if (open) setCityFilter(challengeCity);
+  }, [open, challengeCity]);
 
 
   const DB_TIER_MAP: Record<string, "Bronze" | "Prata" | "Ouro"> = { bronze: "Bronze", silver: "Prata", gold: "Ouro" };
