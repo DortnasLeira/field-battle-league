@@ -541,20 +541,38 @@ function AttachRefereeDialog({
     r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time);
 
   const list = useMemo<Referee[]>(() => {
+    const norm = (s: string) => s.trim().toLowerCase();
+    const cityNorm = norm(cityFilter);
+    const pMin = priceMin === "" ? null : Number(priceMin);
+    const pMax = priceMax === "" ? null : Number(priceMax);
+    const minExp = Number(minExperience) || 0;
+
     let arr = allRefs.slice();
     if (filterTier !== "all") arr = arr.filter((r) => r.tier === filterTier);
-    if (onlySameCity && challengeCity) {
-      arr = arr.filter((r) => r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase());
-    }
+    if (cityNorm) arr = arr.filter((r) => norm(r.city) === cityNorm);
+    if (pMin != null && !Number.isNaN(pMin)) arr = arr.filter((r) => r.pricePerGame >= pMin);
+    if (pMax != null && !Number.isNaN(pMax)) arr = arr.filter((r) => r.pricePerGame <= pMax);
+    if (minExp > 0) arr = arr.filter((r) => (r.experienceYears ?? 0) >= minExp);
     if (onlyCompatible) arr = arr.filter(isCompat);
-    // ordena: compatíveis + cidade igual primeiro, depois por score
+
     return arr.sort((a, b) => {
-      const ac = (isCompat(a) ? 2 : 0) + (a.city.toLowerCase() === challengeCity.toLowerCase() ? 1 : 0);
-      const bc = (isCompat(b) ? 2 : 0) + (b.city.toLowerCase() === challengeCity.toLowerCase() ? 1 : 0);
+      const ac = (isCompat(a) ? 2 : 0) + (norm(a.city) === norm(challengeCity) ? 1 : 0);
+      const bc = (isCompat(b) ? 2 : 0) + (norm(b.city) === norm(challengeCity) ? 1 : 0);
       if (ac !== bc) return bc - ac;
       return b.score - a.score;
     });
-  }, [allRefs, filterTier, onlyCompatible, onlySameCity, challengeCity, challenge.date, challenge.time]);
+  }, [allRefs, filterTier, onlyCompatible, cityFilter, priceMin, priceMax, minExperience, challengeCity, challenge.date, challenge.time]);
+
+  const resetFilters = () => {
+    setFilterTier("all");
+    setOnlyCompatible(true);
+    setCityFilter(challengeCity);
+    setPriceMin("");
+    setPriceMax("");
+    setMinExperience("0");
+  };
+  const activeAdvancedCount =
+    (priceMin !== "" ? 1 : 0) + (priceMax !== "" ? 1 : 0) + ((Number(minExperience) || 0) > 0 ? 1 : 0);
 
   const submit = async () => {
     if (submitting) return;
