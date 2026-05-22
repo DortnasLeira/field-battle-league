@@ -468,6 +468,8 @@ function AttachRefereeDialog({
   const [selected, setSelected] = useState<string>("");
   const [dbRefs, setDbRefs] = useState<Referee[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set());
   const [filterTier, setFilterTier] = useState<string>("all");
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
   const [onlySameCity, setOnlySameCity] = useState<boolean>(true);
@@ -477,6 +479,15 @@ function AttachRefereeDialog({
 
 
   const DB_TIER_MAP: Record<string, "Bronze" | "Prata" | "Ouro"> = { bronze: "Bronze", silver: "Prata", gold: "Ouro" };
+
+  // Reseta estado ao fechar
+  useEffect(() => {
+    if (!open) {
+      setSelected("");
+      setSubmitting(false);
+      setUnavailableIds(new Set());
+    }
+  }, [open]);
 
   // Carrega árbitros reais ao abrir
   useEffect(() => {
@@ -536,11 +547,60 @@ function AttachRefereeDialog({
     });
   }, [allRefs, filterTier, onlyCompatible, onlySameCity, challengeCity, challenge.date, challenge.time]);
 
-  const submit = () => {
-    if (!selected) return toast.error("Selecione um árbitro.");
-    requestRefereeForChallenge(challenge.id, selected);
-    toast.success("Pedido enviado. Árbitro receberá uma notificação.");
-    onOpenChange(false);
+  const submit = async () => {
+    if (submitting) return;
+    if (!selected) {
+      toast.error("Selecione um árbitro.");
+      return;
+    }
+    if (unavailableIds.has(selected)) {
+      toast.error("Este árbitro não está mais disponível.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Revalida no banco se for um árbitro real
+      const isDbRef = dbRefs.some((r) => r.id === selected);
+      if (isDbRef) {
+        const { data, error } = await supabase
+          .from("referees")
+          .select("active, available_days, available_times")
+          .eq("referee_id", selected)
+          .maybeSingle();
+
+        if (error) {
+          toast.error("Falha ao validar disponibilidade.", { description: error.message });
+          return;
+        }
+        if (!data || !data.active) {
+          setUnavailableIds((s) => new Set(s).add(selected));
+          toast.error("Este árbitro não está mais disponível.", {
+            description: "Selecione outro árbitro da lista.",
+          });
+          setSelected("");
+          return;
+        }
+        const days = (data.available_days as string[]) ?? [];
+        const times = (data.available_times as string[]) ?? [];
+        const stillCompat =
+          (days.length === 0 || days.includes(challenge.date)) &&
+          (times.length === 0 || times.includes(challenge.time));
+        if (!stillCompat) {
+          setUnavailableIds((s) => new Set(s).add(selected));
+          toast.error("Árbitro indisponível neste horário.", {
+            description: "A disponibilidade foi atualizada — escolha outro árbitro.",
+          });
+          return;
+        }
+      }
+
+      requestRefereeForChallenge(challenge.id, selected);
+      toast.success("Pedido enviado. Árbitro receberá uma notificação.");
+      onOpenChange(false);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
