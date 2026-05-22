@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Swords, Inbox, Send, Check, X, Flame, Award, Gavel, Plus } from "lucide-react";
+import { Swords, Inbox, Send, Check, X, Flame, Award, Gavel, Plus, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -468,6 +468,8 @@ function AttachRefereeDialog({
   const [selected, setSelected] = useState<string>("");
   const [dbRefs, setDbRefs] = useState<Referee[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set());
   const [filterTier, setFilterTier] = useState<string>("all");
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
   const [onlySameCity, setOnlySameCity] = useState<boolean>(true);
@@ -477,6 +479,15 @@ function AttachRefereeDialog({
 
 
   const DB_TIER_MAP: Record<string, "Bronze" | "Prata" | "Ouro"> = { bronze: "Bronze", silver: "Prata", gold: "Ouro" };
+
+  // Reseta estado ao fechar
+  useEffect(() => {
+    if (!open) {
+      setSelected("");
+      setSubmitting(false);
+      setUnavailableIds(new Set());
+    }
+  }, [open]);
 
   // Carrega árbitros reais ao abrir
   useEffect(() => {
@@ -536,11 +547,60 @@ function AttachRefereeDialog({
     });
   }, [allRefs, filterTier, onlyCompatible, onlySameCity, challengeCity, challenge.date, challenge.time]);
 
-  const submit = () => {
-    if (!selected) return toast.error("Selecione um árbitro.");
-    requestRefereeForChallenge(challenge.id, selected);
-    toast.success("Pedido enviado. Árbitro receberá uma notificação.");
-    onOpenChange(false);
+  const submit = async () => {
+    if (submitting) return;
+    if (!selected) {
+      toast.error("Selecione um árbitro.");
+      return;
+    }
+    if (unavailableIds.has(selected)) {
+      toast.error("Este árbitro não está mais disponível.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Revalida no banco se for um árbitro real
+      const isDbRef = dbRefs.some((r) => r.id === selected);
+      if (isDbRef) {
+        const { data, error } = await supabase
+          .from("referees")
+          .select("active, available_days, available_times")
+          .eq("referee_id", selected)
+          .maybeSingle();
+
+        if (error) {
+          toast.error("Falha ao validar disponibilidade.", { description: error.message });
+          return;
+        }
+        if (!data || !data.active) {
+          setUnavailableIds((s) => new Set(s).add(selected));
+          toast.error("Este árbitro não está mais disponível.", {
+            description: "Selecione outro árbitro da lista.",
+          });
+          setSelected("");
+          return;
+        }
+        const days = (data.available_days as string[]) ?? [];
+        const times = (data.available_times as string[]) ?? [];
+        const stillCompat =
+          (days.length === 0 || days.includes(challenge.date)) &&
+          (times.length === 0 || times.includes(challenge.time));
+        if (!stillCompat) {
+          setUnavailableIds((s) => new Set(s).add(selected));
+          toast.error("Árbitro indisponível neste horário.", {
+            description: "A disponibilidade foi atualizada — escolha outro árbitro.",
+          });
+          return;
+        }
+      }
+
+      requestRefereeForChallenge(challenge.id, selected);
+      toast.success("Pedido enviado. Árbitro receberá uma notificação.");
+      onOpenChange(false);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -591,14 +651,17 @@ function AttachRefereeDialog({
             const sameCity = r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase();
             const tier = REFEREE_TIER_INFO[r.tier];
             const isSel = selected === r.id;
+            const isUnavailable = unavailableIds.has(r.id);
             return (
               <button
                 key={r.id}
                 type="button"
+                disabled={submitting || isUnavailable}
                 onClick={() => setSelected(r.id)}
                 className={cn(
                   "flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition",
                   isSel ? "border-referee bg-referee/10" : "border-border bg-surface hover:border-referee/40",
+                  (submitting || isUnavailable) && "opacity-50 cursor-not-allowed",
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -616,8 +679,8 @@ function AttachRefereeDialog({
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-semibold">R$ {r.pricePerGame}</div>
-                  <div className={cn("text-[10px]", available ? "text-success" : "text-muted-foreground")}>
-                    {available ? "Disponível" : "Sem horário"}
+                  <div className={cn("text-[10px]", isUnavailable ? "text-destructive" : available ? "text-success" : "text-muted-foreground")}>
+                    {isUnavailable ? "Indisponível" : available ? "Disponível" : "Sem horário"}
                   </div>
                 </div>
               </button>
@@ -625,9 +688,17 @@ function AttachRefereeDialog({
           })}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button className="bg-gradient-referee text-background shadow-glow-referee" onClick={submit}>
-            Enviar pedido
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+          <Button
+            className="bg-gradient-referee text-background shadow-glow-referee"
+            onClick={submit}
+            disabled={submitting || loading || !selected}
+          >
+            {submitting ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando…</>
+            ) : (
+              "Enviar pedido"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
