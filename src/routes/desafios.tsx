@@ -651,14 +651,17 @@ function AttachRefereeDialog({
             const sameCity = r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase();
             const tier = REFEREE_TIER_INFO[r.tier];
             const isSel = selected === r.id;
+            const isUnavailable = unavailableIds.has(r.id);
             return (
               <button
                 key={r.id}
                 type="button"
+                disabled={submitting || isUnavailable}
                 onClick={() => setSelected(r.id)}
                 className={cn(
                   "flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition",
                   isSel ? "border-referee bg-referee/10" : "border-border bg-surface hover:border-referee/40",
+                  (submitting || isUnavailable) && "opacity-50 cursor-not-allowed",
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -676,8 +679,8 @@ function AttachRefereeDialog({
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-semibold">R$ {r.pricePerGame}</div>
-                  <div className={cn("text-[10px]", available ? "text-success" : "text-muted-foreground")}>
-                    {available ? "Disponível" : "Sem horário"}
+                  <div className={cn("text-[10px]", isUnavailable ? "text-destructive" : available ? "text-success" : "text-muted-foreground")}>
+                    {isUnavailable ? "Indisponível" : available ? "Disponível" : "Sem horário"}
                   </div>
                 </div>
               </button>
@@ -685,9 +688,17 @@ function AttachRefereeDialog({
           })}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button className="bg-gradient-referee text-background shadow-glow-referee" onClick={submit}>
-            Enviar pedido
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+          <Button
+            className="bg-gradient-referee text-background shadow-glow-referee"
+            onClick={submit}
+            disabled={submitting || loading || !selected}
+          >
+            {submitting ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando…</>
+            ) : (
+              "Enviar pedido"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
