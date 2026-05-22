@@ -643,27 +643,77 @@ function AttachRefereeDialog({
           {challengeCity ? ` em ${challengeCity}` : ""}.
         </p>
 
-        <div className="grid gap-2 sm:grid-cols-3">
-          <div>
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
-            <Select value={filterTier} onValueChange={setFilterTier}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os níveis</SelectItem>
-                <SelectItem value="Bronze">Bronze</SelectItem>
-                <SelectItem value="Prata">Prata</SelectItem>
-                <SelectItem value="Ouro">Ouro</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="space-y-3">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
+              <Select value={filterTier} onValueChange={setFilterTier}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os níveis</SelectItem>
+                  <SelectItem value="Bronze">Bronze</SelectItem>
+                  <SelectItem value="Prata">Prata</SelectItem>
+                  <SelectItem value="Ouro">Ouro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
+              <div className="flex gap-1">
+                <CityCombobox value={cityFilter} onChange={setCityFilter} placeholder="Qualquer cidade" className="h-9 flex-1" />
+                {cityFilter && (
+                  <Button type="button" variant="outline" size="sm" className="h-9 px-2" onClick={() => setCityFilter("")} title="Limpar cidade">
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-          <label className="flex cursor-pointer items-end gap-2 text-xs">
-            <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlySameCity} onChange={(e) => setOnlySameCity(e.target.checked)} />
-            <span>Mesma cidade ({challengeCity || "—"})</span>
-          </label>
-          <label className="flex cursor-pointer items-end gap-2 text-xs">
-            <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlyCompatible} onChange={(e) => setOnlyCompatible(e.target.checked)} />
-            <span>Disponível no dia/horário</span>
-          </label>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="flex cursor-pointer items-center gap-2 text-xs">
+              <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlyCompatible} onChange={(e) => setOnlyCompatible(e.target.checked)} />
+              <span>Disponível no dia/horário</span>
+            </label>
+            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[11px] text-referee hover:bg-referee/10" onClick={() => setShowAdvanced((v) => !v)}>
+              {showAdvanced ? "Ocultar filtros avançados" : "Filtros avançados"}
+              {activeAdvancedCount > 0 && (
+                <span className="ml-1 rounded bg-referee/20 px-1.5 py-0.5 font-mono text-[9px] text-referee">{activeAdvancedCount}</span>
+              )}
+            </Button>
+          </div>
+
+          {showAdvanced && (
+            <div className="rounded-lg border border-referee/20 bg-referee/5 p-3 space-y-3">
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Faixa de preço por jogo (R$)</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Input type="number" inputMode="numeric" min={0} placeholder="Min" className="h-9" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} />
+                  <span className="text-xs text-muted-foreground">—</span>
+                  <Input type="number" inputMode="numeric" min={0} placeholder="Max" className="h-9" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Experiência mínima: <span className="text-referee">{minExperience || 0} {Number(minExperience) === 1 ? "ano" : "anos"}</span>
+                </Label>
+                <input
+                  type="range"
+                  min={0}
+                  max={20}
+                  step={1}
+                  value={minExperience}
+                  onChange={(e) => setMinExperience(e.target.value)}
+                  className="mt-1 w-full accent-[hsl(var(--referee))]"
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-[11px]" onClick={resetFilters}>
+                  Limpar filtros
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="max-h-[360px] space-y-2 overflow-auto pr-1">
