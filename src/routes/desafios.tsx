@@ -15,6 +15,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { FiltersPanel } from "@/components/FiltersPanel";
+import { CityCombobox } from "@/components/CityCombobox";
 import type { Challenge, Referee } from "@/lib/mockData";
 import { REFEREE_TIER_INFO } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
