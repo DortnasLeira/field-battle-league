@@ -15,6 +15,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { FiltersPanel } from "@/components/FiltersPanel";
+import { CityCombobox } from "@/components/CityCombobox";
 import type { Challenge, Referee } from "@/lib/mockData";
 import { REFEREE_TIER_INFO } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
@@ -472,10 +473,19 @@ function AttachRefereeDialog({
   const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set());
   const [filterTier, setFilterTier] = useState<string>("all");
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
-  const [onlySameCity, setOnlySameCity] = useState<boolean>(true);
+  const [cityFilter, setCityFilter] = useState<string>("");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [minExperience, setMinExperience] = useState<string>("0");
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
   const field = fields.find((f) => f.id === challenge.fieldId);
   const challengeCity = (field?.address?.split(",").pop() ?? "").trim();
+
+  // Inicializa cidade com a do desafio quando abre
+  useEffect(() => {
+    if (open) setCityFilter(challengeCity);
+  }, [open, challengeCity]);
 
 
   const DB_TIER_MAP: Record<string, "Bronze" | "Prata" | "Ouro"> = { bronze: "Bronze", silver: "Prata", gold: "Ouro" };
@@ -532,20 +542,38 @@ function AttachRefereeDialog({
     r.availableDays.includes(challenge.date) && r.availableTimes.includes(challenge.time);
 
   const list = useMemo<Referee[]>(() => {
+    const norm = (s: string) => s.trim().toLowerCase();
+    const cityNorm = norm(cityFilter);
+    const pMin = priceMin === "" ? null : Number(priceMin);
+    const pMax = priceMax === "" ? null : Number(priceMax);
+    const minExp = Number(minExperience) || 0;
+
     let arr = allRefs.slice();
     if (filterTier !== "all") arr = arr.filter((r) => r.tier === filterTier);
-    if (onlySameCity && challengeCity) {
-      arr = arr.filter((r) => r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase());
-    }
+    if (cityNorm) arr = arr.filter((r) => norm(r.city) === cityNorm);
+    if (pMin != null && !Number.isNaN(pMin)) arr = arr.filter((r) => r.pricePerGame >= pMin);
+    if (pMax != null && !Number.isNaN(pMax)) arr = arr.filter((r) => r.pricePerGame <= pMax);
+    if (minExp > 0) arr = arr.filter((r) => (r.experienceYears ?? 0) >= minExp);
     if (onlyCompatible) arr = arr.filter(isCompat);
-    // ordena: compatíveis + cidade igual primeiro, depois por score
+
     return arr.sort((a, b) => {
-      const ac = (isCompat(a) ? 2 : 0) + (a.city.toLowerCase() === challengeCity.toLowerCase() ? 1 : 0);
-      const bc = (isCompat(b) ? 2 : 0) + (b.city.toLowerCase() === challengeCity.toLowerCase() ? 1 : 0);
+      const ac = (isCompat(a) ? 2 : 0) + (norm(a.city) === norm(challengeCity) ? 1 : 0);
+      const bc = (isCompat(b) ? 2 : 0) + (norm(b.city) === norm(challengeCity) ? 1 : 0);
       if (ac !== bc) return bc - ac;
       return b.score - a.score;
     });
-  }, [allRefs, filterTier, onlyCompatible, onlySameCity, challengeCity, challenge.date, challenge.time]);
+  }, [allRefs, filterTier, onlyCompatible, cityFilter, priceMin, priceMax, minExperience, challengeCity, challenge.date, challenge.time]);
+
+  const resetFilters = () => {
+    setFilterTier("all");
+    setOnlyCompatible(true);
+    setCityFilter(challengeCity);
+    setPriceMin("");
+    setPriceMax("");
+    setMinExperience("0");
+  };
+  const activeAdvancedCount =
+    (priceMin !== "" ? 1 : 0) + (priceMax !== "" ? 1 : 0) + ((Number(minExperience) || 0) > 0 ? 1 : 0);
 
   const submit = async () => {
     if (submitting) return;
@@ -616,27 +644,77 @@ function AttachRefereeDialog({
           {challengeCity ? ` em ${challengeCity}` : ""}.
         </p>
 
-        <div className="grid gap-2 sm:grid-cols-3">
-          <div>
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
-            <Select value={filterTier} onValueChange={setFilterTier}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os níveis</SelectItem>
-                <SelectItem value="Bronze">Bronze</SelectItem>
-                <SelectItem value="Prata">Prata</SelectItem>
-                <SelectItem value="Ouro">Ouro</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="space-y-3">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
+              <Select value={filterTier} onValueChange={setFilterTier}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os níveis</SelectItem>
+                  <SelectItem value="Bronze">Bronze</SelectItem>
+                  <SelectItem value="Prata">Prata</SelectItem>
+                  <SelectItem value="Ouro">Ouro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
+              <div className="flex gap-1">
+                <CityCombobox value={cityFilter} onChange={setCityFilter} placeholder="Qualquer cidade" className="h-9 flex-1" />
+                {cityFilter && (
+                  <Button type="button" variant="outline" size="sm" className="h-9 px-2" onClick={() => setCityFilter("")} title="Limpar cidade">
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-          <label className="flex cursor-pointer items-end gap-2 text-xs">
-            <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlySameCity} onChange={(e) => setOnlySameCity(e.target.checked)} />
-            <span>Mesma cidade ({challengeCity || "—"})</span>
-          </label>
-          <label className="flex cursor-pointer items-end gap-2 text-xs">
-            <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlyCompatible} onChange={(e) => setOnlyCompatible(e.target.checked)} />
-            <span>Disponível no dia/horário</span>
-          </label>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="flex cursor-pointer items-center gap-2 text-xs">
+              <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlyCompatible} onChange={(e) => setOnlyCompatible(e.target.checked)} />
+              <span>Disponível no dia/horário</span>
+            </label>
+            <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[11px] text-referee hover:bg-referee/10" onClick={() => setShowAdvanced((v) => !v)}>
+              {showAdvanced ? "Ocultar filtros avançados" : "Filtros avançados"}
+              {activeAdvancedCount > 0 && (
+                <span className="ml-1 rounded bg-referee/20 px-1.5 py-0.5 font-mono text-[9px] text-referee">{activeAdvancedCount}</span>
+              )}
+            </Button>
+          </div>
+
+          {showAdvanced && (
+            <div className="rounded-lg border border-referee/20 bg-referee/5 p-3 space-y-3">
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Faixa de preço por jogo (R$)</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Input type="number" inputMode="numeric" min={0} placeholder="Min" className="h-9" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} />
+                  <span className="text-xs text-muted-foreground">—</span>
+                  <Input type="number" inputMode="numeric" min={0} placeholder="Max" className="h-9" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Experiência mínima: <span className="text-referee">{minExperience || 0} {Number(minExperience) === 1 ? "ano" : "anos"}</span>
+                </Label>
+                <input
+                  type="range"
+                  min={0}
+                  max={20}
+                  step={1}
+                  value={minExperience}
+                  onChange={(e) => setMinExperience(e.target.value)}
+                  className="mt-1 w-full accent-[hsl(var(--referee))]"
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-[11px]" onClick={resetFilters}>
+                  Limpar filtros
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="max-h-[360px] space-y-2 overflow-auto pr-1">
