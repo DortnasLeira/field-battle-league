@@ -100,7 +100,7 @@ function OwnerPanel() {
       navigate({ to: "/auth", search: { redirect: "/painel" } });
       return;
     }
-    if (accountType !== "business") {
+    if (!isBusinessAccount(accountType)) {
       toast.error("Apenas contas Business têm acesso ao Painel.");
       navigate({ to: "/" });
     }
