@@ -20,6 +20,7 @@ import type { Challenge, Referee } from "@/lib/mockData";
 import { REFEREE_TIER_INFO } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { cityDistanceKm, getCityCoords } from "@/lib/cityDistance";
 
 
 export const Route = createFileRoute("/desafios")({
