@@ -778,6 +778,10 @@ function AttachRefereeDialog({
           {list.map((r) => {
             const available = isCompat(r);
             const sameCity = r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase();
+            const distKm =
+              cityFilter && radiusKm > 0 && !sameCity
+                ? cityDistanceKm(cityFilter, r.city)
+                : null;
             const tier = REFEREE_TIER_INFO[r.tier];
             const isSel = selected === r.id;
             const isUnavailable = unavailableIds.has(r.id);
