@@ -37,8 +37,9 @@ type Option = {
 const OPTIONS: Option[] = [
   { id: "player", account: "sportist", icon: User, desc: "Quero jogar pelada, entrar em times e me candidatar a vagas." },
   { id: "team", account: "sportist", icon: Shield, desc: "Sou capitão de um time e quero gerenciar elenco e desafios." },
-  { id: "field", account: "business", icon: MapPin, desc: "Sou dono ou gestor de um campo e quero anunciar horários." },
-  { id: "referee", account: "business", icon: Award, desc: "Sou árbitro e quero oferecer arbitragem para times e campos." },
+  { id: "field", account: "business_field", icon: MapPin, desc: "Sou dono ou gestor de um campo e quero anunciar horários." },
+  { id: "referee", account: "business_referee", icon: Award, desc: "Sou árbitro e quero oferecer arbitragem para times e campos." },
+
 ];
 
 function OnboardingPage() {
