@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 import { CityCombobox } from "@/components/CityCombobox";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +61,7 @@ function EditRefereePage() {
   const [saving, setSaving] = useState(false);
   const [newCert, setNewCert] = useState("");
 
-  const isReferee = accountType === "business" && profiles.some((p) => p.type === "referee");
+  const isReferee = isBusinessAccount(accountType) && profiles.some((p) => p.type === "referee");
 
   useEffect(() => {
     if (loading) return;

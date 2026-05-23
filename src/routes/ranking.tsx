@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/ranking")({
@@ -53,7 +53,7 @@ function RankingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (accountType === "business") {
+    if (isBusinessAccount(accountType)) {
       toast.error("Ranking é exclusivo de perfis Esportista.");
       navigate({ to: "/perfil" });
     }

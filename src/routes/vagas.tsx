@@ -39,7 +39,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 import { FiltersPanel } from "@/components/FiltersPanel";
 import {
   ALL_POSITIONS,
@@ -80,7 +80,7 @@ function VagasPage() {
   const navigate = useNavigate();
 
   // Perfis Business (Campo) não têm acesso a Vagas
-  if (accountType === "business") {
+  if (isBusinessAccount(accountType)) {
     if (typeof window !== "undefined") {
       setTimeout(() => {
         toast.error("Vagas são exclusivas de perfis Esportista.");

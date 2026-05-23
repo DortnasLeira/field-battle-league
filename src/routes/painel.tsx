@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 
 export const Route = createFileRoute("/painel")({
   head: () => ({
@@ -100,7 +100,7 @@ function OwnerPanel() {
       navigate({ to: "/auth", search: { redirect: "/painel" } });
       return;
     }
-    if (accountType !== "business") {
+    if (!isBusinessAccount(accountType)) {
       toast.error("Apenas contas Business têm acesso ao Painel.");
       navigate({ to: "/" });
     }

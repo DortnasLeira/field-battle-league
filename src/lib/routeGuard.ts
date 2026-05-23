@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 
 /**
  * Pattern matcher with support for `:param` wildcards.
@@ -82,7 +82,7 @@ export function useRouteGuard() {
 
     const hasField = profiles.some((p) => p.type === "field");
     const hasReferee = profiles.some((p) => p.type === "referee");
-    const isBusiness = accountType === "business";
+    const isBusiness = isBusinessAccount(accountType);
 
     const block = (msg: string, to: string) => {
       if (lastBlocked.current === pathname) return;

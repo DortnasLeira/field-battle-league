@@ -1043,7 +1043,11 @@ export type Database = {
       team_admin_count: { Args: { _team_id: string }; Returns: number }
     }
     Enums: {
-      account_type: "sportist" | "business"
+      account_type:
+        | "sportist"
+        | "business"
+        | "business_field"
+        | "business_referee"
       assignment_status:
         | "pending"
         | "accepted"
@@ -1183,7 +1187,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_type: ["sportist", "business"],
+      account_type: [
+        "sportist",
+        "business",
+        "business_field",
+        "business_referee",
+      ],
       assignment_status: [
         "pending",
         "accepted",
