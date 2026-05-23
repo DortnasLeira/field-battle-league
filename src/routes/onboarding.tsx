@@ -61,10 +61,15 @@ function OnboardingPage() {
     const allowed = ALLOWED_PROFILE_TYPES[accountType];
     const hasAny = allowed.some((t) => profiles.some((p) => p.type === t));
     if (hasAny) {
-      const onlyReferee =
-        profiles.some((p) => p.type === "referee") && !profiles.some((p) => p.type === "field");
-      navigate({ to: accountType === "business" ? (onlyReferee ? "/arbitragem" : "/complexo") : "/perfil" });
+      const dest =
+        accountType === "business_field"
+          ? "/complexo"
+          : accountType === "business_referee"
+          ? "/arbitragem"
+          : "/perfil";
+      navigate({ to: dest });
     }
+
   }, [loading, session, accountType, profiles, navigate]);
 
   const existingTypes = new Set(profiles.map((p) => p.type));
