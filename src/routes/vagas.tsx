@@ -39,7 +39,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 import { FiltersPanel } from "@/components/FiltersPanel";
 import {
   ALL_POSITIONS,

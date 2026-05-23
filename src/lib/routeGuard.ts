@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 
 /**
  * Pattern matcher with support for `:param` wildcards.

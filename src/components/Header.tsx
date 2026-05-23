@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useAuth, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/lib/auth";
+import { useAuth, isBusinessAccount, PROFILE_TYPE_LABEL, PROFILE_TYPE_EMOJI, frameClass } from "@/lib/auth";
 import { toast } from "sonner";
 
 // Não logado: apenas Buscar e Campos

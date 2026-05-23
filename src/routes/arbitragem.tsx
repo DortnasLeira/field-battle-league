@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isBusinessAccount } from "@/lib/auth";
 import { REFEREE_ACHIEVEMENTS } from "@/lib/refereeAchievements";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
