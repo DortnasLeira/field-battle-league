@@ -549,33 +549,52 @@ function AttachRefereeDialog({
     const pMin = priceMin === "" ? null : Number(priceMin);
     const pMax = priceMax === "" ? null : Number(priceMax);
     const minExp = Number(minExperience) || 0;
+    const filterCoords = getCityCoords(cityFilter);
+    const useRadius = radiusKm > 0 && !!filterCoords;
 
     let arr = allRefs.slice();
     if (filterTier !== "all") arr = arr.filter((r) => r.tier === filterTier);
-    if (cityNorm) arr = arr.filter((r) => norm(r.city) === cityNorm);
+    if (cityNorm) {
+      if (useRadius) {
+        arr = arr.filter((r) => {
+          if (norm(r.city) === cityNorm) return true;
+          const d = cityDistanceKm(cityFilter, r.city);
+          return d != null && d <= radiusKm;
+        });
+      } else {
+        arr = arr.filter((r) => norm(r.city) === cityNorm);
+      }
+    }
     if (pMin != null && !Number.isNaN(pMin)) arr = arr.filter((r) => r.pricePerGame >= pMin);
     if (pMax != null && !Number.isNaN(pMax)) arr = arr.filter((r) => r.pricePerGame <= pMax);
     if (minExp > 0) arr = arr.filter((r) => (r.experienceYears ?? 0) >= minExp);
     if (onlyCompatible) arr = arr.filter(isCompat);
 
     return arr.sort((a, b) => {
+      // Quando usando raio, ordena também por distância crescente
+      if (useRadius) {
+        const da = cityDistanceKm(cityFilter, a.city) ?? Number.POSITIVE_INFINITY;
+        const db = cityDistanceKm(cityFilter, b.city) ?? Number.POSITIVE_INFINITY;
+        if (da !== db) return da - db;
+      }
       const ac = (isCompat(a) ? 2 : 0) + (norm(a.city) === norm(challengeCity) ? 1 : 0);
       const bc = (isCompat(b) ? 2 : 0) + (norm(b.city) === norm(challengeCity) ? 1 : 0);
       if (ac !== bc) return bc - ac;
       return b.score - a.score;
     });
-  }, [allRefs, filterTier, onlyCompatible, cityFilter, priceMin, priceMax, minExperience, challengeCity, challenge.date, challenge.time]);
+  }, [allRefs, filterTier, onlyCompatible, cityFilter, radiusKm, priceMin, priceMax, minExperience, challengeCity, challenge.date, challenge.time]);
 
   const resetFilters = () => {
     setFilterTier("all");
     setOnlyCompatible(true);
     setCityFilter(challengeCity);
+    setRadiusKm(0);
     setPriceMin("");
     setPriceMax("");
     setMinExperience("0");
   };
   const activeAdvancedCount =
-    (priceMin !== "" ? 1 : 0) + (priceMax !== "" ? 1 : 0) + ((Number(minExperience) || 0) > 0 ? 1 : 0);
+    (priceMin !== "" ? 1 : 0) + (priceMax !== "" ? 1 : 0) + ((Number(minExperience) || 0) > 0 ? 1 : 0) + (radiusKm > 0 ? 1 : 0);
 
   const submit = async () => {
     if (submitting) return;
