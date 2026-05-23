@@ -20,6 +20,7 @@ import type { Challenge, Referee } from "@/lib/mockData";
 import { REFEREE_TIER_INFO } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { cityDistanceKm, getCityCoords } from "@/lib/cityDistance";
 
 
 export const Route = createFileRoute("/desafios")({
@@ -474,6 +475,7 @@ function AttachRefereeDialog({
   const [filterTier, setFilterTier] = useState<string>("all");
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
   const [cityFilter, setCityFilter] = useState<string>("");
+  const [radiusKm, setRadiusKm] = useState<number>(0);
   const [priceMin, setPriceMin] = useState<string>("");
   const [priceMax, setPriceMax] = useState<string>("");
   const [minExperience, setMinExperience] = useState<string>("0");
@@ -547,33 +549,52 @@ function AttachRefereeDialog({
     const pMin = priceMin === "" ? null : Number(priceMin);
     const pMax = priceMax === "" ? null : Number(priceMax);
     const minExp = Number(minExperience) || 0;
+    const filterCoords = getCityCoords(cityFilter);
+    const useRadius = radiusKm > 0 && !!filterCoords;
 
     let arr = allRefs.slice();
     if (filterTier !== "all") arr = arr.filter((r) => r.tier === filterTier);
-    if (cityNorm) arr = arr.filter((r) => norm(r.city) === cityNorm);
+    if (cityNorm) {
+      if (useRadius) {
+        arr = arr.filter((r) => {
+          if (norm(r.city) === cityNorm) return true;
+          const d = cityDistanceKm(cityFilter, r.city);
+          return d != null && d <= radiusKm;
+        });
+      } else {
+        arr = arr.filter((r) => norm(r.city) === cityNorm);
+      }
+    }
     if (pMin != null && !Number.isNaN(pMin)) arr = arr.filter((r) => r.pricePerGame >= pMin);
     if (pMax != null && !Number.isNaN(pMax)) arr = arr.filter((r) => r.pricePerGame <= pMax);
     if (minExp > 0) arr = arr.filter((r) => (r.experienceYears ?? 0) >= minExp);
     if (onlyCompatible) arr = arr.filter(isCompat);
 
     return arr.sort((a, b) => {
+      // Quando usando raio, ordena também por distância crescente
+      if (useRadius) {
+        const da = cityDistanceKm(cityFilter, a.city) ?? Number.POSITIVE_INFINITY;
+        const db = cityDistanceKm(cityFilter, b.city) ?? Number.POSITIVE_INFINITY;
+        if (da !== db) return da - db;
+      }
       const ac = (isCompat(a) ? 2 : 0) + (norm(a.city) === norm(challengeCity) ? 1 : 0);
       const bc = (isCompat(b) ? 2 : 0) + (norm(b.city) === norm(challengeCity) ? 1 : 0);
       if (ac !== bc) return bc - ac;
       return b.score - a.score;
     });
-  }, [allRefs, filterTier, onlyCompatible, cityFilter, priceMin, priceMax, minExperience, challengeCity, challenge.date, challenge.time]);
+  }, [allRefs, filterTier, onlyCompatible, cityFilter, radiusKm, priceMin, priceMax, minExperience, challengeCity, challenge.date, challenge.time]);
 
   const resetFilters = () => {
     setFilterTier("all");
     setOnlyCompatible(true);
     setCityFilter(challengeCity);
+    setRadiusKm(0);
     setPriceMin("");
     setPriceMax("");
     setMinExperience("0");
   };
   const activeAdvancedCount =
-    (priceMin !== "" ? 1 : 0) + (priceMax !== "" ? 1 : 0) + ((Number(minExperience) || 0) > 0 ? 1 : 0);
+    (priceMin !== "" ? 1 : 0) + (priceMax !== "" ? 1 : 0) + ((Number(minExperience) || 0) > 0 ? 1 : 0) + (radiusKm > 0 ? 1 : 0);
 
   const submit = async () => {
     if (submitting) return;
@@ -671,6 +692,36 @@ function AttachRefereeDialog({
             </div>
           </div>
 
+          {cityFilter && (
+            <div className="rounded-lg border border-referee/20 bg-referee/5 px-3 py-2">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Raio de busca: {radiusKm > 0 ? (
+                  <span className="text-referee">{radiusKm} km</span>
+                ) : (
+                  <span className="text-referee">somente esta cidade</span>
+                )}
+                {radiusKm > 0 && !getCityCoords(cityFilter) && (
+                  <span className="ml-2 text-warning">
+                    (cidade sem coordenadas — usando nome exato)
+                  </span>
+                )}
+              </Label>
+              <input
+                type="range"
+                min={0}
+                max={300}
+                step={10}
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="mt-1 w-full accent-[hsl(var(--referee))]"
+                disabled={!getCityCoords(cityFilter)}
+              />
+              <div className="mt-0.5 flex justify-between text-[9px] text-muted-foreground">
+                <span>0</span><span>100</span><span>200</span><span>300 km</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-2">
             <label className="flex cursor-pointer items-center gap-2 text-xs">
               <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlyCompatible} onChange={(e) => setOnlyCompatible(e.target.checked)} />
@@ -727,6 +778,10 @@ function AttachRefereeDialog({
           {list.map((r) => {
             const available = isCompat(r);
             const sameCity = r.city.trim().toLowerCase() === challengeCity.trim().toLowerCase();
+            const distKm =
+              cityFilter && radiusKm > 0 && !sameCity
+                ? cityDistanceKm(cityFilter, r.city)
+                : null;
             const tier = REFEREE_TIER_INFO[r.tier];
             const isSel = selected === r.id;
             const isUnavailable = unavailableIds.has(r.id);
@@ -752,6 +807,9 @@ function AttachRefereeDialog({
                       </span>
                       <span>★ {r.score.toFixed(1)}</span>
                       <span className={sameCity ? "text-referee" : ""}>{r.city || "—"}</span>
+                      {distKm != null && (
+                        <span className="text-referee/80">~{Math.round(distKm)} km</span>
+                      )}
                     </div>
                   </div>
                 </div>
