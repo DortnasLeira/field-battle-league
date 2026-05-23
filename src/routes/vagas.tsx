@@ -80,7 +80,7 @@ function VagasPage() {
   const navigate = useNavigate();
 
   // Perfis Business (Campo) não têm acesso a Vagas
-  if (accountType === "business") {
+  if (isBusinessAccount(accountType)) {
     if (typeof window !== "undefined") {
       setTimeout(() => {
         toast.error("Vagas são exclusivas de perfis Esportista.");

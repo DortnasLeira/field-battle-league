@@ -87,7 +87,7 @@ function ComplexoPage() {
       navigate({ to: "/auth", search: { redirect: "/complexo" } });
       return;
     }
-    if (accountType !== "business") {
+    if (!isBusinessAccount(accountType)) {
       toast.error("Apenas contas Business podem gerenciar um complexo.");
       navigate({ to: "/" });
     }

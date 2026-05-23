@@ -39,7 +39,7 @@ function EditVenuePage() {
       navigate({ to: "/auth", search: { redirect: "/complexo/editar" } });
       return;
     }
-    if (accountType !== "business") {
+    if (!isBusinessAccount(accountType)) {
       toast.error("Apenas contas Business podem editar o estabelecimento.");
       navigate({ to: "/" });
     }

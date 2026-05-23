@@ -50,7 +50,7 @@ function ArbitragemPage() {
   const { challenges, matches, referees, currentRefereeId } = useStore();
 
   const isReferee =
-    accountType === "business" && profiles.some((p) => p.type === "referee");
+    isBusinessAccount(accountType) && profiles.some((p) => p.type === "referee");
 
   // O guard global já redireciona quem não é árbitro. Este fallback evita flash de conteúdo.
   if (!isReferee) {

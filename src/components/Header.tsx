@@ -61,7 +61,7 @@ export function Header() {
   const { session, accountType, profiles } = useAuth();
   const navigate = useNavigate();
   const isActive = (to: string) => pathname.startsWith(to);
-  const isBusiness = accountType === "business";
+  const isBusiness = isBusinessAccount(accountType);
   const hasFieldProfile = profiles.some((p) => p.type === "field");
   const hasRefereeProfile = profiles.some((p) => p.type === "referee");
   const links = !session
@@ -165,7 +165,7 @@ function ProfileSwitcher() {
     );
   }
 
-  const isBusiness = accountType === "business";
+  const isBusiness = isBusinessAccount(accountType);
   const hasFieldProfile = profiles.some((p) => p.type === "field");
   const hasRefereeProfile = profiles.some((p) => p.type === "referee");
 
