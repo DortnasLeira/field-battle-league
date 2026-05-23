@@ -692,6 +692,36 @@ function AttachRefereeDialog({
             </div>
           </div>
 
+          {cityFilter && (
+            <div className="rounded-lg border border-referee/20 bg-referee/5 px-3 py-2">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Raio de busca: {radiusKm > 0 ? (
+                  <span className="text-referee">{radiusKm} km</span>
+                ) : (
+                  <span className="text-referee">somente esta cidade</span>
+                )}
+                {radiusKm > 0 && !getCityCoords(cityFilter) && (
+                  <span className="ml-2 text-warning">
+                    (cidade sem coordenadas — usando nome exato)
+                  </span>
+                )}
+              </Label>
+              <input
+                type="range"
+                min={0}
+                max={300}
+                step={10}
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="mt-1 w-full accent-[hsl(var(--referee))]"
+                disabled={!getCityCoords(cityFilter)}
+              />
+              <div className="mt-0.5 flex justify-between text-[9px] text-muted-foreground">
+                <span>0</span><span>100</span><span>200</span><span>300 km</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-2">
             <label className="flex cursor-pointer items-center gap-2 text-xs">
               <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--referee))]" checked={onlyCompatible} onChange={(e) => setOnlyCompatible(e.target.checked)} />
