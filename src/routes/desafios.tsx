@@ -807,6 +807,9 @@ function AttachRefereeDialog({
                       </span>
                       <span>★ {r.score.toFixed(1)}</span>
                       <span className={sameCity ? "text-referee" : ""}>{r.city || "—"}</span>
+                      {distKm != null && (
+                        <span className="text-referee/80">~{Math.round(distKm)} km</span>
+                      )}
                     </div>
                   </div>
                 </div>
