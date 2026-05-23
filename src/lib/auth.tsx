@@ -3,17 +3,24 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ProfileType = "player" | "team" | "field" | "referee";
-export type AccountType = "sportist" | "business";
+export type AccountType = "sportist" | "business_field" | "business_referee";
 
 export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
   sportist: "Esportista",
-  business: "Business",
+  business_field: "Business Campo",
+  business_referee: "Business Árbitro",
 };
 
 export const ALLOWED_PROFILE_TYPES: Record<AccountType, ProfileType[]> = {
   sportist: ["player", "team"],
-  business: ["field", "referee"],
+  business_field: ["field"],
+  business_referee: ["referee"],
 };
+
+export function isBusinessAccount(t: AccountType | null): boolean {
+  return t === "business_field" || t === "business_referee";
+}
+
 
 export type UserProfile = {
   id: string;
