@@ -474,6 +474,7 @@ function AttachRefereeDialog({
   const [filterTier, setFilterTier] = useState<string>("all");
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(true);
   const [cityFilter, setCityFilter] = useState<string>("");
+  const [radiusKm, setRadiusKm] = useState<number>(0);
   const [priceMin, setPriceMin] = useState<string>("");
   const [priceMax, setPriceMax] = useState<string>("");
   const [minExperience, setMinExperience] = useState<string>("0");
