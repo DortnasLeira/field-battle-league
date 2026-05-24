@@ -233,7 +233,7 @@ function TransferPage() {
 
       <Card className="space-y-4 p-5">
         <div>
-          <Label>Buscar novo dono (nome ou e-mail)</Label>
+          <Label>Buscar novo dono (nome)</Label>
           <div className="relative mt-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
