@@ -37,7 +37,7 @@ type PlayerExtras = UserProfile & {
   photo_url?: string | null;
 };
 
-export function PublicPlayerDashboard({ profile }: { profile: UserProfile }) {
+export function PublicPlayerDashboard({ profile, isVisitor = false }: { profile: UserProfile; isVisitor?: boolean }) {
   const p = profile as PlayerExtras;
   const [teams, setTeams] = useState<TeamRow[]>([]);
   const [matches, setMatches] = useState<MatchRow[]>([]);
@@ -292,41 +292,43 @@ export function PublicPlayerDashboard({ profile }: { profile: UserProfile }) {
         </div>
       </Card>
 
-      <Card className="border-border bg-card p-6">
-        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" /> Próximos jogos
-        </h2>
-        <div className="mt-4 space-y-3">
-          {!loading && upcoming.length === 0 && <EmptyLine text="Nenhum jogo confirmado." />}
-          {upcoming.map((m) => {
-            const homeT = m.home_team_id ? teamsById[m.home_team_id] : null;
-            const awayT = m.away_team_id ? teamsById[m.away_team_id] : null;
-            return (
-              <div key={m.id} className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="font-semibold">{homeT?.shield} {homeT?.name ?? "—"}</span>
-                  <span className="font-mono text-xs text-muted-foreground">VS</span>
-                  <span className="font-semibold">{awayT?.shield} {awayT?.name ?? "—"}</span>
+      {!isVisitor && (
+        <Card className="border-border bg-card p-6">
+          <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" /> Próximos jogos
+          </h2>
+          <div className="mt-4 space-y-3">
+            {!loading && upcoming.length === 0 && <EmptyLine text="Nenhum jogo confirmado." />}
+            {upcoming.map((m) => {
+              const homeT = m.home_team_id ? teamsById[m.home_team_id] : null;
+              const awayT = m.away_team_id ? teamsById[m.away_team_id] : null;
+              return (
+                <div key={m.id} className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="font-semibold">{homeT?.shield} {homeT?.name ?? "—"}</span>
+                    <span className="font-mono text-xs text-muted-foreground">VS</span>
+                    <span className="font-semibold">{awayT?.shield} {awayT?.name ?? "—"}</span>
+                  </div>
+                  <div className="text-right text-xs">
+                    {m.scheduled_at && (
+                      <div className="font-display text-sm uppercase">
+                        {new Date(m.scheduled_at).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                        {" · "}
+                        {new Date(m.scheduled_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    )}
+                    {m.location && (
+                      <div className="font-mono text-muted-foreground">
+                        <MapPin className="inline h-3 w-3" /> {m.location}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right text-xs">
-                  {m.scheduled_at && (
-                    <div className="font-display text-sm uppercase">
-                      {new Date(m.scheduled_at).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
-                      {" · "}
-                      {new Date(m.scheduled_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  )}
-                  {m.location && (
-                    <div className="font-mono text-muted-foreground">
-                      <MapPin className="inline h-3 w-3" /> {m.location}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <p className="text-center text-xs text-muted-foreground">
         <Link to="/buscar" className="underline">← Voltar para a busca</Link>

@@ -44,7 +44,7 @@ type MatchRow = {
   location: string | null;
 };
 
-export function PublicTeamDashboard({ team }: { team: TeamRow }) {
+export function PublicTeamDashboard({ team, isVisitor = false }: { team: TeamRow; isVisitor?: boolean }) {
   const { session } = useAuth();
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [teamsById, setTeamsById] = useState<Record<string, TeamRow>>({});
@@ -157,7 +157,7 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
             <h1 className="font-display text-2xl uppercase tracking-wide sm:text-3xl">{team.name}</h1>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <InfoPill label="Cidade" value={team.city || "—"} />
-              <InfoPill label="Capitão" value={team.captain || "—"} />
+              {!isVisitor && <InfoPill label="Capitão" value={team.captain || "—"} />}
               <InfoPill label="Dias" value={team.preferred_days?.join(", ") || "—"} />
               <InfoPill label="Horários" value={team.preferred_times?.join(", ") || "—"} />
             </div>
@@ -191,21 +191,23 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
         </Card>
       )}
 
-      <Card className="border-border bg-card p-6">
-        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" /> Painel de status
-        </h2>
-        <p className="text-xs text-muted-foreground">Score Elo do time e fair play coletivo.</p>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatBox label="Rating Elo" value={Math.round(Number(team.rating ?? 1500))} accent />
-          <StatBox label="Tier" value={ratingTier(Number(team.rating ?? 1500))} />
-          <StatBox label="Fair Play" value={`${Math.round(Number(team.fair_play ?? 100))}%`} />
-          <StatBox label="Verificado" value={team.verified ? "Sim" : "Não"} />
-        </div>
-        <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
-          <HeartHandshake className="h-3.5 w-3.5" /> Elo recalculado automaticamente após cada súmula assinada.
-        </div>
-      </Card>
+      {!isVisitor && (
+        <Card className="border-border bg-card p-6">
+          <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" /> Painel de status
+          </h2>
+          <p className="text-xs text-muted-foreground">Score Elo do time e fair play coletivo.</p>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatBox label="Rating Elo" value={Math.round(Number(team.rating ?? 1500))} accent />
+            <StatBox label="Tier" value={ratingTier(Number(team.rating ?? 1500))} />
+            <StatBox label="Fair Play" value={`${Math.round(Number(team.fair_play ?? 100))}%`} />
+            <StatBox label="Verificado" value={team.verified ? "Sim" : "Não"} />
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <HeartHandshake className="h-3.5 w-3.5" /> Elo recalculado automaticamente após cada súmula assinada.
+          </div>
+        </Card>
+      )}
 
       <Card className="border-border bg-card p-6">
         <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
@@ -231,22 +233,24 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
         </div>
       </Card>
 
-      <Card className="border-border bg-card p-6">
-        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-primary" /> Estatísticas
-        </h2>
-        <p className="text-xs text-muted-foreground">Histórico geral</p>
-        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-          <StatBox label="Jogos" value={stats.j} />
-          <StatBox label="V" value={stats.w} accent />
-          <StatBox label="E" value={stats.d} />
-          <StatBox label="D" value={stats.l} />
-          <StatBox label="GP" value={stats.gf} />
-          <StatBox label="GC" value={stats.ga} />
-          <StatBox label="SG" value={stats.sg > 0 ? `+${stats.sg}` : stats.sg} />
-          <StatBox label="Aprov." value={`${stats.pct}%`} />
-        </div>
-      </Card>
+      {!isVisitor && (
+        <Card className="border-border bg-card p-6">
+          <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" /> Estatísticas
+          </h2>
+          <p className="text-xs text-muted-foreground">Histórico geral</p>
+          <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            <StatBox label="Jogos" value={stats.j} />
+            <StatBox label="V" value={stats.w} accent />
+            <StatBox label="E" value={stats.d} />
+            <StatBox label="D" value={stats.l} />
+            <StatBox label="GP" value={stats.gf} />
+            <StatBox label="GC" value={stats.ga} />
+            <StatBox label="SG" value={stats.sg > 0 ? `+${stats.sg}` : stats.sg} />
+            <StatBox label="Aprov." value={`${stats.pct}%`} />
+          </div>
+        </Card>
+      )}
 
       <Card className="border-border bg-card p-6">
         <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
@@ -301,41 +305,43 @@ export function PublicTeamDashboard({ team }: { team: TeamRow }) {
         </div>
       </Card>
 
-      <Card className="border-border bg-card p-6">
-        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" /> Próximos jogos
-        </h2>
-        <div className="mt-4 space-y-3">
-          {!loading && upcoming.length === 0 && <EmptyLine text="Nenhum jogo agendado." />}
-          {upcoming.map((m) => {
-            const homeT = m.home_team_id ? teamsById[m.home_team_id] : null;
-            const awayT = m.away_team_id ? teamsById[m.away_team_id] : null;
-            return (
-              <div key={m.id} className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="font-semibold">{homeT?.shield} {homeT?.name ?? "—"}</span>
-                  <span className="font-mono text-xs text-muted-foreground">VS</span>
-                  <span className="font-semibold">{awayT?.shield} {awayT?.name ?? "—"}</span>
+      {!isVisitor && (
+        <Card className="border-border bg-card p-6">
+          <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" /> Próximos jogos
+          </h2>
+          <div className="mt-4 space-y-3">
+            {!loading && upcoming.length === 0 && <EmptyLine text="Nenhum jogo agendado." />}
+            {upcoming.map((m) => {
+              const homeT = m.home_team_id ? teamsById[m.home_team_id] : null;
+              const awayT = m.away_team_id ? teamsById[m.away_team_id] : null;
+              return (
+                <div key={m.id} className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="font-semibold">{homeT?.shield} {homeT?.name ?? "—"}</span>
+                    <span className="font-mono text-xs text-muted-foreground">VS</span>
+                    <span className="font-semibold">{awayT?.shield} {awayT?.name ?? "—"}</span>
+                  </div>
+                  <div className="text-right text-xs">
+                    {m.scheduled_at && (
+                      <div className="font-display text-sm uppercase">
+                        {new Date(m.scheduled_at).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                        {" · "}
+                        {new Date(m.scheduled_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    )}
+                    {m.location && (
+                      <div className="font-mono text-muted-foreground">
+                        <MapPin className="inline h-3 w-3" /> {m.location}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right text-xs">
-                  {m.scheduled_at && (
-                    <div className="font-display text-sm uppercase">
-                      {new Date(m.scheduled_at).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
-                      {" · "}
-                      {new Date(m.scheduled_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  )}
-                  {m.location && (
-                    <div className="font-mono text-muted-foreground">
-                      <MapPin className="inline h-3 w-3" /> {m.location}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <p className="text-center text-xs text-muted-foreground">
         <Link to="/buscar" className="underline">← Voltar para a busca</Link>

@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Lock, MapPin, Star, Calendar, History, Trophy, Shield } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Calendar, History, Trophy, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ export const Route = createFileRoute("/time/$id")({
 function TeamPublicPage() {
   const { id } = Route.useParams();
   const { session, loading } = useAuth();
-  const navigate = useNavigate();
   const [team, setTeam] = useState<TeamRow | null>(null);
   const [fetching, setFetching] = useState(true);
 
@@ -40,11 +39,6 @@ function TeamPublicPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!session) {
-      navigate({ to: "/auth", search: { redirect: `/time/${id}` } });
-      return;
-    }
-    // UUIDs only — mock IDs like "t1" won't match. Skip DB fetch in that case.
     const looksLikeUuid = /^[0-9a-f]{8}-/i.test(id);
     if (!looksLikeUuid) {
       setFetching(false);
@@ -59,18 +53,11 @@ function TeamPublicPage() {
         setTeam((data ?? null) as TeamRow | null);
         setFetching(false);
       });
-  }, [id, session, loading, navigate]);
-
-  if (!session) {
-    return (
-      <Card className="border-border bg-card p-8 text-center">
-        <Lock className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Faça login para ver este perfil.</p>
-      </Card>
-    );
-  }
+  }, [id, loading]);
 
   if (fetching) return <p className="text-sm text-muted-foreground">Carregando...</p>;
+
+  const isVisitor = !session;
 
   // DB hit
   if (team) {
@@ -79,7 +66,7 @@ function TeamPublicPage() {
         <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar para a busca</Link>
         </Button>
-        <PublicTeamDashboard team={team} />
+        <PublicTeamDashboard team={team} isVisitor={isVisitor} />
       </div>
     );
   }
@@ -91,7 +78,7 @@ function TeamPublicPage() {
         <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar para a busca</Link>
         </Button>
-        <MockTeamDetails team={mockTeam} />
+        <MockTeamDetails team={mockTeam} isVisitor={isVisitor} />
       </div>
     );
   }
@@ -99,7 +86,7 @@ function TeamPublicPage() {
   return <p className="text-sm text-muted-foreground">Time não encontrado.</p>;
 }
 
-function MockTeamDetails({ team }: { team: Team }) {
+function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: boolean }) {
   const yr = new Date().getFullYear();
   const teamMatches = useMemo(
     () => mockMatches.filter((m) => m.homeId === team.id || m.awayId === team.id),
@@ -162,7 +149,7 @@ function MockTeamDetails({ team }: { team: Team }) {
               <span className="inline-flex items-center gap-1 text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" /> {team.city}
               </span>
-              {typeof team.rating === "number" && (
+              {!isVisitor && typeof team.rating === "number" && (
                 <>
                   <span className="text-muted-foreground">·</span>
                   <span className="inline-flex items-center gap-1 text-primary">
@@ -182,10 +169,10 @@ function MockTeamDetails({ team }: { team: Team }) {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <InfoPill label="Capitão" value={team.captain} />
-              <InfoPill label={`Aprov. ${yr}`} value={yrPct === null ? "—" : `${yrPct}%`} />
-              <InfoPill label="Aprov. geral" value={`${stats.pct}%`} />
-              <InfoPill label="Jogos" value={String(stats.j)} />
+              {!isVisitor && <InfoPill label="Capitão" value={team.captain} />}
+              {!isVisitor && <InfoPill label={`Aprov. ${yr}`} value={yrPct === null ? "—" : `${yrPct}%`} />}
+              {!isVisitor && <InfoPill label="Aprov. geral" value={`${stats.pct}%`} />}
+              {!isVisitor && <InfoPill label="Jogos" value={String(stats.j)} />}
             </div>
           </div>
         </div>
@@ -226,21 +213,23 @@ function MockTeamDetails({ team }: { team: Team }) {
         </div>
       </Card>
 
-      <Card className="border-border bg-card p-6">
-        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-primary" /> Estatísticas
-        </h2>
-        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-          <StatBox label="Jogos" value={stats.j} />
-          <StatBox label="V" value={stats.w} accent />
-          <StatBox label="E" value={stats.d} />
-          <StatBox label="D" value={stats.l} />
-          <StatBox label="GP" value={stats.gf} />
-          <StatBox label="GC" value={stats.ga} />
-          <StatBox label="SG" value={stats.sg > 0 ? `+${stats.sg}` : stats.sg} />
-          <StatBox label="Aprov." value={`${stats.pct}%`} />
-        </div>
-      </Card>
+      {!isVisitor && (
+        <Card className="border-border bg-card p-6">
+          <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" /> Estatísticas
+          </h2>
+          <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            <StatBox label="Jogos" value={stats.j} />
+            <StatBox label="V" value={stats.w} accent />
+            <StatBox label="E" value={stats.d} />
+            <StatBox label="D" value={stats.l} />
+            <StatBox label="GP" value={stats.gf} />
+            <StatBox label="GC" value={stats.ga} />
+            <StatBox label="SG" value={stats.sg > 0 ? `+${stats.sg}` : stats.sg} />
+            <StatBox label="Aprov." value={`${stats.pct}%`} />
+          </div>
+        </Card>
+      )}
 
       <Card className="border-border bg-card p-6">
         <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
