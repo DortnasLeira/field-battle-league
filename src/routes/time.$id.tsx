@@ -86,7 +86,7 @@ function TeamPublicPage() {
   return <p className="text-sm text-muted-foreground">Time não encontrado.</p>;
 }
 
-function MockTeamDetails({ team }: { team: Team }) {
+function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: boolean }) {
   const yr = new Date().getFullYear();
   const teamMatches = useMemo(
     () => mockMatches.filter((m) => m.homeId === team.id || m.awayId === team.id),
