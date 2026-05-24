@@ -20,7 +20,7 @@ import type { Challenge, Referee } from "@/lib/mockData";
 import { REFEREE_TIER_INFO } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { cityDistanceKm, getCityCoords } from "@/lib/cityDistance";
+import { cityDistanceKm, getCityCoords, getCityUF } from "@/lib/cityDistance";
 
 
 export const Route = createFileRoute("/desafios")({
@@ -555,11 +555,22 @@ function AttachRefereeDialog({
     let arr = allRefs.slice();
     if (filterTier !== "all") arr = arr.filter((r) => r.tier === filterTier);
     if (cityNorm) {
+      const filterUF = getCityUF(cityFilter);
       if (useRadius) {
         arr = arr.filter((r) => {
           if (norm(r.city) === cityNorm) return true;
           const d = cityDistanceKm(cityFilter, r.city);
-          return d != null && d <= radiusKm;
+          if (d != null) return d <= radiusKm;
+          // Fallback: sem coordenadas → mesma UF conta como dentro do raio
+          const rUF = getCityUF(r.city);
+          return !!filterUF && !!rUF && filterUF === rUF;
+        });
+      } else if (filterUF) {
+        // Sem raio mas com UF → casa por UF (com nome exato como subconjunto)
+        arr = arr.filter((r) => {
+          if (norm(r.city) === cityNorm) return true;
+          const rUF = getCityUF(r.city);
+          return !!rUF && rUF === filterUF;
         });
       } else {
         arr = arr.filter((r) => norm(r.city) === cityNorm);
