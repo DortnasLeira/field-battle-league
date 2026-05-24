@@ -149,7 +149,7 @@ function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: 
               <span className="inline-flex items-center gap-1 text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" /> {team.city}
               </span>
-              {typeof team.rating === "number" && (
+              {!isVisitor && typeof team.rating === "number" && (
                 <>
                   <span className="text-muted-foreground">·</span>
                   <span className="inline-flex items-center gap-1 text-primary">
@@ -169,10 +169,10 @@ function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: 
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <InfoPill label="Capitão" value={team.captain} />
-              <InfoPill label={`Aprov. ${yr}`} value={yrPct === null ? "—" : `${yrPct}%`} />
-              <InfoPill label="Aprov. geral" value={`${stats.pct}%`} />
-              <InfoPill label="Jogos" value={String(stats.j)} />
+              {!isVisitor && <InfoPill label="Capitão" value={team.captain} />}
+              {!isVisitor && <InfoPill label={`Aprov. ${yr}`} value={yrPct === null ? "—" : `${yrPct}%`} />}
+              {!isVisitor && <InfoPill label="Aprov. geral" value={`${stats.pct}%`} />}
+              {!isVisitor && <InfoPill label="Jogos" value={String(stats.j)} />}
             </div>
           </div>
         </div>
@@ -213,21 +213,23 @@ function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: 
         </div>
       </Card>
 
-      <Card className="border-border bg-card p-6">
-        <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-primary" /> Estatísticas
-        </h2>
-        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-          <StatBox label="Jogos" value={stats.j} />
-          <StatBox label="V" value={stats.w} accent />
-          <StatBox label="E" value={stats.d} />
-          <StatBox label="D" value={stats.l} />
-          <StatBox label="GP" value={stats.gf} />
-          <StatBox label="GC" value={stats.ga} />
-          <StatBox label="SG" value={stats.sg > 0 ? `+${stats.sg}` : stats.sg} />
-          <StatBox label="Aprov." value={`${stats.pct}%`} />
-        </div>
-      </Card>
+      {!isVisitor && (
+        <Card className="border-border bg-card p-6">
+          <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" /> Estatísticas
+          </h2>
+          <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            <StatBox label="Jogos" value={stats.j} />
+            <StatBox label="V" value={stats.w} accent />
+            <StatBox label="E" value={stats.d} />
+            <StatBox label="D" value={stats.l} />
+            <StatBox label="GP" value={stats.gf} />
+            <StatBox label="GC" value={stats.ga} />
+            <StatBox label="SG" value={stats.sg > 0 ? `+${stats.sg}` : stats.sg} />
+            <StatBox label="Aprov." value={`${stats.pct}%`} />
+          </div>
+        </Card>
+      )}
 
       <Card className="border-border bg-card p-6">
         <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
