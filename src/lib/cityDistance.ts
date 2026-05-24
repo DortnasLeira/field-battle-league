@@ -64,9 +64,21 @@ export const CITY_COORDS: Record<string, [number, number]> = {
 
 const normalize = (s: string) => s.trim().toLowerCase();
 
+/** Remove sufixo "/UF" e normaliza para lookup no mapa de coordenadas. */
+function stripUf(s: string) {
+  return normalize(s).replace(/\s*\/\s*[a-z]{2}\s*$/i, "");
+}
+
 export function getCityCoords(city: string): [number, number] | null {
   if (!city) return null;
-  return CITY_COORDS[normalize(city)] ?? null;
+  return CITY_COORDS[normalize(city)] ?? CITY_COORDS[stripUf(city)] ?? null;
+}
+
+/** Extrai a sigla da UF de uma string no formato "Cidade/UF". */
+export function getCityUF(city: string | null | undefined): string | null {
+  if (!city) return null;
+  const m = city.match(/\/\s*([a-zA-Z]{2})\s*$/);
+  return m ? m[1].toUpperCase() : null;
 }
 
 /** Distância em km entre dois pontos (haversine). */
