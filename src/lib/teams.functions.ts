@@ -36,7 +36,7 @@ export const transferTeamOwnershipFn = createServerFn({ method: "POST" })
     // New owner must have a profile
     const { data: newProfile, error: npErr } = await supabase
       .from("profiles")
-      .select("id, display_name, email")
+      .select("id, display_name")
       .eq("id", newOwnerUserId)
       .maybeSingle();
     if (npErr) throw new Error("Falha ao validar novo dono.");

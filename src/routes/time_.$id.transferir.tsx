@@ -18,7 +18,7 @@ export const Route = createFileRoute("/time_/$id/transferir")({
   component: TransferPage,
 });
 
-type ProfileRow = { id: string; display_name: string | null; email: string | null };
+type ProfileRow = { id: string; display_name: string | null };
 
 function TransferPage() {
   const { id: teamId } = Route.useParams();
@@ -56,7 +56,7 @@ function TransferPage() {
     }
     const { data: prof } = await supabase
       .from("profiles")
-      .select("id, display_name, email")
+      .select("id, display_name")
       .eq("id", ownerRow.user_id)
       .maybeSingle();
     setCurrentOwner(prof ?? null);
@@ -89,8 +89,8 @@ function TransferPage() {
     const timer = setTimeout(async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, display_name, email")
-        .or(`display_name.ilike.%${q}%,email.ilike.%${q}%`)
+        .select("id, display_name")
+        .ilike("display_name", `%${q}%`)
         .limit(10);
       if (cancelled) return;
       const me = session?.user.id;
@@ -129,7 +129,7 @@ function TransferPage() {
     setSubmitting(true);
     try {
       await transferFn({ data: { teamId, newOwnerUserId: selected.id } });
-      toast.success(`Gestão transferida para ${selected.display_name ?? selected.email}.`);
+      toast.success(`Gestão transferida para ${selected.display_name ?? "novo dono"}.`);
       // Reflect immediately in UI
       setCurrentOwner(selected);
       setIsOwner(false);
@@ -173,7 +173,7 @@ function TransferPage() {
               <div>
                 <h2 className="font-display uppercase">Transferência concluída</h2>
                 <p className="text-sm text-muted-foreground">
-                  Novo dono: <strong>{currentOwner?.display_name ?? currentOwner?.email}</strong>
+                  Novo dono: <strong>{currentOwner?.display_name ?? "—"}</strong>
                 </p>
               </div>
             </div>
@@ -225,7 +225,7 @@ function TransferPage() {
             <div className="flex-1">
               <div className="font-mono text-[10px] uppercase tracking-wider text-primary">Dono atual</div>
               <div className="text-sm font-semibold">{currentOwner.display_name ?? "Sem nome"}</div>
-              <div className="text-xs text-muted-foreground">{currentOwner.email}</div>
+              <div className="text-xs text-muted-foreground">Dono atual</div>
             </div>
           </div>
         </Card>
@@ -233,7 +233,7 @@ function TransferPage() {
 
       <Card className="space-y-4 p-5">
         <div>
-          <Label>Buscar novo dono (nome ou e-mail)</Label>
+          <Label>Buscar novo dono (nome)</Label>
           <div className="relative mt-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -263,7 +263,7 @@ function TransferPage() {
                 >
                   <div>
                     <div className="text-sm font-medium">{r.display_name ?? "Sem nome"}</div>
-                    <div className="text-xs text-muted-foreground">{r.email}</div>
+                    <div className="text-xs text-muted-foreground">ID: {r.id.slice(0, 8)}</div>
                   </div>
                   {isCurrent ? (
                     <Badge variant="outline" className="border-primary/40 text-primary">Dono atual</Badge>
@@ -284,7 +284,7 @@ function TransferPage() {
           <div className="rounded-md border border-primary/40 bg-primary/5 p-3">
             <div className="font-mono text-[10px] uppercase tracking-wider text-primary">Novo dono</div>
             <div className="mt-1 text-sm font-medium">{selected.display_name ?? "Sem nome"}</div>
-            <div className="text-xs text-muted-foreground">{selected.email}</div>
+            <div className="text-xs text-muted-foreground">ID: {selected.id.slice(0, 8)}</div>
             {(sameAsCurrent || isSelf) && (
               <div className="mt-2 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
