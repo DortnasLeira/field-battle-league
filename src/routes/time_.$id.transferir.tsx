@@ -18,7 +18,7 @@ export const Route = createFileRoute("/time_/$id/transferir")({
   component: TransferPage,
 });
 
-type ProfileRow = { id: string; display_name: string | null; email: string | null };
+type ProfileRow = { id: string; display_name: string | null };
 
 function TransferPage() {
   const { id: teamId } = Route.useParams();
