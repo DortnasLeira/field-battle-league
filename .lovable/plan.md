@@ -1,52 +1,20 @@
-## Reestruturação de tipos de conta
+## Problema
 
-### Mudança principal
-Hoje existem 2 tipos: `sportist` e `business` (esse abrange Campo e Árbitro). Vamos passar para 3:
+Nos cartões de time em `/buscar`, o componente `<TeamBadge size="md" />` renderiza escudo + nome + cidade. Logo ao lado, o cartão também renderiza nome (em caixa alta) e cidade. Isso gera a duplicação que aparece no exemplo:
 
-- **Esportista** (`sportist`) — pode criar perfis de **Jogador** e **Time**
-- **Business Campo** (`business_field`) — pode criar somente perfil de **Campo**
-- **Business Árbitro** (`business_referee`) — pode criar somente perfil de **Árbitro**
+- Linha do TeamBadge: `🦁 Leões da Vila / São Paulo`
+- Linhas do cartão: `LEÕES DA VILA` + `São Paulo · 100% em 2026 · Desde 2018`
 
-Times continuam exclusivos de Esportista (já é o comportamento atual).
+## Solução
 
-### Banco de dados (migração)
-1. Adicionar valores `business_field` e `business_referee` ao enum `public.account_type`.
-2. Migrar dados existentes em `user_account_types`:
-   - usuários `business` que possuem perfil `referee` → `business_referee`
-   - demais `business` (com perfil `field` ou sem perfis) → `business_field`
-3. Atualizar funções/policies:
-   - `enforce_profile_account_type`: nova lógica
-     - `sportist` ⇒ `player` ou `team`
-     - `business_field` ⇒ apenas `field`
-     - `business_referee` ⇒ apenas `referee`
-   - `is_business_account`: passa a retornar true para `business_field` OR `business_referee`
-   - Policy `venues_insert_business`: aceitar `business_field` (em vez de `business`)
-4. Manter `'business'` legado no enum por compatibilidade (sem remover, apenas parar de usar).
+Em `src/routes/buscar.tsx`, dentro do mapeamento dos times (≈ linha 274), trocar `<TeamBadge teamId={t.id} size="md" />` por apenas o quadrado do escudo (mesmo visual do `TeamBadge`, sem o bloco de texto ao lado). As demais linhas do cartão (nome em caixa alta, cidade · aproveitamento · desde, nota · campo, botões Perfil/Desafiar) permanecem inalteradas.
 
-### Frontend
-1. `src/lib/auth.tsx`:
-   - `AccountType = 'sportist' | 'business_field' | 'business_referee'`
-   - `ACCOUNT_TYPE_LABEL`: rótulos PT-BR ("Esportista", "Business Campo", "Business Árbitro")
-   - `ALLOWED_PROFILE_TYPES`:
-     - sportist: `['player', 'team']`
-     - business_field: `['field']`
-     - business_referee: `['referee']`
-   - Tratar `account_type === 'business'` antigo lido do DB como `business_field` por segurança (fallback no client).
-2. `src/routes/onboarding.tsx`:
-   - `OPTIONS`: mapear cada perfil ao novo `account` correto
-     - player → sportist, team → sportist, field → business_field, referee → business_referee
-   - Mensagens de bloqueio usando os novos labels
-3. Verificar usos de `accountType === 'business'` em todo o projeto e ajustar:
-   - `Header`, `RefereeDashboard`, `complexo*`, `arbitragem*`, guards de rota, etc.
-   - Substituir por checks específicos (`'business_field'` / `'business_referee'`) ou helper `isBusiness(accountType)`.
+Mudança mínima — não tocar em `TeamBadge.tsx` (é usado em outras telas onde o nome/cidade fazem sentido) nem em nenhum outro arquivo.
 
-### Detalhes técnicos
-- Adicionar valor a um enum Postgres exige `ALTER TYPE ... ADD VALUE` fora de bloco de transação — separar em statements simples.
-- Não remover o valor `'business'` (Postgres não permite drop de enum value sem recriar o tipo); apenas migrar todas as linhas existentes.
-- Após migração, types.ts será regenerado automaticamente.
+### Resultado por cartão
 
-### Arquivos a editar
-- `supabase/migrations/...` (novo)
-- `src/lib/auth.tsx`
-- `src/routes/onboarding.tsx`
-- Outros arquivos onde `'business'` aparece (ajuste pontual com grep)
+- 🦁 (escudo)
+- LEÕES DA VILA
+- São Paulo · 100% em 2026 · Desde 2018
+- ⭐ 4.7 (58) · Arena Central
+- [Perfil] [Desafiar]

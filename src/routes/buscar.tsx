@@ -273,7 +273,9 @@ function BuscarPage() {
                 return (
                   <Card key={t.id} className="flex flex-col gap-3 border-border bg-card p-4">
                     <div className="flex items-start gap-3">
-                      <TeamBadge teamId={t.id} size="md" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-elevated text-xl ring-1 ring-border">
+                        <span>{t.shield}</span>
+                      </div>
                       <div className="flex-1 min-w-0 space-y-1">
                         {/* Linha 1: nome */}
                         <div className="font-display text-base uppercase tracking-wide truncate">{t.name}</div>
