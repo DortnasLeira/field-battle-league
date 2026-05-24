@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Lock, MapPin, Star, Calendar, History, Trophy, Shield } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Calendar, History, Trophy, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ export const Route = createFileRoute("/time/$id")({
 function TeamPublicPage() {
   const { id } = Route.useParams();
   const { session, loading } = useAuth();
-  const navigate = useNavigate();
   const [team, setTeam] = useState<TeamRow | null>(null);
   const [fetching, setFetching] = useState(true);
 
@@ -40,11 +39,6 @@ function TeamPublicPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!session) {
-      navigate({ to: "/auth", search: { redirect: `/time/${id}` } });
-      return;
-    }
-    // UUIDs only — mock IDs like "t1" won't match. Skip DB fetch in that case.
     const looksLikeUuid = /^[0-9a-f]{8}-/i.test(id);
     if (!looksLikeUuid) {
       setFetching(false);
@@ -59,18 +53,11 @@ function TeamPublicPage() {
         setTeam((data ?? null) as TeamRow | null);
         setFetching(false);
       });
-  }, [id, session, loading, navigate]);
-
-  if (!session) {
-    return (
-      <Card className="border-border bg-card p-8 text-center">
-        <Lock className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Faça login para ver este perfil.</p>
-      </Card>
-    );
-  }
+  }, [id, loading]);
 
   if (fetching) return <p className="text-sm text-muted-foreground">Carregando...</p>;
+
+  const isVisitor = !session;
 
   // DB hit
   if (team) {
@@ -79,7 +66,7 @@ function TeamPublicPage() {
         <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar para a busca</Link>
         </Button>
-        <PublicTeamDashboard team={team} />
+        <PublicTeamDashboard team={team} isVisitor={isVisitor} />
       </div>
     );
   }
@@ -91,7 +78,7 @@ function TeamPublicPage() {
         <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar para a busca</Link>
         </Button>
-        <MockTeamDetails team={mockTeam} />
+        <MockTeamDetails team={mockTeam} isVisitor={isVisitor} />
       </div>
     );
   }
