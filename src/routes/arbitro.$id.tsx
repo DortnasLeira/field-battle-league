@@ -229,7 +229,9 @@ function RefereeProfilePage() {
             <h1 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">{referee.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{referee.city}</span>
-              <span className="inline-flex items-center gap-1 text-referee"><Star className="h-3 w-3 fill-current" />{referee.score.toFixed(1)} <span className="text-muted-foreground">({referee.reviews} avaliações)</span></span>
+              {session && (
+                <span className="inline-flex items-center gap-1 text-referee"><Star className="h-3 w-3 fill-current" />{referee.score.toFixed(1)} <span className="text-muted-foreground">({referee.reviews} avaliações)</span></span>
+              )}
               <span className="inline-flex items-center gap-1"><DollarSign className="h-3 w-3" />R$ {referee.pricePerGame}/jogo</span>
               <span>{referee.experienceYears} anos de experiência</span>
             </div>
