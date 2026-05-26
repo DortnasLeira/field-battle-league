@@ -77,7 +77,7 @@ function FieldDetailsPage() {
       const field = (f as SubField | null) ?? null;
       setSf(field);
       if (field?.venue_id) {
-        const { data: v } = await supabase.from("venues" as never).select("*").eq("id", field.venue_id).maybeSingle();
+        const { data: v } = await supabase.from("venues" as never).select("id, owner_user_id, name, city, address, bio, photo_url").eq("id", field.venue_id).maybeSingle();
         if (!cancel) setVenue((v as Venue | null) ?? null);
       }
       setLoading(false);
