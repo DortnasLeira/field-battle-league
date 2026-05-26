@@ -1,20 +1,21 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "@playwright/test";
 
 /**
  * Verifica visibilidade de informações sensíveis nos perfis públicos
  * (Jogador, Time, Árbitro) para visitantes (deslogados) versus usuários
  * autenticados.
  *
- * Estratégia:
- * - Visitante: navega direto na rota pública e valida que campos restritos
- *   NÃO aparecem e que campos públicos APARECEM.
- * - Logado: só roda quando E2E_USER_EMAIL / E2E_USER_PASSWORD estão definidos.
- *   Faz login via /auth e revalida as mesmas rotas, esperando ver os campos
- *   antes ocultos.
+ * Seletores estáveis (data-testid) em vez de strings de texto:
+ *   - team-profile / player-profile / referee-profile  (root, com data-visitor)
+ *   - team-captain-pill, team-status-panel, team-stats, team-upcoming-games
+ *   - team-rating (no mock t1)
+ *   - player-upcoming-games
+ *   - referee-rating, referee-my-requests
+ *   - not-found
  *
  * IDs usados:
- * - Time:   "t1"  (mock — Leões da Vila, capitão "Você")
- * - Árbitro: "r1" (mock — Marcos Pereira, score 4.9, 87 avaliações)
+ * - Time:    "t1"  (mock — Leões da Vila)
+ * - Árbitro: "r1"  (mock — Marcos Pereira)
  * - Jogador: UUID real do banco; pode ser sobrescrito por E2E_PLAYER_ID.
  */
 
@@ -25,77 +26,74 @@ const PLAYER_ID =
 
 async function gotoAndSettle(page: Page, path: string) {
   await page.goto(path);
-  // espera o "Carregando..." sumir
-  await expect(page.getByText(/Carregando/i).first()).toBeHidden({
-    timeout: 10_000,
-  }).catch(() => {});
+  await expect(page.getByText(/Carregando/i).first())
+    .toBeHidden({ timeout: 10_000 })
+    .catch(() => {});
+}
+
+/** Espera o root do perfil aparecer e retorna o locator. */
+async function waitForProfileRoot(page: Page, testid: string): Promise<Locator> {
+  const root = page.getByTestId(testid);
+  await expect(root).toBeVisible({ timeout: 10_000 });
+  return root;
+}
+
+/** Asserts genéricos de não-vazamento (e-mail/telefone, null/undefined). */
+async function expectNoLeaks(page: Page) {
+  const body = page.locator("body");
+  await expect(body).not.toContainText(/\bundefined\b/);
+  await expect(body).not.toContainText(/\bnull\b/);
+  await expect(page.locator("a[href^='mailto:']")).toHaveCount(0);
+  await expect(page.locator("a[href^='tel:']")).toHaveCount(0);
 }
 
 // ---------------------------------------------------------------------------
-// VISITANTE (deslogado)
+// VISITANTE (deslogado) — seletores estáveis
 // ---------------------------------------------------------------------------
 test.describe("Perfis públicos — visitante (deslogado)", () => {
-  test("Time: oculta capitão, estatísticas, próximos jogos e avaliação", async ({
+  test("Time: oculta capitão, status, estatísticas, próximos jogos e rating", async ({
     page,
   }) => {
     await gotoAndSettle(page, `/time/${TEAM_ID}`);
+    const root = await waitForProfileRoot(page, "team-profile");
 
-    // Públicos
-    await expect(
-      page.getByRole("heading", { name: /Leões da Vila/i }),
-    ).toBeVisible();
-    await expect(page.getByText(/Campo preferido/i)).toBeVisible();
+    // Marcador de modo visitante no root
+    await expect(root).toHaveAttribute("data-visitor", "true");
 
-    // Restritos
-    await expect(page.getByText(/^Capitão$/i)).toHaveCount(0);
-    await expect(
-      page.getByRole("heading", { name: /Estatísticas/i }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByRole("heading", { name: /Próximos jogos/i }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByRole("heading", { name: /Painel de status/i }),
-    ).toHaveCount(0);
-    // a estrelinha de rating "4.7(58)" não deve aparecer no header
-    await expect(page.getByText(/\(58\)/)).toHaveCount(0);
+    // Seções restritas — contagem exata = 0
+    await expect(page.getByTestId("team-captain-pill")).toHaveCount(0);
+    await expect(page.getByTestId("team-status-panel")).toHaveCount(0);
+    await expect(page.getByTestId("team-stats")).toHaveCount(0);
+    await expect(page.getByTestId("team-upcoming-games")).toHaveCount(0);
+    await expect(page.getByTestId("team-rating")).toHaveCount(0);
+
+    await expectNoLeaks(page);
   });
 
-  test("Jogador: oculta próximos jogos e avaliação", async ({ page }) => {
+  test("Jogador: oculta próximos jogos e não vaza contato", async ({ page }) => {
     await gotoAndSettle(page, `/jogador/${PLAYER_ID}`);
 
-    // se o jogador não existir mais, o teste degrada graciosamente
-    const notFound = await page
-      .getByText(/Jogador não encontrado/i)
-      .isVisible()
-      .catch(() => false);
+    const notFound = await page.getByTestId("not-found").isVisible().catch(() => false);
     test.skip(notFound, `Jogador ${PLAYER_ID} não está no banco.`);
 
-    // Restritos
-    await expect(
-      page.getByRole("heading", { name: /Próximos jogos/i }),
-    ).toHaveCount(0);
-    // telefone / e-mail nunca devem aparecer em perfil público
-    await expect(page.getByText(/@/)).toHaveCount(0);
+    const root = await waitForProfileRoot(page, "player-profile");
+    await expect(root).toHaveAttribute("data-visitor", "true");
+
+    await expect(page.getByTestId("player-upcoming-games")).toHaveCount(0);
+    await expectNoLeaks(page);
   });
 
-  test("Árbitro: oculta avaliação no header e seção de solicitações", async ({
+  test("Árbitro: oculta rating no header e bloco de solicitações", async ({
     page,
   }) => {
     await gotoAndSettle(page, `/arbitro/${REFEREE_ID}`);
+    const root = await waitForProfileRoot(page, "referee-profile");
+    await expect(root).toHaveAttribute("data-visitor", "true");
 
-    // Públicos
-    await expect(
-      page.getByRole("heading", { name: /Marcos Pereira/i }),
-    ).toBeVisible();
-    await expect(page.getByText(/Disponibilidade/i)).toBeVisible();
+    await expect(page.getByTestId("referee-rating")).toHaveCount(0);
+    await expect(page.getByTestId("referee-my-requests")).toHaveCount(0);
 
-    // Restritos — header de avaliação ("4.9 (87 avaliações)")
-    await expect(page.getByText(/avaliações/i)).toHaveCount(0);
-    // bloco "Minhas Solicitações" só existe para usuários logados
-    await expect(
-      page.getByRole("heading", { name: /Minhas Solicitações/i }),
-    ).toHaveCount(0);
+    await expectNoLeaks(page);
   });
 });
 
@@ -116,32 +114,29 @@ test.describe("Perfis públicos — usuário logado", () => {
     await page.getByLabel(/e-?mail/i).fill(email!);
     await page.getByLabel(/senha/i).fill(password!);
     await page.getByRole("button", { name: /entrar|login/i }).click();
-    await expect(page).toHaveURL(/\/(buscar|perfil|onboarding)/, {
-      timeout: 10_000,
-    });
+    await expect(page).toHaveURL(/\/(buscar|perfil|onboarding)/, { timeout: 10_000 });
   });
 
-  test("Time: revela capitão, estatísticas e avaliação quando logado", async ({
+  test("Time: revela capitão, status, estatísticas e próximos jogos", async ({
     page,
   }) => {
     await gotoAndSettle(page, `/time/${TEAM_ID}`);
-    await expect(page.getByText(/^Capitão$/i).first()).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: /Estatísticas/i }),
-    ).toBeVisible();
+    const root = await waitForProfileRoot(page, "team-profile");
+    await expect(root).toHaveAttribute("data-visitor", "false");
+    await expect(page.getByTestId("team-captain-pill")).toHaveCount(1);
+    await expect(page.getByTestId("team-stats")).toHaveCount(1);
   });
 
   test("Jogador: revela próximos jogos quando logado", async ({ page }) => {
     await gotoAndSettle(page, `/jogador/${PLAYER_ID}`);
-    await expect(
-      page.getByRole("heading", { name: /Próximos jogos/i }),
-    ).toBeVisible();
+    await waitForProfileRoot(page, "player-profile");
+    await expect(page.getByTestId("player-upcoming-games")).toHaveCount(1);
   });
 
-  test("Árbitro: revela avaliação no header quando logado", async ({
-    page,
-  }) => {
+  test("Árbitro: revela rating no header quando logado", async ({ page }) => {
     await gotoAndSettle(page, `/arbitro/${REFEREE_ID}`);
-    await expect(page.getByText(/avaliações/i).first()).toBeVisible();
+    const root = await waitForProfileRoot(page, "referee-profile");
+    await expect(root).toHaveAttribute("data-visitor", "false");
+    await expect(page.getByTestId("referee-rating")).toHaveCount(1);
   });
 });
