@@ -32,7 +32,7 @@ function PlayerPublicPage() {
   }, [id, loading]);
 
   if (fetching) return <p className="text-sm text-muted-foreground">Carregando...</p>;
-  if (!player) return <p className="text-sm text-muted-foreground">Jogador não encontrado.</p>;
+  if (!player) return <p data-testid="not-found" className="text-sm text-muted-foreground">Jogador não encontrado.</p>;
 
   return (
     <div className="space-y-4">

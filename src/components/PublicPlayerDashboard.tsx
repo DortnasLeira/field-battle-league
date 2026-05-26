@@ -136,7 +136,7 @@ export function PublicPlayerDashboard({ profile, isVisitor = false }: { profile:
   const initials = profile.name.split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="player-profile" data-visitor={isVisitor ? "true" : "false"}>
       <Card className="border-border bg-gradient-hero p-5 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row">
           <div
@@ -293,7 +293,7 @@ export function PublicPlayerDashboard({ profile, isVisitor = false }: { profile:
       </Card>
 
       {!isVisitor && (
-        <Card className="border-border bg-card p-6">
+        <Card data-testid="player-upcoming-games" className="border-border bg-card p-6">
           <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" /> Próximos jogos
           </h2>
