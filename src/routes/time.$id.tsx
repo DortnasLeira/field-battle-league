@@ -83,7 +83,7 @@ function TeamPublicPage() {
     );
   }
 
-  return <p className="text-sm text-muted-foreground">Time não encontrado.</p>;
+  return <p data-testid="not-found" className="text-sm text-muted-foreground">Time não encontrado.</p>;
 }
 
 function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: boolean }) {
@@ -129,7 +129,7 @@ function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: 
   const fieldLabel = preferredField?.name || team.preferredFieldName || "VISITANTE";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="team-profile" data-visitor={isVisitor ? "true" : "false"}>
       <Card className="border-border bg-gradient-hero p-5 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row">
           <div className="relative flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-surface text-5xl ring-2 ring-border">
@@ -152,7 +152,7 @@ function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: 
               {!isVisitor && typeof team.rating === "number" && (
                 <>
                   <span className="text-muted-foreground">·</span>
-                  <span className="inline-flex items-center gap-1 text-primary">
+                  <span data-testid="team-rating" className="inline-flex items-center gap-1 text-primary">
                     <Star className="h-3.5 w-3.5 fill-current" /> {team.rating.toFixed(1)}
                     {team.reviews ? <span className="text-muted-foreground">({team.reviews})</span> : null}
                   </span>
@@ -169,7 +169,11 @@ function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: 
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {!isVisitor && <InfoPill label="Capitão" value={team.captain} />}
+              {!isVisitor && (
+                <div data-testid="team-captain-pill">
+                  <InfoPill label="Capitão" value={team.captain} />
+                </div>
+              )}
               {!isVisitor && <InfoPill label={`Aprov. ${yr}`} value={yrPct === null ? "—" : `${yrPct}%`} />}
               {!isVisitor && <InfoPill label="Aprov. geral" value={`${stats.pct}%`} />}
               {!isVisitor && <InfoPill label="Jogos" value={String(stats.j)} />}
@@ -214,7 +218,7 @@ function MockTeamDetails({ team, isVisitor = false }: { team: Team; isVisitor?: 
       </Card>
 
       {!isVisitor && (
-        <Card className="border-border bg-card p-6">
+        <Card data-testid="team-stats" className="border-border bg-card p-6">
           <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" /> Estatísticas
           </h2>

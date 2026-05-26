@@ -132,7 +132,7 @@ export function PublicTeamDashboard({ team, isVisitor = false }: { team: TeamRow
   }, [completed, team.id]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="team-profile" data-visitor={isVisitor ? "true" : "false"}>
       <Card className="border-border bg-gradient-hero p-5 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row">
           <div className="relative flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl bg-surface text-5xl ring-2 ring-border">
@@ -157,7 +157,11 @@ export function PublicTeamDashboard({ team, isVisitor = false }: { team: TeamRow
             <h1 className="font-display text-2xl uppercase tracking-wide sm:text-3xl">{team.name}</h1>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <InfoPill label="Cidade" value={team.city || "—"} />
-              {!isVisitor && <InfoPill label="Capitão" value={team.captain || "—"} />}
+              {!isVisitor && (
+                <div data-testid="team-captain-pill">
+                  <InfoPill label="Capitão" value={team.captain || "—"} />
+                </div>
+              )}
               <InfoPill label="Dias" value={team.preferred_days?.join(", ") || "—"} />
               <InfoPill label="Horários" value={team.preferred_times?.join(", ") || "—"} />
             </div>
@@ -192,7 +196,7 @@ export function PublicTeamDashboard({ team, isVisitor = false }: { team: TeamRow
       )}
 
       {!isVisitor && (
-        <Card className="border-border bg-card p-6">
+        <Card data-testid="team-status-panel" className="border-border bg-card p-6">
           <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" /> Painel de status
           </h2>
@@ -234,7 +238,7 @@ export function PublicTeamDashboard({ team, isVisitor = false }: { team: TeamRow
       </Card>
 
       {!isVisitor && (
-        <Card className="border-border bg-card p-6">
+        <Card data-testid="team-stats" className="border-border bg-card p-6">
           <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" /> Estatísticas
           </h2>
@@ -306,7 +310,7 @@ export function PublicTeamDashboard({ team, isVisitor = false }: { team: TeamRow
       </Card>
 
       {!isVisitor && (
-        <Card className="border-border bg-card p-6">
+        <Card data-testid="team-upcoming-games" className="border-border bg-card p-6">
           <h2 className="font-display text-xl uppercase tracking-wide flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" /> Próximos jogos
           </h2>

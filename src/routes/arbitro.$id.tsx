@@ -133,7 +133,7 @@ function RefereeProfilePage() {
 
   if (!referee) {
     return (
-      <Card className="border-border bg-card p-8 text-center text-sm text-muted-foreground">
+      <Card data-testid="not-found" className="border-border bg-card p-8 text-center text-sm text-muted-foreground">
         Árbitro não encontrado. <Link to="/buscar" className="text-primary underline">Voltar à busca</Link>
       </Card>
     );
@@ -209,7 +209,7 @@ function RefereeProfilePage() {
   const upcoming = referee.hireHistory.filter((h) => h.status === "scheduled");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="referee-profile" data-visitor={!session ? "true" : "false"}>
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link to="/buscar"><ArrowLeft className="mr-1 h-4 w-4" /> Voltar à busca</Link>
       </Button>
@@ -230,7 +230,7 @@ function RefereeProfilePage() {
             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{referee.city}</span>
               {session && (
-                <span className="inline-flex items-center gap-1 text-referee"><Star className="h-3 w-3 fill-current" />{referee.score.toFixed(1)} <span className="text-muted-foreground">({referee.reviews} avaliações)</span></span>
+                <span data-testid="referee-rating" className="inline-flex items-center gap-1 text-referee"><Star className="h-3 w-3 fill-current" />{referee.score.toFixed(1)} <span className="text-muted-foreground">({referee.reviews} avaliações)</span></span>
               )}
               <span className="inline-flex items-center gap-1"><DollarSign className="h-3 w-3" />R$ {referee.pricePerGame}/jogo</span>
               <span>{referee.experienceYears} anos de experiência</span>
@@ -365,7 +365,7 @@ function RefereeProfilePage() {
 
       {/* My hire requests */}
       {session && (
-        <Card className="border-border bg-card p-5">
+        <Card data-testid="referee-my-requests" className="border-border bg-card p-5">
           <div className="flex items-center gap-2">
             <Whistle className="h-4 w-4 text-referee" />
             <h2 className="font-display text-lg uppercase tracking-wide">Minhas Solicitações</h2>

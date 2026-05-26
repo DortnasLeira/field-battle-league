@@ -1,13 +1,14 @@
 import { test, expect, type Page } from "@playwright/test";
 
 /**
- * Cobre cenários de borda para perfis públicos:
- * 1. IDs inexistentes → UI mostra mensagem de "não encontrado" e NÃO vaza
- *    nenhum campo sensível (e-mail, telefone, capitão, estatísticas).
- * 2. Perfis com campos nulos/vazios → UI não quebra, não imprime "null"
- *    nem "undefined", e segue ocultando informações restritas a visitantes.
+ * Cobre cenários de borda para perfis públicos usando seletores estáveis
+ * (data-testid) em vez de strings de texto:
  *
- * Não depende de credenciais — roda totalmente como visitante.
+ * 1. IDs inexistentes → renderiza [data-testid="not-found"] e nenhuma
+ *    seção restrita aparece.
+ * 2. Perfis existentes com campos potencialmente nulos → root
+ *    [data-testid="<persona>-profile"][data-visitor="true"] aparece e a UI
+ *    não imprime "null"/"undefined" nem expõe contato.
  */
 
 const FAKE_UUID = "00000000-0000-0000-0000-000000000000";
@@ -22,10 +23,8 @@ async function gotoAndSettle(page: Page, path: string) {
 
 async function expectNoLeaks(page: Page) {
   const body = page.locator("body");
-  // Nunca renderizar literais de valores indefinidos
   await expect(body).not.toContainText(/\bundefined\b/);
   await expect(body).not.toContainText(/\bnull\b/);
-  // Visitantes nunca devem ver e-mail ou telefone
   await expect(page.locator("a[href^='mailto:']")).toHaveCount(0);
   await expect(page.locator("a[href^='tel:']")).toHaveCount(0);
 }
@@ -34,59 +33,73 @@ async function expectNoLeaks(page: Page) {
 // 1) Perfil inexistente
 // ---------------------------------------------------------------------------
 test.describe("Perfis inexistentes — mensagem clara e sem vazamento", () => {
-  test("Time inexistente mostra 'não encontrado'", async ({ page }) => {
+  test("Time inexistente: mostra not-found e nenhuma seção do perfil", async ({
+    page,
+  }) => {
     await gotoAndSettle(page, `/time/${FAKE_UUID}`);
-    await expect(page.getByText(/Time não encontrado/i)).toBeVisible();
+    await expect(page.getByTestId("not-found")).toBeVisible();
+    await expect(page.getByTestId("team-profile")).toHaveCount(0);
+    await expect(page.getByTestId("team-captain-pill")).toHaveCount(0);
+    await expect(page.getByTestId("team-stats")).toHaveCount(0);
+    await expect(page.getByTestId("team-upcoming-games")).toHaveCount(0);
+    await expect(page.getByTestId("team-status-panel")).toHaveCount(0);
     await expectNoLeaks(page);
-    // Campos restritos jamais aparecem
-    await expect(page.getByText(/^Capitão$/i)).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: /Estatísticas/i })).toHaveCount(0);
   });
 
-  test("Jogador inexistente mostra 'não encontrado'", async ({ page }) => {
+  test("Jogador inexistente: mostra not-found e nenhuma seção do perfil", async ({
+    page,
+  }) => {
     await gotoAndSettle(page, `/jogador/${FAKE_UUID}`);
-    await expect(page.getByText(/Jogador não encontrado/i)).toBeVisible();
+    await expect(page.getByTestId("not-found")).toBeVisible();
+    await expect(page.getByTestId("player-profile")).toHaveCount(0);
+    await expect(page.getByTestId("player-upcoming-games")).toHaveCount(0);
     await expectNoLeaks(page);
-    await expect(page.getByRole("heading", { name: /Próximos jogos/i })).toHaveCount(0);
   });
 
-  test("Árbitro inexistente mostra 'não encontrado'", async ({ page }) => {
+  test("Árbitro inexistente: mostra not-found e nenhuma seção do perfil", async ({
+    page,
+  }) => {
     await gotoAndSettle(page, `/arbitro/${FAKE_SLUG}`);
-    await expect(page.getByText(/Árbitro não encontrado/i)).toBeVisible();
+    await expect(page.getByTestId("not-found")).toBeVisible();
+    await expect(page.getByTestId("referee-profile")).toHaveCount(0);
+    await expect(page.getByTestId("referee-rating")).toHaveCount(0);
+    await expect(page.getByTestId("referee-my-requests")).toHaveCount(0);
     await expectNoLeaks(page);
-    await expect(page.getByText(/avaliações/i)).toHaveCount(0);
   });
 });
 
 // ---------------------------------------------------------------------------
-// 2) Perfis existentes com campos potencialmente nulos
+// 2) Perfis existentes com campos nulos — UI resiliente
 // ---------------------------------------------------------------------------
-// Usamos os mocks "t1" (Time) e "r1" (Árbitro) — confirmados nos testes de
-// visibilidade — para garantir que o render não quebre mesmo se cidade,
-// fundação, bio ou avaliação estiverem ausentes para um visitante.
-
 test.describe("Perfis com campos nulos — UI resiliente", () => {
-  test("Time t1: header renderiza sem 'null'/'undefined' para visitante", async ({
+  test("Time t1: root visitante e sem 'null'/'undefined' no DOM", async ({
     page,
   }) => {
     await gotoAndSettle(page, "/time/t1");
-    await expect(
-      page.getByRole("heading", { name: /Leões da Vila/i }),
-    ).toBeVisible();
+    const root = page.getByTestId("team-profile");
+    await expect(root).toBeVisible();
+    await expect(root).toHaveAttribute("data-visitor", "true");
+
+    // Mesmo com campos faltando, nenhuma seção restrita escapa
+    await expect(page.getByTestId("team-captain-pill")).toHaveCount(0);
+    await expect(page.getByTestId("team-stats")).toHaveCount(0);
+    await expect(page.getByTestId("team-rating")).toHaveCount(0);
+    await expect(page.getByTestId("team-upcoming-games")).toHaveCount(0);
+
     await expectNoLeaks(page);
   });
 
-  test("Árbitro r1: header renderiza sem vazar contato para visitante", async ({
+  test("Árbitro r1: root visitante e sem bloco de solicitações", async ({
     page,
   }) => {
     await gotoAndSettle(page, "/arbitro/r1");
-    await expect(
-      page.getByRole("heading", { name: /Marcos Pereira/i }),
-    ).toBeVisible();
+    const root = page.getByTestId("referee-profile");
+    await expect(root).toBeVisible();
+    await expect(root).toHaveAttribute("data-visitor", "true");
+
+    await expect(page.getByTestId("referee-rating")).toHaveCount(0);
+    await expect(page.getByTestId("referee-my-requests")).toHaveCount(0);
+
     await expectNoLeaks(page);
-    // sem bloco "Minhas Solicitações" (somente logado)
-    await expect(
-      page.getByRole("heading", { name: /Minhas Solicitações/i }),
-    ).toHaveCount(0);
   });
 });
