@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Search, Building2, Clock, ChevronRight, Loader2, Lock, CheckCircle2 } from "lucide-react";
+import { MapPin, Search, Building2, Clock, ChevronRight, Loader2, Lock, CheckCircle2, CalendarDays, Sun, Sunset, Moon, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { BookingStripeCheckout } from "@/components/BookingStripeCheckout";
 import { computeSlotPrice, describeRule, type PricingRule } from "@/lib/pricing";
+import { dayIdFor } from "@/lib/pricing";
 
 export const Route = createFileRoute("/campos")({
   head: () => ({
@@ -59,35 +60,119 @@ const TYPE_LABEL: Record<SubField["field_type"], string> = {
   salao: "Salão",
 };
 
+type Period = "morning" | "afternoon" | "night";
+const PERIODS: { id: Period; label: string; range: [string, string]; icon: typeof Sun }[] = [
+  { id: "morning", label: "Manhã (08:00–12:00)", range: ["08:00", "12:00"], icon: Sun },
+  { id: "afternoon", label: "Tarde (12:00–18:00)", range: ["12:00", "18:00"], icon: Sunset },
+  { id: "night", label: "Noite (18:00–23:00)", range: ["18:00", "23:00"], icon: Moon },
+];
+
+const toMin = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+
 function CamposPage() {
   const { session, activeProfile } = useAuth();
   const navigate = useNavigate();
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [allSubFields, setAllSubFields] = useState<SubField[]>([]);
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
+  const [date, setDate] = useState("");
+  const [period, setPeriod] = useState<Period | "">("");
+  const [time, setTime] = useState("");
+  const [bookedKeys, setBookedKeys] = useState<Set<string>>(new Set());
+  const [bookingsLoading, setBookingsLoading] = useState(false);
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+  const [initialSlot, setInitialSlot] = useState<{ date: string; time: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    supabase
-      .from("venues")
-      .select("id, name, city, address, bio, photo_url")
-      .order("name")
-      .then(({ data }) => {
-        setVenues((data ?? []) as Venue[]);
-        setLoading(false);
-      });
+    Promise.all([
+      supabase.from("venues").select("id, name, city, address, bio, photo_url").order("name"),
+      supabase.from("sub_fields")
+        .select("id, venue_id, name, field_type, price_per_hour, available_days, available_times, pricing_rules, photo_url, active")
+        .eq("active", true),
+    ]).then(([v, s]) => {
+      setVenues((v.data ?? []) as Venue[]);
+      setAllSubFields((s.data ?? []) as SubField[]);
+      setLoading(false);
+    });
   }, []);
+
+  // Carrega bookings confirmados (ou pendentes recentes) para a data escolhida
+  useEffect(() => {
+    if (!date) { setBookedKeys(new Set()); return; }
+    setBookingsLoading(true);
+    const start = new Date(`${date}T00:00:00`).toISOString();
+    const end = new Date(`${date}T23:59:59`).toISOString();
+    supabase
+      .from("bookings")
+      .select("sub_field_id, scheduled_at, status, created_at")
+      .gte("scheduled_at", start)
+      .lte("scheduled_at", end)
+      .then(({ data }) => {
+        const keys = new Set<string>();
+        const fiveMinAgo = Date.now() - 5 * 60_000;
+        (data ?? []).forEach((b) => {
+          if (!b.sub_field_id) return;
+          const isBlocking =
+            b.status === "confirmed" ||
+            (b.status === "pending" && new Date(b.created_at).getTime() > fiveMinAgo);
+          if (!isBlocking) return;
+          const d = new Date(b.scheduled_at);
+          const hhmm = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+          keys.add(`${b.sub_field_id}|${hhmm}`);
+        });
+        setBookedKeys(keys);
+        setBookingsLoading(false);
+      });
+  }, [date]);
+
+  const availabilityActive = !!date && (!!period || !!time);
+
+  const availableVenueIds = useMemo(() => {
+    if (!availabilityActive) return null;
+    const dayId = dayIdFor(new Date(`${date}T12:00:00`));
+    let win: [number, number] | null = null;
+    if (time) {
+      const t = toMin(time);
+      win = [t, t + 1]; // exato
+    } else if (period) {
+      const p = PERIODS.find((x) => x.id === period)!;
+      win = [toMin(p.range[0]), toMin(p.range[1])];
+    }
+    const ok = new Set<string>();
+    for (const sf of allSubFields) {
+      if (!sf.available_days?.includes(dayId)) continue;
+      const slots = sf.available_times?.length ? sf.available_times : [];
+      const candidate = slots.filter((t) => {
+        const m = toMin(t);
+        return win![0] <= m && m < win![1];
+      });
+      // Se filtra por horário exato e o campo não publica slots, ainda assim aceita
+      const effective = time && candidate.length === 0 && slots.length === 0 ? [time] : candidate;
+      const free = effective.some((t) => !bookedKeys.has(`${sf.id}|${t}`));
+      if (free) ok.add(sf.venue_id);
+    }
+    return ok;
+  }, [availabilityActive, allSubFields, bookedKeys, date, period, time]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return venues.filter((v) => {
       if (q && !v.name.toLowerCase().includes(q) && !(v.address ?? "").toLowerCase().includes(q)) return false;
       if (city && !(v.city ?? "").toLowerCase().includes(city.toLowerCase())) return false;
+      if (availableVenueIds && !availableVenueIds.has(v.id)) return false;
       return true;
     });
-  }, [venues, query, city]);
+  }, [venues, query, city, availableVenueIds]);
+
+  const filtersCount = (date ? 1 : 0) + (period ? 1 : 0) + (time ? 1 : 0);
+
+  const clearAvailability = () => { setDate(""); setPeriod(""); setTime(""); };
 
   return (
     <div className="space-y-6">
@@ -98,7 +183,7 @@ function CamposPage() {
         </p>
       </div>
 
-      <Card className="border-border bg-card p-4">
+      <Card className="space-y-4 border-border bg-card p-4">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -113,20 +198,107 @@ function CamposPage() {
             <CityCombobox value={city} onChange={setCity} placeholder="Cidade" />
           </div>
         </div>
+
+        <div className="border-t border-border pt-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-display uppercase tracking-wider text-primary">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Disponibilidade
+              {filtersCount > 0 && (
+                <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                  {filtersCount}
+                </span>
+              )}
+            </div>
+            {filtersCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearAvailability} className="h-7 text-xs text-muted-foreground">
+                <X className="mr-1 h-3 w-3" /> Limpar
+              </Button>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label className="text-[11px] uppercase text-muted-foreground">Data</Label>
+              <Input
+                type="date"
+                value={date}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setDate(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-[11px] uppercase text-muted-foreground">Horário preferido</Label>
+              <div className="mt-1 grid grid-cols-3 gap-1">
+                {PERIODS.map((p) => {
+                  const Icon = p.icon;
+                  const active = period === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => { setPeriod(active ? "" : p.id); setTime(""); }}
+                      className={`flex flex-col items-center justify-center gap-0.5 rounded-md border px-2 py-1.5 text-[10px] uppercase tracking-wide transition ${
+                        active
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                      }`}
+                      title={p.label}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {p.id === "morning" ? "Manhã" : p.id === "afternoon" ? "Tarde" : "Noite"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <Label className="text-[11px] uppercase text-muted-foreground">
+                <Clock className="mr-1 inline h-3 w-3" /> Horário exato (opcional)
+              </Label>
+              <Input
+                type="time"
+                value={time}
+                onChange={(e) => { setTime(e.target.value); if (e.target.value) setPeriod(""); }}
+                className="mt-1"
+                disabled={!date}
+              />
+            </div>
+          </div>
+          {date && !period && !time && (
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Selecione um período ou horário exato para filtrar campos disponíveis.
+            </p>
+          )}
+        </div>
       </Card>
 
       {loading ? (
         <div className="flex justify-center p-10 text-muted-foreground">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
+      ) : bookingsLoading && availabilityActive ? (
+        <div className="flex justify-center p-10 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
       ) : filtered.length === 0 ? (
         <Card className="border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          Nenhum estabelecimento encontrado.
+          {availabilityActive
+            ? "Nenhum campo disponível para a data e horário selecionados."
+            : "Nenhum estabelecimento encontrado."}
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((v) => (
-            <VenueCard key={v.id} venue={v} onOpen={() => setSelectedVenue(v)} />
+            <VenueCard
+              key={v.id}
+              venue={v}
+              onOpen={() => {
+                setInitialSlot(date && (time || period) ? { date, time } : null);
+                setSelectedVenue(v);
+              }}
+            />
           ))}
         </div>
       )}
@@ -136,6 +308,7 @@ function CamposPage() {
           {selectedVenue && (
             <VenueSubFields
               venue={selectedVenue}
+              initialSlot={initialSlot}
               onClose={() => setSelectedVenue(null)}
               authed={!!session}
               canBook={activeProfile?.type === "player" || activeProfile?.type === "team"}
@@ -152,9 +325,10 @@ function CamposPage() {
 }
 
 function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: () => void }) {
+  const address = venue.address?.trim() ? venue.address : "Não definido";
   return (
-    <Card className="overflow-hidden border-border bg-card p-0">
-      <div className="relative h-28 bg-gradient-primary/40">
+    <Card className="flex h-full min-h-[280px] flex-col overflow-hidden border-border bg-card p-0">
+      <div className="relative h-28 flex-shrink-0 bg-gradient-primary/40">
         {venue.photo_url ? (
           <img src={venue.photo_url} alt={venue.name} className="h-full w-full object-cover" />
         ) : (
@@ -163,17 +337,19 @@ function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: () => void }) {
           </div>
         )}
       </div>
-      <div className="space-y-2 p-4">
-        <div className="font-display text-lg uppercase tracking-wide">{venue.name}</div>
-        {venue.address && (
-          <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
-            <span className="line-clamp-2">{venue.address}</span>
-          </div>
-        )}
-        <Button onClick={onOpen} variant="outline" size="sm" className="w-full">
-          Ver campos disponíveis <ChevronRight className="ml-1 h-3.5 w-3.5" />
-        </Button>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <div className="line-clamp-2 font-display text-lg uppercase tracking-wide">{venue.name}</div>
+        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
+          <span className={`line-clamp-2 ${venue.address?.trim() ? "" : "italic opacity-70"}`}>
+            {address}
+          </span>
+        </div>
+        <div className="mt-auto pt-2">
+          <Button onClick={onOpen} variant="outline" size="sm" className="w-full">
+            Ver campos disponíveis <ChevronRight className="ml-1 h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
     </Card>
   );
