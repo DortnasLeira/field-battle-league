@@ -236,7 +236,7 @@ function ProfileEditor({
       {/* Form */}
       <Card className="border-border bg-card p-5 space-y-5">
         {/* Photo upload (player) */}
-        {type === "player" && (
+        {true && (
           <div className="rounded-lg border border-border bg-surface/60 p-4">
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Foto do perfil</div>
             <div className="mt-3 flex items-center gap-4">
