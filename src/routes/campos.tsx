@@ -170,9 +170,9 @@ function CamposPage() {
     });
   }, [venues, query, city, availableVenueIds]);
 
-  const filtersCount = (date ? 1 : 0) + (period ? 1 : 0) + (time ? 1 : 0);
+  const filtersCount = (city ? 1 : 0) + (date ? 1 : 0) + (period ? 1 : 0) + (time ? 1 : 0);
 
-  const clearAvailability = () => { setDate(""); setPeriod(""); setTime(""); };
+  const clearAll = () => { setCity(""); setDate(""); setPeriod(""); setTime(""); };
 
   return (
     <div className="space-y-6">
