@@ -357,12 +357,14 @@ function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: () => void }) {
 
 function VenueSubFields({
   venue,
+  initialSlot,
   onClose,
   authed,
   canBook,
   onLogin,
 }: {
   venue: Venue;
+  initialSlot?: { date: string; time: string } | null;
   onClose: () => void;
   authed: boolean;
   canBook: boolean;
@@ -371,8 +373,8 @@ function VenueSubFields({
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SubField | null>(null);
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [date, setDate] = useState(initialSlot?.date ?? "");
+  const [time, setTime] = useState(initialSlot?.time ?? "");
   const [showCheckout, setShowCheckout] = useState(false);
 
   useEffect(() => {
