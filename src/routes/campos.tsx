@@ -183,96 +183,96 @@ function CamposPage() {
         </p>
       </div>
 
-      <Card className="space-y-4 border-border bg-card p-4">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Nome do estabelecimento ou endereço..."
-              className="pl-9"
-            />
-          </div>
-          <div className="sm:w-60">
-            <CityCombobox value={city} onChange={setCity} placeholder="Cidade" />
-          </div>
+      <Card className="space-y-3 border-border bg-card p-4">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Nome do estabelecimento ou endereço..."
+            className="pl-9"
+          />
         </div>
 
-        <div className="border-t border-border pt-3">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-display uppercase tracking-wider text-primary">
-              <CalendarDays className="h-3.5 w-3.5" />
-              Disponibilidade
-              {filtersCount > 0 && (
-                <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
-                  {filtersCount}
-                </span>
-              )}
-            </div>
-            {filtersCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearAvailability} className="h-7 text-xs text-muted-foreground">
-                <X className="mr-1 h-3 w-3" /> Limpar
-              </Button>
-            )}
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3">
+        <FiltersPanel count={filtersCount} onClear={clearAll}>
+          <div className="space-y-4">
             <div>
-              <Label className="text-[11px] uppercase text-muted-foreground">Data</Label>
-              <Input
-                type="date"
-                value={date}
-                min={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-[11px] uppercase text-muted-foreground">Horário preferido</Label>
-              <div className="mt-1 grid grid-cols-3 gap-1">
-                {PERIODS.map((p) => {
-                  const Icon = p.icon;
-                  const active = period === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => { setPeriod(active ? "" : p.id); setTime(""); }}
-                      className={`flex flex-col items-center justify-center gap-0.5 rounded-md border px-2 py-1.5 text-[10px] uppercase tracking-wide transition ${
-                        active
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      }`}
-                      title={p.label}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {p.id === "morning" ? "Manhã" : p.id === "afternoon" ? "Tarde" : "Noite"}
-                    </button>
-                  );
-                })}
+              <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Cidade
+              </Label>
+              <div className="mt-1">
+                <CityCombobox value={city} onChange={setCity} placeholder="Cidade" />
               </div>
             </div>
-            <div>
-              <Label className="text-[11px] uppercase text-muted-foreground">
-                <Clock className="mr-1 inline h-3 w-3" /> Horário exato (opcional)
-              </Label>
-              <Input
-                type="time"
-                value={time}
-                onChange={(e) => { setTime(e.target.value); if (e.target.value) setPeriod(""); }}
-                className="mt-1"
-                disabled={!date}
-              />
+
+            <div className="border-t border-border pt-3">
+              <div className="mb-2 flex items-center gap-2 text-xs font-display uppercase tracking-wider text-primary">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Disponibilidade
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Data
+                  </Label>
+                  <Input
+                    type="date"
+                    value={date}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Horário preferido
+                  </Label>
+                  <div className="mt-1 grid grid-cols-3 gap-1">
+                    {PERIODS.map((p) => {
+                      const Icon = p.icon;
+                      const active = period === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => { setPeriod(active ? "" : p.id); setTime(""); }}
+                          className={`flex flex-col items-center justify-center gap-0.5 rounded-md border px-2 py-1.5 text-[10px] uppercase tracking-wide transition ${
+                            active
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                          }`}
+                          title={p.label}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                          {p.id === "morning" ? "Manhã" : p.id === "afternoon" ? "Tarde" : "Noite"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Clock className="mr-1 inline h-3 w-3" /> Horário exato (opcional)
+                  </Label>
+                  <Input
+                    type="time"
+                    value={time}
+                    onChange={(e) => { setTime(e.target.value); if (e.target.value) setPeriod(""); }}
+                    className="mt-1"
+                    disabled={!date}
+                  />
+                </div>
+              </div>
+              {date && !period && !time && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  Selecione um período ou horário exato para filtrar campos disponíveis.
+                </p>
+              )}
             </div>
           </div>
-          {date && !period && !time && (
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Selecione um período ou horário exato para filtrar campos disponíveis.
-            </p>
-          )}
-        </div>
+        </FiltersPanel>
       </Card>
+
 
       {loading ? (
         <div className="flex justify-center p-10 text-muted-foreground">
