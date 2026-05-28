@@ -33,6 +33,29 @@ type Kind = "all" | "players" | "teams" | "referees";
 const ALL_POSITIONS = ["Goleiro", "Zagueiro", "Lateral", "Volante", "Meia", "Atacante"];
 const ALL_LEVELS = ["Iniciante", "Intermediário", "Avançado"];
 
+const DAY_IDS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const DAYS: { id: typeof DAY_IDS[number]; label: string }[] = [
+  { id: "mon", label: "Seg" },
+  { id: "tue", label: "Ter" },
+  { id: "wed", label: "Qua" },
+  { id: "thu", label: "Qui" },
+  { id: "fri", label: "Sex" },
+  { id: "sat", label: "Sáb" },
+  { id: "sun", label: "Dom" },
+];
+// Mock teams use short PT labels in preferredDays; map id → label
+const DAY_LABEL_PT: Record<string, string> = {
+  mon: "Seg", tue: "Ter", wed: "Qua", thu: "Qui", fri: "Sex", sat: "Sáb", sun: "Dom",
+};
+const dayIdOfDate = (yyyymmdd: string) => DAY_IDS[new Date(`${yyyymmdd}T12:00:00`).getDay()];
+
+type Period = "morning" | "afternoon" | "night";
+const PERIODS: { id: Period; label: string; slots: string[] }[] = [
+  { id: "morning",   label: "Manhã",  slots: ["08:00", "09:00", "10:00", "11:00"] },
+  { id: "afternoon", label: "Tarde",  slots: ["13:00", "14:00", "15:00", "16:00"] },
+  { id: "night",     label: "Noite",  slots: ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00"] },
+];
+
 function BuscarPage() {
   const [kind, setKind] = useState<Kind>("all");
   const [query, setQuery] = useState("");
