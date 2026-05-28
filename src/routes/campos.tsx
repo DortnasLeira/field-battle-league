@@ -62,10 +62,10 @@ const TYPE_LABEL: Record<SubField["field_type"], string> = {
 };
 
 type Period = "morning" | "afternoon" | "night";
-const PERIODS: { id: Period; label: string; range: [string, string]; icon: typeof Sun }[] = [
-  { id: "morning", label: "Manhã (08:00–12:00)", range: ["08:00", "12:00"], icon: Sun },
-  { id: "afternoon", label: "Tarde (12:00–18:00)", range: ["12:00", "18:00"], icon: Sunset },
-  { id: "night", label: "Noite (18:00–23:00)", range: ["18:00", "23:00"], icon: Moon },
+const PERIODS: { id: Period; label: string; range: [string, string]; icon: typeof Sun; slots: string[] }[] = [
+  { id: "morning",   label: "Manhã (08:00–12:00)",  range: ["08:00", "12:00"], icon: Sun,    slots: ["08:00", "09:00", "10:00", "11:00"] },
+  { id: "afternoon", label: "Tarde (13:00–17:00)",  range: ["13:00", "17:00"], icon: Sunset, slots: ["13:00", "14:00", "15:00", "16:00"] },
+  { id: "night",     label: "Noite (18:00–24:00)",  range: ["18:00", "24:00"], icon: Moon,   slots: ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00"] },
 ];
 
 const toMin = (hhmm: string) => {
