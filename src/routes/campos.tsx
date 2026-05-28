@@ -251,22 +251,41 @@ function CamposPage() {
                     })}
                   </div>
                 </div>
-                <div>
+                <div className="sm:col-span-3">
                   <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     <Clock className="mr-1 inline h-3 w-3" /> Horário exato (opcional)
                   </Label>
-                  <Input
-                    type="time"
-                    value={time}
-                    onChange={(e) => { setTime(e.target.value); if (e.target.value) setPeriod(""); }}
-                    className="mt-1"
-                    disabled={!date}
-                  />
+                  {!period ? (
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      Selecione um período acima para escolher um horário específico.
+                    </p>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {PERIODS.find((p) => p.id === period)!.slots.map((t) => {
+                        const on = time === t;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setTime(on ? "" : t)}
+                            disabled={!date}
+                            className={`rounded-md border px-2.5 py-1 font-mono text-xs transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                              on
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
               {date && !period && !time && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
-                  Selecione um período ou horário exato para filtrar campos disponíveis.
+                  Selecione um período para filtrar campos disponíveis.
                 </p>
               )}
             </div>
