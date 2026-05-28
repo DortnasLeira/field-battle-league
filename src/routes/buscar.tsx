@@ -217,67 +217,147 @@ function BuscarPage() {
 
         <div className="mt-3">
           <FiltersPanel count={filterCount} onClear={clear}>
-            {isReferees ? (
+            <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div>
                   <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <MapPin className="mr-0.5 inline h-3 w-3" /> Cidade {activeProfile?.city && city === activeProfile.city && <span className="text-primary">(auto)</span>}
+                    <MapPin className="mr-0.5 inline h-3 w-3" /> Cidade{" "}
+                    {activeProfile?.city && city === activeProfile.city && (
+                      <span className="text-primary">(auto)</span>
+                    )}
                   </Label>
-                  <div className="mt-1"><CityCombobox value={city} onChange={setCity} placeholder="Sua cidade" /></div>
+                  <div className="mt-1">
+                    <CityCombobox value={city} onChange={setCity} placeholder="Sua cidade" />
+                  </div>
                 </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <DollarSign className="mr-0.5 inline h-3 w-3" /> Preço máx. por jogo
-                  </Label>
-                  <Input type="number" value={refMaxPrice} onChange={(e) => setRefMaxPrice(e.target.value)} placeholder="R$ 200" className="mt-1" />
-                </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <Star className="mr-0.5 inline h-3 w-3" /> Score mínimo
-                  </Label>
-                  <select value={refMinScore} onChange={(e) => setRefMinScore(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
-                    <option value="">Qualquer</option>
-                    <option value="3">3.0+</option>
-                    <option value="4">4.0+</option>
-                    <option value="4.5">4.5+</option>
-                    <option value="4.8">4.8+</option>
-                  </select>
-                </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <Calendar className="mr-0.5 inline h-3 w-3" /> Data
-                  </Label>
-                  <Input type="date" value={refDate} onChange={(e) => setRefDate(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <Clock className="mr-0.5 inline h-3 w-3" /> Horário
-                  </Label>
-                  <Input type="time" value={refTime} onChange={(e) => setRefTime(e.target.value)} className="mt-1" />
-                </div>
+
+                {isReferees ? (
+                  <>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <DollarSign className="mr-0.5 inline h-3 w-3" /> Preço máx. por jogo
+                      </Label>
+                      <Input type="number" value={refMaxPrice} onChange={(e) => setRefMaxPrice(e.target.value)} placeholder="R$ 200" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <Star className="mr-0.5 inline h-3 w-3" /> Score mínimo
+                      </Label>
+                      <select value={refMinScore} onChange={(e) => setRefMinScore(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                        <option value="">Qualquer</option>
+                        <option value="3">3.0+</option>
+                        <option value="4">4.0+</option>
+                        <option value="4.5">4.5+</option>
+                        <option value="4.8">4.8+</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Posição</Label>
+                      <select value={position} onChange={(e) => setPosition(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                        <option value="">Todas</option>
+                        {ALL_POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
+                      <select value={level} onChange={(e) => setLevel(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                        <option value="">Todos</option>
+                        {ALL_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                    </div>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
-                  <div className="mt-1"><CityCombobox value={city} onChange={setCity} placeholder="Ex: São Paulo/SP" /></div>
+
+              <div className="border-t border-border pt-3 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-display uppercase tracking-wider text-primary">
+                  <Calendar className="h-3.5 w-3.5" /> Disponibilidade
                 </div>
+
                 <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Posição</Label>
-                  <select value={position} onChange={(e) => setPosition(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
-                    <option value="">Todas</option>
-                    {ALL_POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Dia da semana
+                  </Label>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {DAYS.map((d) => {
+                      const on = dayOfWeek === d.id;
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => setDayOfWeek(on ? "" : d.id)}
+                          className={cn(
+                            "rounded-md border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition",
+                            on
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                          )}
+                        >
+                          {d.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
                 <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
-                  <select value={level} onChange={(e) => setLevel(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
-                    <option value="">Todos</option>
-                    {ALL_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-                  </select>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Clock className="mr-0.5 inline h-3 w-3" /> Horário preferido
+                  </Label>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {PERIODS.map((p) => {
+                      const on = period === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => { setPeriod(on ? "" : p.id); setPreferredTime(""); }}
+                          className={cn(
+                            "rounded-md border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition",
+                            on
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                          )}
+                        >
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {period && (
+                  <div>
+                    <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Horário exato (opcional)
+                    </Label>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {periodSlots.map((t) => {
+                        const on = preferredTime === t;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setPreferredTime(on ? "" : t)}
+                            className={cn(
+                              "rounded-md border px-2.5 py-1 font-mono text-xs transition",
+                              on
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                            )}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </FiltersPanel>
         </div>
       </Card>
