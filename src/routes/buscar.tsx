@@ -33,6 +33,29 @@ type Kind = "all" | "players" | "teams" | "referees";
 const ALL_POSITIONS = ["Goleiro", "Zagueiro", "Lateral", "Volante", "Meia", "Atacante"];
 const ALL_LEVELS = ["Iniciante", "Intermediário", "Avançado"];
 
+const DAY_IDS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const DAYS: { id: typeof DAY_IDS[number]; label: string }[] = [
+  { id: "mon", label: "Seg" },
+  { id: "tue", label: "Ter" },
+  { id: "wed", label: "Qua" },
+  { id: "thu", label: "Qui" },
+  { id: "fri", label: "Sex" },
+  { id: "sat", label: "Sáb" },
+  { id: "sun", label: "Dom" },
+];
+// Mock teams use short PT labels in preferredDays; map id → label
+const DAY_LABEL_PT: Record<string, string> = {
+  mon: "Seg", tue: "Ter", wed: "Qua", thu: "Qui", fri: "Sex", sat: "Sáb", sun: "Dom",
+};
+const dayIdOfDate = (yyyymmdd: string) => DAY_IDS[new Date(`${yyyymmdd}T12:00:00`).getDay()];
+
+type Period = "morning" | "afternoon" | "night";
+const PERIODS: { id: Period; label: string; slots: string[] }[] = [
+  { id: "morning",   label: "Manhã",  slots: ["08:00", "09:00", "10:00", "11:00"] },
+  { id: "afternoon", label: "Tarde",  slots: ["13:00", "14:00", "15:00", "16:00"] },
+  { id: "night",     label: "Noite",  slots: ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00"] },
+];
+
 function BuscarPage() {
   const [kind, setKind] = useState<Kind>("all");
   const [query, setQuery] = useState("");
@@ -40,11 +63,17 @@ function BuscarPage() {
   const [position, setPosition] = useState<string>("");
   const [level, setLevel] = useState<string>("");
 
-  // Referee filters
+
+
+
+  // Shared availability filters (apply to teams and referees)
+  const [dayOfWeek, setDayOfWeek] = useState<string>("");
+  const [period, setPeriod] = useState<Period | "">("");
+  const [preferredTime, setPreferredTime] = useState<string>("");
+
+  // Referee-only price/score
   const [refMaxPrice, setRefMaxPrice] = useState<string>("");
   const [refMinScore, setRefMinScore] = useState<string>("");
-  const [refDate, setRefDate] = useState<string>("");
-  const [refTime, setRefTime] = useState<string>("");
 
   const [players, setPlayers] = useState<UserProfile[]>([]);
   const { session, activeProfile } = useAuth();
@@ -70,15 +99,33 @@ function BuscarPage() {
   const q = query.trim().toLowerCase();
   const cityKey = normalizeCity(city);
 
+  const periodSlots = useMemo(
+    () => (period ? PERIODS.find((p) => p.id === period)!.slots : []),
+    [period],
+  );
+  const availabilityActive = !!(dayOfWeek || period || preferredTime);
+
+  const matchesTime = (times: string[] | undefined | null) => {
+    if (!availabilityActive) return true;
+    const list = times ?? [];
+    if (preferredTime) return list.includes(preferredTime);
+    if (period) return list.some((t) => periodSlots.includes(t));
+    return true;
+  };
+
   const filteredTeams = useMemo(() => {
     return mockTeams.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q) && !t.captain.toLowerCase().includes(q)) return false;
       if (cityKey && !normalizeCity(t.city).includes(cityKey)) return false;
+      if (dayOfWeek && !(t.preferredDays ?? []).includes(DAY_LABEL_PT[dayOfWeek])) return false;
+      if (!matchesTime(t.preferredTimes)) return false;
       return true;
     });
-  }, [q, cityKey]);
+  }, [q, cityKey, dayOfWeek, period, preferredTime]);
 
   const filteredPlayers = useMemo(() => {
+    // Players don't expose availability — hide them when availability filters are on.
+    if (availabilityActive) return [];
     return players.filter((p) => {
       const name = (p.name || "").toLowerCase();
       const nick = (p.nickname || "").toLowerCase();
@@ -88,7 +135,7 @@ function BuscarPage() {
       if (level && p.level !== level) return false;
       return true;
     });
-  }, [players, q, cityKey, position, level]);
+  }, [players, q, cityKey, position, level, availabilityActive]);
 
   const filteredReferees = useMemo(() => {
     return mockReferees.filter((r) => {
@@ -96,16 +143,20 @@ function BuscarPage() {
       if (cityKey && !normalizeCity(r.city).includes(cityKey)) return false;
       if (refMaxPrice && r.pricePerGame > Number(refMaxPrice)) return false;
       if (refMinScore && r.score < Number(refMinScore)) return false;
-      if (refDate && !r.availableDays.includes(refDate)) return false;
-      if (refTime && !r.availableTimes.includes(refTime)) return false;
+      if (dayOfWeek) {
+        const hasDay = (r.availableDays ?? []).some((d) => dayIdOfDate(d) === dayOfWeek);
+        if (!hasDay) return false;
+      }
+      if (!matchesTime(r.availableTimes)) return false;
       return true;
     });
-  }, [q, cityKey, refMaxPrice, refMinScore, refDate, refTime]);
+  }, [q, cityKey, refMaxPrice, refMinScore, dayOfWeek, period, preferredTime]);
 
   const isReferees = kind === "referees";
+  const sharedCount = [city, dayOfWeek, period, preferredTime].filter(Boolean).length;
   const filterCount = isReferees
-    ? [city, refMaxPrice, refMinScore, refDate, refTime].filter(Boolean).length
-    : [city, position, level].filter(Boolean).length;
+    ? sharedCount + [refMaxPrice, refMinScore].filter(Boolean).length
+    : sharedCount + [position, level].filter(Boolean).length;
 
   const clear = () => {
     setCity("");
@@ -113,9 +164,11 @@ function BuscarPage() {
     setLevel("");
     setRefMaxPrice("");
     setRefMinScore("");
-    setRefDate("");
-    setRefTime("");
+    setDayOfWeek("");
+    setPeriod("");
+    setPreferredTime("");
   };
+
 
   const showTeams = kind === "all" || kind === "teams";
   const showPlayers = kind === "all" || kind === "players";
@@ -164,67 +217,147 @@ function BuscarPage() {
 
         <div className="mt-3">
           <FiltersPanel count={filterCount} onClear={clear}>
-            {isReferees ? (
+            <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div>
                   <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <MapPin className="mr-0.5 inline h-3 w-3" /> Cidade {activeProfile?.city && city === activeProfile.city && <span className="text-primary">(auto)</span>}
+                    <MapPin className="mr-0.5 inline h-3 w-3" /> Cidade{" "}
+                    {activeProfile?.city && city === activeProfile.city && (
+                      <span className="text-primary">(auto)</span>
+                    )}
                   </Label>
-                  <div className="mt-1"><CityCombobox value={city} onChange={setCity} placeholder="Sua cidade" /></div>
+                  <div className="mt-1">
+                    <CityCombobox value={city} onChange={setCity} placeholder="Sua cidade" />
+                  </div>
                 </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <DollarSign className="mr-0.5 inline h-3 w-3" /> Preço máx. por jogo
-                  </Label>
-                  <Input type="number" value={refMaxPrice} onChange={(e) => setRefMaxPrice(e.target.value)} placeholder="R$ 200" className="mt-1" />
-                </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <Star className="mr-0.5 inline h-3 w-3" /> Score mínimo
-                  </Label>
-                  <select value={refMinScore} onChange={(e) => setRefMinScore(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
-                    <option value="">Qualquer</option>
-                    <option value="3">3.0+</option>
-                    <option value="4">4.0+</option>
-                    <option value="4.5">4.5+</option>
-                    <option value="4.8">4.8+</option>
-                  </select>
-                </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <Calendar className="mr-0.5 inline h-3 w-3" /> Data
-                  </Label>
-                  <Input type="date" value={refDate} onChange={(e) => setRefDate(e.target.value)} className="mt-1" />
-                </div>
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <Clock className="mr-0.5 inline h-3 w-3" /> Horário
-                  </Label>
-                  <Input type="time" value={refTime} onChange={(e) => setRefTime(e.target.value)} className="mt-1" />
-                </div>
+
+                {isReferees ? (
+                  <>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <DollarSign className="mr-0.5 inline h-3 w-3" /> Preço máx. por jogo
+                      </Label>
+                      <Input type="number" value={refMaxPrice} onChange={(e) => setRefMaxPrice(e.target.value)} placeholder="R$ 200" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <Star className="mr-0.5 inline h-3 w-3" /> Score mínimo
+                      </Label>
+                      <select value={refMinScore} onChange={(e) => setRefMinScore(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                        <option value="">Qualquer</option>
+                        <option value="3">3.0+</option>
+                        <option value="4">4.0+</option>
+                        <option value="4.5">4.5+</option>
+                        <option value="4.8">4.8+</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Posição</Label>
+                      <select value={position} onChange={(e) => setPosition(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                        <option value="">Todas</option>
+                        {ALL_POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
+                      <select value={level} onChange={(e) => setLevel(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
+                        <option value="">Todos</option>
+                        {ALL_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                    </div>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
-                  <div className="mt-1"><CityCombobox value={city} onChange={setCity} placeholder="Ex: São Paulo/SP" /></div>
+
+              <div className="border-t border-border pt-3 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-display uppercase tracking-wider text-primary">
+                  <Calendar className="h-3.5 w-3.5" /> Disponibilidade
                 </div>
+
                 <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Posição</Label>
-                  <select value={position} onChange={(e) => setPosition(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
-                    <option value="">Todas</option>
-                    {ALL_POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Dia da semana
+                  </Label>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {DAYS.map((d) => {
+                      const on = dayOfWeek === d.id;
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => setDayOfWeek(on ? "" : d.id)}
+                          className={cn(
+                            "rounded-md border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition",
+                            on
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                          )}
+                        >
+                          {d.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
                 <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nível</Label>
-                  <select value={level} onChange={(e) => setLevel(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm">
-                    <option value="">Todos</option>
-                    {ALL_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-                  </select>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Clock className="mr-0.5 inline h-3 w-3" /> Horário preferido
+                  </Label>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {PERIODS.map((p) => {
+                      const on = period === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => { setPeriod(on ? "" : p.id); setPreferredTime(""); }}
+                          className={cn(
+                            "rounded-md border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition",
+                            on
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                          )}
+                        >
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {period && (
+                  <div>
+                    <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Horário exato (opcional)
+                    </Label>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {periodSlots.map((t) => {
+                        const on = preferredTime === t;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setPreferredTime(on ? "" : t)}
+                            className={cn(
+                              "rounded-md border px-2.5 py-1 font-mono text-xs transition",
+                              on
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                            )}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </FiltersPanel>
         </div>
       </Card>
@@ -375,11 +508,11 @@ function BuscarPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Data</Label>
-                <Input type="date" defaultValue={refDate || hireRef?.availableDays[0]} />
+                <Input type="date" defaultValue={hireRef?.availableDays[0]} />
               </div>
               <div>
                 <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Horário</Label>
-                <select className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" defaultValue={refTime}>
+                <select className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" defaultValue={preferredTime || undefined}>
                   {hireRef?.availableTimes.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
