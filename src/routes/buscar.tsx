@@ -77,6 +77,23 @@ function BuscarPage() {
     navigate({ to: "/auth", search: { redirect: window.location.pathname } });
   };
 
+  // Shared availability filters (apply to teams and referees)
+  const [dayOfWeek, setDayOfWeek] = useState<string>("");
+  const [period, setPeriod] = useState<Period | "">("");
+  const [preferredTime, setPreferredTime] = useState<string>("");
+
+  // Referee-only price/score
+  const [refMaxPrice, setRefMaxPrice] = useState<string>("");
+  const [refMinScore, setRefMinScore] = useState<string>("");
+
+  const [players, setPlayers] = useState<UserProfile[]>([]);
+  const { session, activeProfile } = useAuth();
+  const navigate = useNavigate();
+  const requireLogin = () => {
+    toast.error("Faça login para ver o perfil.");
+    navigate({ to: "/auth", search: { redirect: window.location.pathname } });
+  };
+
   useEffect(() => {
     supabase
       .from("user_profiles")
@@ -93,15 +110,33 @@ function BuscarPage() {
   const q = query.trim().toLowerCase();
   const cityKey = normalizeCity(city);
 
+  const periodSlots = useMemo(
+    () => (period ? PERIODS.find((p) => p.id === period)!.slots : []),
+    [period],
+  );
+  const availabilityActive = !!(dayOfWeek || period || preferredTime);
+
+  const matchesTime = (times: string[] | undefined | null) => {
+    if (!availabilityActive) return true;
+    const list = times ?? [];
+    if (preferredTime) return list.includes(preferredTime);
+    if (period) return list.some((t) => periodSlots.includes(t));
+    return true;
+  };
+
   const filteredTeams = useMemo(() => {
     return mockTeams.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q) && !t.captain.toLowerCase().includes(q)) return false;
       if (cityKey && !normalizeCity(t.city).includes(cityKey)) return false;
+      if (dayOfWeek && !(t.preferredDays ?? []).includes(DAY_LABEL_PT[dayOfWeek])) return false;
+      if (!matchesTime(t.preferredTimes)) return false;
       return true;
     });
-  }, [q, cityKey]);
+  }, [q, cityKey, dayOfWeek, period, preferredTime]);
 
   const filteredPlayers = useMemo(() => {
+    // Players don't expose availability — hide them when availability filters are on.
+    if (availabilityActive) return [];
     return players.filter((p) => {
       const name = (p.name || "").toLowerCase();
       const nick = (p.nickname || "").toLowerCase();
@@ -111,7 +146,7 @@ function BuscarPage() {
       if (level && p.level !== level) return false;
       return true;
     });
-  }, [players, q, cityKey, position, level]);
+  }, [players, q, cityKey, position, level, availabilityActive]);
 
   const filteredReferees = useMemo(() => {
     return mockReferees.filter((r) => {
@@ -119,16 +154,20 @@ function BuscarPage() {
       if (cityKey && !normalizeCity(r.city).includes(cityKey)) return false;
       if (refMaxPrice && r.pricePerGame > Number(refMaxPrice)) return false;
       if (refMinScore && r.score < Number(refMinScore)) return false;
-      if (refDate && !r.availableDays.includes(refDate)) return false;
-      if (refTime && !r.availableTimes.includes(refTime)) return false;
+      if (dayOfWeek) {
+        const hasDay = (r.availableDays ?? []).some((d) => dayIdOfDate(d) === dayOfWeek);
+        if (!hasDay) return false;
+      }
+      if (!matchesTime(r.availableTimes)) return false;
       return true;
     });
-  }, [q, cityKey, refMaxPrice, refMinScore, refDate, refTime]);
+  }, [q, cityKey, refMaxPrice, refMinScore, dayOfWeek, period, preferredTime]);
 
   const isReferees = kind === "referees";
+  const sharedCount = [city, dayOfWeek, period, preferredTime].filter(Boolean).length;
   const filterCount = isReferees
-    ? [city, refMaxPrice, refMinScore, refDate, refTime].filter(Boolean).length
-    : [city, position, level].filter(Boolean).length;
+    ? sharedCount + [refMaxPrice, refMinScore].filter(Boolean).length
+    : sharedCount + [position, level].filter(Boolean).length;
 
   const clear = () => {
     setCity("");
@@ -136,9 +175,11 @@ function BuscarPage() {
     setLevel("");
     setRefMaxPrice("");
     setRefMinScore("");
-    setRefDate("");
-    setRefTime("");
+    setDayOfWeek("");
+    setPeriod("");
+    setPreferredTime("");
   };
+
 
   const showTeams = kind === "all" || kind === "teams";
   const showPlayers = kind === "all" || kind === "players";
