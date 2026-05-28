@@ -63,19 +63,8 @@ function BuscarPage() {
   const [position, setPosition] = useState<string>("");
   const [level, setLevel] = useState<string>("");
 
-  // Referee filters
-  const [refMaxPrice, setRefMaxPrice] = useState<string>("");
-  const [refMinScore, setRefMinScore] = useState<string>("");
-  const [refDate, setRefDate] = useState<string>("");
-  const [refTime, setRefTime] = useState<string>("");
 
-  const [players, setPlayers] = useState<UserProfile[]>([]);
-  const { session, activeProfile } = useAuth();
-  const navigate = useNavigate();
-  const requireLogin = () => {
-    toast.error("Faça login para ver o perfil.");
-    navigate({ to: "/auth", search: { redirect: window.location.pathname } });
-  };
+
 
   // Shared availability filters (apply to teams and referees)
   const [dayOfWeek, setDayOfWeek] = useState<string>("");
