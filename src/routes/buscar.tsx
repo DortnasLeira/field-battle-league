@@ -508,11 +508,11 @@ function BuscarPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Data</Label>
-                <Input type="date" defaultValue={refDate || hireRef?.availableDays[0]} />
+                <Input type="date" defaultValue={hireRef?.availableDays[0]} />
               </div>
               <div>
                 <Label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Horário</Label>
-                <select className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" defaultValue={refTime}>
+                <select className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" defaultValue={preferredTime || undefined}>
                   {hireRef?.availableTimes.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
