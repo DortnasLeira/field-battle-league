@@ -475,7 +475,16 @@ function BuscarPage() {
                             toast.error("Apenas perfis de Time podem desafiar outro time.");
                             return;
                           }
-                          navigate({ to: "/desafios", search: { opponent: t.id } });
+                          const periodSlot = period ? PERIODS.find((p) => p.id === period)!.slots[0] : "";
+                          navigate({
+                            to: "/desafios",
+                            search: {
+                              opponent: t.id,
+                              dow: dayOfWeek || undefined,
+                              time: preferredTime || periodSlot || undefined,
+                            },
+                          });
+
                         }}
                         title="Desafiar este time"
                       >

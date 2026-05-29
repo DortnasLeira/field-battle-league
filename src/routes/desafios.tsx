@@ -23,9 +23,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { cityDistanceKm, getCityCoords, getCityUF } from "@/lib/cityDistance";
 
 
+const DOW_IDS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+type Dow = typeof DOW_IDS[number];
+function nextDateForDow(dow: Dow): string {
+  const today = new Date();
+  const target = DOW_IDS.indexOf(dow);
+  const diff = (target - today.getDay() + 7) % 7 || 7;
+  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + diff);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export const Route = createFileRoute("/desafios")({
   validateSearch: (s: Record<string, unknown>) => ({
     opponent: typeof s.opponent === "string" ? s.opponent : undefined,
+    dow: typeof s.dow === "string" && (DOW_IDS as readonly string[]).includes(s.dow) ? (s.dow as Dow) : undefined,
+    time: typeof s.time === "string" && /^\d{2}:\d{2}$/.test(s.time) ? s.time : undefined,
   }),
   head: () => ({
     meta: [
@@ -35,6 +48,7 @@ export const Route = createFileRoute("/desafios")({
   }),
   component: DesafiosPage,
 });
+
 
 function DesafiosPage() {
   const { challenges, currentTeamId, teams, fields, createChallenge } = useStore();
@@ -175,10 +189,11 @@ function DesafiosPage() {
         </TabsContent>
         <TabsContent value="accepted" className="mt-6">
           <ChallengeGrid items={accepted} mode="accepted" empty="Sem batalhas marcadas no momento." />
-        </TabsContent>
+      </TabsContent>
       </Tabs>
 
       <CreateChallengeDialog
+
         open={createOpen}
         onOpenChange={(v) => {
           setCreateOpen(v);
@@ -188,9 +203,12 @@ function DesafiosPage() {
         fields={fields}
         currentTeamId={currentTeamId}
         lockedOpponentId={opponentId}
+        initialDate={search.dow ? nextDateForDow(search.dow) : ""}
+        initialTime={search.time ?? "20:00"}
         canCreate={activeProfile?.type === "team"}
         onSubmit={handleCreate}
       />
+
     </div>
   );
 }
@@ -202,6 +220,8 @@ function CreateChallengeDialog({
   fields,
   currentTeamId,
   lockedOpponentId,
+  initialDate,
+  initialTime,
   canCreate,
   onSubmit,
 }: {
@@ -211,22 +231,27 @@ function CreateChallengeDialog({
   fields: { id: string; name: string }[];
   currentTeamId: string;
   lockedOpponentId?: string;
+  initialDate?: string;
+  initialTime?: string;
   canCreate: boolean;
   onSubmit: (p: { toTeamId: string; fieldId: string; date: string; time: string; message: string }) => void;
 }) {
   const [toTeamId, setToTeamId] = useState<string>(lockedOpponentId ?? "");
   const [fieldId, setFieldId] = useState<string>(fields[0]?.id ?? "");
-  const [date, setDate] = useState<string>("");
-  const [time, setTime] = useState<string>("20:00");
+  const [date, setDate] = useState<string>(initialDate ?? "");
+  const [time, setTime] = useState<string>(initialTime ?? "20:00");
   const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
     if (open) {
       setToTeamId(lockedOpponentId ?? "");
       setFieldId(fields[0]?.id ?? "");
+      setDate(initialDate ?? "");
+      setTime(initialTime ?? "20:00");
       setMessage("");
     }
-  }, [open, lockedOpponentId, fields]);
+  }, [open, lockedOpponentId, fields, initialDate, initialTime]);
+
 
   const opponent = teams.find((t) => t.id === toTeamId);
   const opponentOptions = teams.filter((t) => t.id !== currentTeamId);
