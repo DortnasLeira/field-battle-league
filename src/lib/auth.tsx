@@ -51,6 +51,7 @@ export type UserProfile = {
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
+  profilesLoaded: boolean;
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
   accountType: AccountType | null;
@@ -71,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [accountType, setAccountTypeState] = useState<AccountType | null>(null);
+  const [profilesLoaded, setProfilesLoaded] = useState(false);
 
   // Bootstrap session
   useEffect(() => {
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfiles([]);
       setActiveId(null);
       setAccountTypeState(null);
+      setProfilesLoaded(true);
       return;
     }
     const [{ data: profs }, { data: act }, { data: acct }] = await Promise.all([
@@ -107,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setActiveId(null);
     }
+    setProfilesLoaded(true);
   }, [session]);
 
   useEffect(() => {
@@ -191,6 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     session,
     loading,
+    profilesLoaded,
     profiles,
     activeProfile,
     accountType,
