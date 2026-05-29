@@ -51,6 +51,7 @@ export type UserProfile = {
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
+  profilesLoaded: boolean;
   profiles: UserProfile[];
   activeProfile: UserProfile | null;
   accountType: AccountType | null;
