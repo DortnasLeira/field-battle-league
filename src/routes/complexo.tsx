@@ -87,8 +87,8 @@ function ComplexoPage() {
       navigate({ to: "/auth", search: { redirect: "/complexo" } });
       return;
     }
-    if (accountType !== "business_field") {
-      toast.error("Apenas contas Business podem gerenciar um complexo.");
+    if (accountType !== "business_field" && accountType !== "business") {
+      toast.error("Esta área é exclusiva para complexos esportivos (contas Campo).");
       navigate({ to: "/" });
     }
   }, [session, accountType, loading, navigate]);
