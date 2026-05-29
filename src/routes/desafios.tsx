@@ -220,6 +220,8 @@ function CreateChallengeDialog({
   fields,
   currentTeamId,
   lockedOpponentId,
+  initialDate,
+  initialTime,
   canCreate,
   onSubmit,
 }: {
@@ -229,22 +231,27 @@ function CreateChallengeDialog({
   fields: { id: string; name: string }[];
   currentTeamId: string;
   lockedOpponentId?: string;
+  initialDate?: string;
+  initialTime?: string;
   canCreate: boolean;
   onSubmit: (p: { toTeamId: string; fieldId: string; date: string; time: string; message: string }) => void;
 }) {
   const [toTeamId, setToTeamId] = useState<string>(lockedOpponentId ?? "");
   const [fieldId, setFieldId] = useState<string>(fields[0]?.id ?? "");
-  const [date, setDate] = useState<string>("");
-  const [time, setTime] = useState<string>("20:00");
+  const [date, setDate] = useState<string>(initialDate ?? "");
+  const [time, setTime] = useState<string>(initialTime ?? "20:00");
   const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
     if (open) {
       setToTeamId(lockedOpponentId ?? "");
       setFieldId(fields[0]?.id ?? "");
+      setDate(initialDate ?? "");
+      setTime(initialTime ?? "20:00");
       setMessage("");
     }
-  }, [open, lockedOpponentId, fields]);
+  }, [open, lockedOpponentId, fields, initialDate, initialTime]);
+
 
   const opponent = teams.find((t) => t.id === toTeamId);
   const opponentOptions = teams.filter((t) => t.id !== currentTeamId);
