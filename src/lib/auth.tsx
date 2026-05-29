@@ -91,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfiles([]);
       setActiveId(null);
       setAccountTypeState(null);
+      setProfilesLoaded(true);
       return;
     }
     const [{ data: profs }, { data: act }, { data: acct }] = await Promise.all([
@@ -109,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setActiveId(null);
     }
+    setProfilesLoaded(true);
   }, [session]);
 
   useEffect(() => {
