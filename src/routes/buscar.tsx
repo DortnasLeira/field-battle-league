@@ -113,14 +113,23 @@ function BuscarPage() {
     return true;
   };
 
+  const rankByTime = (times: string[] | undefined | null): number => {
+    const list = times ?? [];
+    if (preferredTime && list.includes(preferredTime)) return 0;
+    if (period && list.some((t) => periodSlots.includes(t))) return 1;
+    return 2;
+  };
+
   const filteredTeams = useMemo(() => {
-    return mockTeams.filter((t) => {
+    const list = mockTeams.filter((t) => {
       if (q && !t.name.toLowerCase().includes(q) && !t.captain.toLowerCase().includes(q)) return false;
       if (cityKey && !normalizeCity(t.city).includes(cityKey)) return false;
       if (dayOfWeek && !(t.preferredDays ?? []).includes(DAY_LABEL_PT[dayOfWeek])) return false;
       if (!matchesTime(t.preferredTimes)) return false;
       return true;
     });
+    if (!availabilityActive) return list;
+    return [...list].sort((a, b) => rankByTime(a.preferredTimes) - rankByTime(b.preferredTimes));
   }, [q, cityKey, dayOfWeek, period, preferredTime]);
 
   const filteredPlayers = useMemo(() => {
@@ -138,7 +147,7 @@ function BuscarPage() {
   }, [players, q, cityKey, position, level, availabilityActive]);
 
   const filteredReferees = useMemo(() => {
-    return mockReferees.filter((r) => {
+    const list = mockReferees.filter((r) => {
       if (q && !r.name.toLowerCase().includes(q)) return false;
       if (cityKey && !normalizeCity(r.city).includes(cityKey)) return false;
       if (refMaxPrice && r.pricePerGame > Number(refMaxPrice)) return false;
@@ -150,7 +159,14 @@ function BuscarPage() {
       if (!matchesTime(r.availableTimes)) return false;
       return true;
     });
+    if (!availabilityActive) return list;
+    return [...list].sort((a, b) => {
+      const byTime = rankByTime(a.availableTimes) - rankByTime(b.availableTimes);
+      if (byTime !== 0) return byTime;
+      return b.score - a.score;
+    });
   }, [q, cityKey, refMaxPrice, refMinScore, dayOfWeek, period, preferredTime]);
+
 
   const isReferees = kind === "referees";
   const sharedCount = [city, dayOfWeek, period, preferredTime].filter(Boolean).length;
