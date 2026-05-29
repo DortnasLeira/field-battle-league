@@ -195,6 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     session,
     loading,
+    profilesLoaded,
     profiles,
     activeProfile,
     accountType,
