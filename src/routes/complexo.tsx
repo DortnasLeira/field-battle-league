@@ -78,6 +78,21 @@ function ComplexoPage() {
   const { session, accountType, loading, activeProfile, profilesLoaded } = useAuth();
   const navigate = useNavigate();
   const [venue, setVenue] = useState<Venue | null>(null);
+  const [subFields, setSubFields] = useState<SubField[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    if (loading || !profilesLoaded) return;
+    if (!session) {
+      navigate({ to: "/auth", search: { redirect: "/complexo" } });
+      return;
+    }
+    const isFieldAccount = accountType === "business_field" || activeProfile?.type === "field";
+    if (!isFieldAccount) {
+      toast.error("Esta área é exclusiva para complexos esportivos (contas Campo).");
+      navigate({ to: "/" });
+    }
+  }, [session, accountType, loading, profilesLoaded, activeProfile, navigate]);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
