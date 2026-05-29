@@ -189,8 +189,11 @@ function DesafiosPage() {
         </TabsContent>
         <TabsContent value="accepted" className="mt-6">
           <ChallengeGrid items={accepted} mode="accepted" empty="Sem batalhas marcadas no momento." />
-        </TabsContent>
+      </TabsContent>
+      </Tabs>
+
       <CreateChallengeDialog
+
         open={createOpen}
         onOpenChange={(v) => {
           setCreateOpen(v);
