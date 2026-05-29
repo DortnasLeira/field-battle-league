@@ -23,9 +23,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { cityDistanceKm, getCityCoords, getCityUF } from "@/lib/cityDistance";
 
 
+const DOW_IDS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+type Dow = typeof DOW_IDS[number];
+function nextDateForDow(dow: Dow): string {
+  const today = new Date();
+  const target = DOW_IDS.indexOf(dow);
+  const diff = (target - today.getDay() + 7) % 7 || 7;
+  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + diff);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export const Route = createFileRoute("/desafios")({
   validateSearch: (s: Record<string, unknown>) => ({
     opponent: typeof s.opponent === "string" ? s.opponent : undefined,
+    dow: typeof s.dow === "string" && (DOW_IDS as readonly string[]).includes(s.dow) ? (s.dow as Dow) : undefined,
+    time: typeof s.time === "string" && /^\d{2}:\d{2}$/.test(s.time) ? s.time : undefined,
   }),
   head: () => ({
     meta: [
@@ -35,6 +48,7 @@ export const Route = createFileRoute("/desafios")({
   }),
   component: DesafiosPage,
 });
+
 
 function DesafiosPage() {
   const { challenges, currentTeamId, teams, fields, createChallenge } = useStore();
