@@ -190,8 +190,6 @@ function DesafiosPage() {
         <TabsContent value="accepted" className="mt-6">
           <ChallengeGrid items={accepted} mode="accepted" empty="Sem batalhas marcadas no momento." />
         </TabsContent>
-      </Tabs>
-
       <CreateChallengeDialog
         open={createOpen}
         onOpenChange={(v) => {
@@ -202,9 +200,12 @@ function DesafiosPage() {
         fields={fields}
         currentTeamId={currentTeamId}
         lockedOpponentId={opponentId}
+        initialDate={search.dow ? nextDateForDow(search.dow) : ""}
+        initialTime={search.time ?? "20:00"}
         canCreate={activeProfile?.type === "team"}
         onSubmit={handleCreate}
       />
+
     </div>
   );
 }
