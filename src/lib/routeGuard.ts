@@ -143,5 +143,5 @@ export function useRouteGuard() {
     }
 
     lastBlocked.current = null;
-  }, [pathname, session, loading, accountType, profiles, navigate]);
+  }, [pathname, session, loading, profilesLoaded, accountType, profiles, navigate]);
 }
