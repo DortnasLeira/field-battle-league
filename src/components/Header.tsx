@@ -36,7 +36,6 @@ const fieldBusinessLinks = [
   { to: "/ligas", label: "Ligas", icon: Trophy },
   { to: "/campos", label: "Campos", icon: MapPin },
   { to: "/desafios", label: "Desafios", icon: Swords },
-  { to: "/complexo", label: "Complexo", icon: Building2 },
 ] as const;
 
 // Business com perfil Árbitro (exclusivo: vê /arbitragem, NÃO vê /complexo)
