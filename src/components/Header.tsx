@@ -168,41 +168,40 @@ function ProfileSwitcher() {
   const hasFieldProfile = profiles.some((p) => p.type === "field");
   const hasRefereeProfile = profiles.some((p) => p.type === "referee");
 
+  const profileButton = (
+    <button
+      className="flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5 transition hover:border-primary/40"
+      title={isBusiness ? "Abrir menu" : "Trocar perfil"}
+    >
+      <div
+        className={cn("flex h-8 w-8 items-center justify-center rounded-md text-lg", frameClass(activeProfile.frame))}
+        style={{ background: activeProfile.color + "22", color: activeProfile.color }}
+      >
+        {activeProfile.avatar ?? PROFILE_TYPE_EMOJI[activeProfile.type]}
+      </div>
+      <div className="hidden text-left leading-tight sm:block">
+        <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+          {PROFILE_TYPE_LABEL[activeProfile.type]}
+        </div>
+        <div className="text-xs font-semibold">{activeProfile.nickname || activeProfile.name}</div>
+      </div>
+      <ChevronsUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
+    </button>
+  );
+
   return (
     <div className="flex items-center gap-1">
-      <button
-        onClick={() => navigate({ to: "/perfil" })}
-        className="flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5 transition hover:border-primary/40"
-        title="Ver meu perfil"
-      >
-        <div
-          className={cn("flex h-8 w-8 items-center justify-center rounded-md text-lg", frameClass(activeProfile.frame))}
-          style={{ background: activeProfile.color + "22", color: activeProfile.color }}
-        >
-          {activeProfile.avatar ?? PROFILE_TYPE_EMOJI[activeProfile.type]}
-        </div>
-        <div className="hidden text-left leading-tight sm:block">
-          <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-            {PROFILE_TYPE_LABEL[activeProfile.type]}
-          </div>
-          <div className="text-xs font-semibold">{activeProfile.nickname || activeProfile.name}</div>
-        </div>
-      </button>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className="flex h-9 items-center justify-center rounded-md border border-border bg-surface px-2 transition hover:border-primary/40"
-            title={isBusiness ? "Menu" : "Trocar perfil"}
-          >
-            <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>{profileButton}</DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           {isBusiness ? (
             <>
               <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Business
+                {activeProfile.nickname || activeProfile.name}
               </DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
+                <User className="mr-2 h-4 w-4" /> Meu perfil
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate({ to: "/painel" })}>
                 <LayoutDashboard className="mr-2 h-4 w-4" /> Painel
               </DropdownMenuItem>
@@ -259,6 +258,9 @@ function ProfileSwitcher() {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
+                <User className="mr-2 h-4 w-4" /> Meu perfil
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
                 <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
               </DropdownMenuItem>
