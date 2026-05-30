@@ -233,6 +233,16 @@ function ProfileSwitcher() {
           ) : (
             <>
               <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                {activeProfile.nickname || activeProfile.name}
+              </DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
+                <User className="mr-2 h-4 w-4" /> Meu perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
+                <Settings className="mr-2 h-4 w-4" /> Editar perfil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                 Trocar perfil
               </DropdownMenuLabel>
               {profiles.map((p) => (
@@ -257,15 +267,8 @@ function ProfileSwitcher() {
                   {p.id === activeProfile.id && <span className="text-[10px] text-primary">●</span>}
                 </DropdownMenuItem>
               ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate({ to: "/perfil" })}>
-                <User className="mr-2 h-4 w-4" /> Meu perfil
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate({ to: "/onboarding" })}>
                 <Plus className="mr-2 h-4 w-4" /> Adicionar tipo de perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate({ to: "/perfil/editar" })}>
-                <Settings className="mr-2 h-4 w-4" /> Editar perfis
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
