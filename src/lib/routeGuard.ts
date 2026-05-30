@@ -73,12 +73,15 @@ const REQUIRES_BUSINESS_PATTERNS = ["/painel"];
 
 export function useRouteGuard() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { session, loading, accountType, profiles } = useAuth();
+  const { session, loading, profilesLoaded, accountType, profiles } = useAuth();
   const navigate = useNavigate();
   const lastBlocked = useRef<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
+    // Aguarda perfis carregarem antes de avaliar guards baseados em tipo de perfil/conta,
+    // para evitar bloqueio prematuro com profiles=[] enquanto o refresh ainda está em voo.
+    if (session && !profilesLoaded) return;
 
     const hasField = profiles.some((p) => p.type === "field");
     const hasReferee = profiles.some((p) => p.type === "referee");
@@ -140,5 +143,5 @@ export function useRouteGuard() {
     }
 
     lastBlocked.current = null;
-  }, [pathname, session, loading, accountType, profiles, navigate]);
+  }, [pathname, session, loading, profilesLoaded, accountType, profiles, navigate]);
 }
