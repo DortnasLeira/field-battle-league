@@ -80,6 +80,8 @@ function ComplexoPage() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const hasFieldProfile = profiles.some((p) => p.type === "field");
+  const canAccessComplexo = accountType === "business_field" || activeProfile?.type === "field" || hasFieldProfile;
 
   useEffect(() => {
     if (loading || !profilesLoaded) return;
@@ -87,19 +89,17 @@ function ComplexoPage() {
       navigate({ to: "/auth", search: { redirect: "/complexo" } });
       return;
     }
-    const hasFieldProfile = profiles.some((p) => p.type === "field");
-    const isFieldAccount =
-      accountType === "business_field" ||
-      activeProfile?.type === "field" ||
-      hasFieldProfile;
-    if (!isFieldAccount) {
+    if (!canAccessComplexo) {
       toast.error("Esta área é exclusiva para complexos esportivos (contas Campo).");
       navigate({ to: "/buscar" });
     }
-  }, [session, accountType, loading, profilesLoaded, profiles, activeProfile, navigate]);
+  }, [session, loading, profilesLoaded, navigate, canAccessComplexo]);
 
   const load = useCallback(async () => {
-    if (!session?.user) return;
+    if (!session?.user || !canAccessComplexo) {
+      setLoadingData(false);
+      return;
+    }
     setLoadingData(true);
     let { data: venues } = await supabase
       .from("venues" as never)
@@ -135,7 +135,7 @@ function ComplexoPage() {
       setSubFields([]);
     }
     setLoadingData(false);
-  }, [session, activeProfile]);
+  }, [session, activeProfile, canAccessComplexo]);
 
   useEffect(() => { load(); }, [load]);
 
