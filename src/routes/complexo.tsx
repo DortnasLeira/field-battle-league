@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import type { PricingRule } from "@/lib/pricing";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/complexo")({
   head: () => ({
