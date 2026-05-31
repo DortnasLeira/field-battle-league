@@ -86,7 +86,7 @@ const TYPE_LABEL: Record<SubFieldType, string> = {
 };
 
 function OwnerPanel() {
-  const { session, accountType, loading } = useAuth();
+  const { session, accountType, loading, profilesLoaded, profiles, activeProfile } = useAuth();
   const navigate = useNavigate();
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [venueId, setVenueId] = useState<string | null>(null);
@@ -100,11 +100,19 @@ function OwnerPanel() {
       navigate({ to: "/auth", search: { redirect: "/painel" } });
       return;
     }
-    if (!isBusinessAccount(accountType)) {
+    // Aguarda perfis carregarem antes de avaliar o tipo de conta para evitar
+    // bloqueio prematuro com accountType=null durante o refresh.
+    if (!profilesLoaded) return;
+    const isBusiness =
+      isBusinessAccount(accountType) ||
+      profiles.some((p) => p.type === "field" || p.type === "referee") ||
+      activeProfile?.type === "field" ||
+      activeProfile?.type === "referee";
+    if (!isBusiness) {
       toast.error("Apenas contas Business têm acesso ao Painel.");
-      navigate({ to: "/" });
+      navigate({ to: "/buscar" });
     }
-  }, [session, accountType, loading, navigate]);
+  }, [session, accountType, loading, profilesLoaded, profiles, activeProfile, navigate]);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
