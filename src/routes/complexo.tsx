@@ -75,24 +75,24 @@ type SubField = {
 };
 
 function ComplexoPage() {
-  const { session, accountType, loading, activeProfile, profilesLoaded } = useAuth();
-  const navigate = useNavigate();
-  const [venue, setVenue] = useState<Venue | null>(null);
-  const [subFields, setSubFields] = useState<SubField[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
-
+  const { session, accountType, loading, activeProfile, profilesLoaded, profiles } = useAuth();
+  // ... keep existing code
   useEffect(() => {
     if (loading || !profilesLoaded) return;
     if (!session) {
       navigate({ to: "/auth", search: { redirect: "/complexo" } });
       return;
     }
-    const isFieldAccount = accountType === "business_field" || activeProfile?.type === "field";
+    const hasFieldProfile = profiles.some((p) => p.type === "field");
+    const isFieldAccount =
+      accountType === "business_field" ||
+      activeProfile?.type === "field" ||
+      hasFieldProfile;
     if (!isFieldAccount) {
       toast.error("Esta área é exclusiva para complexos esportivos (contas Campo).");
-      navigate({ to: "/" });
+      navigate({ to: "/buscar" });
     }
-  }, [session, accountType, loading, profilesLoaded, activeProfile, navigate]);
+  }, [session, accountType, loading, profilesLoaded, profiles, activeProfile, navigate]);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
