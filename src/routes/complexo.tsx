@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import type { PricingRule } from "@/lib/pricing";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/complexo")({
   head: () => ({
@@ -154,6 +155,11 @@ function ComplexoPage() {
     if (error) { toast.error(error.message); return; }
     await load();
   };
+  const bootstrapping = loading || (!!session && !profilesLoaded);
+
+  if (bootstrapping) {
+    return <ComplexoSkeleton />;
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 py-6">
@@ -218,6 +224,57 @@ function ComplexoPage() {
           )}
         </Card>
       )}
+    </div>
+  );
+}
+
+function ComplexoSkeleton() {
+  return (
+    <div className="mx-auto max-w-5xl space-y-6 py-6" aria-busy="true" aria-label="Carregando complexo">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-9 w-72" />
+        <Skeleton className="h-4 w-96 max-w-full" />
+      </div>
+      <Card className="border-border bg-card p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-48" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+          <Skeleton className="h-9 w-40" />
+        </div>
+        <div className="space-y-4">
+          {[0, 1].map((i) => (
+            <div key={i} className="rounded-lg border border-border bg-surface p-4">
+              <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
+                <Skeleton className="aspect-square w-full rounded-md" />
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Skeleton className="h-10 sm:col-span-2" />
+                    <Skeleton className="h-10" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <Skeleton key={j} className="h-7 w-12" />
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from({ length: 10 }).map((_, j) => (
+                      <Skeleton key={j} className="h-6 w-14" />
+                    ))}
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
