@@ -86,6 +86,7 @@ export function useRouteGuard() {
     const hasField = profiles.some((p) => p.type === "field");
     const hasReferee = profiles.some((p) => p.type === "referee");
     const isBusiness = isBusinessAccount(accountType);
+    const canAccessFieldArea = accountType === "business_field" || hasField;
 
     const block = (msg: string, to: string) => {
       if (lastBlocked.current === pathname) return;
@@ -104,7 +105,7 @@ export function useRouteGuard() {
 
     if (anyMatch(pathname, REQUIRES_FIELD_PATTERNS)) {
       if (!session) return block("Faça login para acessar seu complexo.", "/auth");
-      if (!(isBusiness && hasField)) return block("Esta área é exclusiva para complexos esportivos.", "/buscar");
+      if (!canAccessFieldArea) return block("Esta área é exclusiva para complexos esportivos.", "/buscar");
       lastBlocked.current = null;
       return;
     }
