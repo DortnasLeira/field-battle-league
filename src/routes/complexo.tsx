@@ -76,7 +76,11 @@ type SubField = {
 
 function ComplexoPage() {
   const { session, accountType, loading, activeProfile, profilesLoaded, profiles } = useAuth();
-  // ... keep existing code
+  const navigate = useNavigate();
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [subFields, setSubFields] = useState<SubField[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+
   useEffect(() => {
     if (loading || !profilesLoaded) return;
     if (!session) {
