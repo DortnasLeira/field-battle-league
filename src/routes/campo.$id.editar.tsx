@@ -110,7 +110,11 @@ function FieldEditPage() {
     navigate({ to: "/campo/$id", params: { id: sf.id } });
   };
 
-  if (loading || authLoading) {
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando campo" />;
+  }
+
+  if (loading) {
     return (
       <Card className="flex items-center justify-center p-10 text-muted-foreground">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…
