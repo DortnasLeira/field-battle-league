@@ -19,6 +19,8 @@ import {
   type ProfileType,
   type UserProfile,
 } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,15 +34,18 @@ export const Route = createFileRoute("/perfil_/editar")({
 });
 
 function PerfilPage() {
-  const { session, profiles, activeProfile, loading, updateProfile, deleteProfile, setActive } = useAuth();
+  const access = useProtectedAccess("auth", { redirectBack: "/perfil/editar" });
+  const { profiles, activeProfile, updateProfile, deleteProfile, setActive } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth", search: { redirect: "/perfil/editar" } });
-    else if (!loading && session && profiles.length === 0) navigate({ to: "/onboarding" });
-  }, [loading, session, profiles, navigate]);
+    if (access.status === "ready" && profiles.length === 0) {
+      navigate({ to: "/onboarding" });
+    }
+  }, [access.status, profiles.length, navigate]);
 
-  if (!session || !activeProfile) return null;
+  if (access.status === "loading") return <RouteLoadingSkeleton label="Carregando edição de perfil" />;
+  if (!activeProfile) return <RouteLoadingSkeleton label="Carregando perfil ativo" />;
 
   return (
     <div className="space-y-6">
