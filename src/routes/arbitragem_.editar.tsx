@@ -56,26 +56,16 @@ type Referee = {
 };
 
 function EditRefereePage() {
-  const { session, accountType, profiles, loading } = useAuth();
+  const access = useProtectedAccess("referee", {
+    redirectBack: "/arbitragem/editar",
+    deniedMessage: "Apenas árbitros podem acessar esta página.",
+  });
+  const { session, profiles } = useAuth();
   const navigate = useNavigate();
   const [ref, setRef] = useState<Referee | null>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newCert, setNewCert] = useState("");
-
-  const isReferee = isBusinessAccount(accountType) && profiles.some((p) => p.type === "referee");
-
-  useEffect(() => {
-    if (loading) return;
-    if (!session) {
-      navigate({ to: "/auth", search: { redirect: "/arbitragem/editar" } });
-      return;
-    }
-    if (!isReferee) {
-      toast.error("Apenas árbitros podem acessar esta página.");
-      navigate({ to: "/" });
-    }
-  }, [session, loading, isReferee, navigate]);
 
   useEffect(() => {
     (async () => {
