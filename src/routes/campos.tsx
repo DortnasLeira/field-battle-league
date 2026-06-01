@@ -324,7 +324,7 @@ function CamposPage() {
       )}
 
       <Dialog open={!!selectedVenue} onOpenChange={(o) => !o && setSelectedVenue(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           {selectedVenue && (
             <VenueSubFields
               venue={selectedVenue}
@@ -345,6 +345,7 @@ function CamposPage() {
 }
 
 function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: () => void }) {
+  const navigate = useNavigate();
   const address = venue.address?.trim() ? venue.address : "Não definido";
   return (
     <Card className="flex h-full min-h-[280px] flex-col overflow-hidden border-border bg-card p-0">
@@ -358,16 +359,21 @@ function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: () => void }) {
         )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="line-clamp-2 font-display text-lg uppercase tracking-wide">{venue.name}</div>
+        <div className="line-clamp-2 font-display text-lg uppercase tracking-wide text-foreground">
+          {venue.name}
+        </div>
         <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
           <span className={`line-clamp-2 ${venue.address?.trim() ? "" : "italic opacity-70"}`}>
             {address}
           </span>
         </div>
-        <div className="mt-auto pt-2">
-          <Button onClick={onOpen} variant="outline" size="sm" className="w-full">
-            Ver campos disponíveis <ChevronRight className="ml-1 h-3.5 w-3.5" />
+        <div className="mt-auto flex flex-col gap-2 pt-2">
+          <Button onClick={onOpen} variant="default" size="sm" className="w-full bg-gradient-primary text-primary-foreground">
+            <ChevronRight className="mr-1 h-3.5 w-3.5" /> Alugar
+          </Button>
+          <Button onClick={() => navigate({ to: "/complexo/$id", params: { id: venue.id } })} variant="outline" size="sm" className="w-full">
+            Ver perfil
           </Button>
         </div>
       </div>
@@ -505,7 +511,7 @@ function VenueSubFields({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+      <div className="mt-4 space-y-4">
         {loading ? (
           <div className="flex justify-center p-8 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -515,69 +521,99 @@ function VenueSubFields({
             Este estabelecimento ainda não cadastrou campos.
           </div>
         ) : (
-          subFields.map((sf) => {
-            const isSelected = selected?.id === sf.id;
-            return (
-              <button
-                key={sf.id}
-                type="button"
-                onClick={() => { setSelected(sf); setTime(""); }}
-                className={`w-full rounded-lg border p-3 text-left transition ${
-                  isSelected ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/50"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="font-display text-base uppercase tracking-wide">{sf.name}</div>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                      <Badge variant="outline">{TYPE_LABEL[sf.field_type]}</Badge>
-                      {sf.available_days.length > 0 && (
-                        <Badge variant="outline" className="text-[10px]">
-                          {sf.available_days.length} dias/sem
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-mono text-xs text-muted-foreground">R$/h</div>
-                    <div className="font-display text-xl text-primary">
-                      {Number(sf.price_per_hour).toFixed(0)}
-                    </div>
-                  </div>
-                </div>
-                {isSelected && (
-                  <div className="mt-3 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
-                    <div>
-                      <Label className="text-xs">Data</Label>
-                      <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">
-                        <Clock className="mr-1 inline h-3 w-3" /> Horário
-                      </Label>
-                      {sf.available_times.length > 0 ? (
-                        <select
-                          value={time}
-                          onChange={(e) => setTime(e.target.value)}
-                          className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-                        >
-                          <option value="">Escolha</option>
-                          {sf.available_times.map((t) => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      ) : (
-                        <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-                      )}
-                    </div>
-                    {date && time && (
-                      <div className="sm:col-span-2">
-                        <SlotAvailabilityBadge state={availability} />
+          <>
+            {/* Grid compacto de campos com fotos */}
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {subFields.map((sf) => {
+                const isSelected = selected?.id === sf.id;
+                return (
+                  <button
+                    key={sf.id}
+                    type="button"
+                    onClick={() => { setSelected(sf); setTime(""); }}
+                    className={`overflow-hidden rounded-lg border text-left transition ${
+                      isSelected ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "border-border bg-card hover:border-primary/40 hover:shadow-glow"
+                    }`}
+                  >
+                    <div
+                      className="aspect-[16/9] w-full bg-muted"
+                      style={{
+                        backgroundImage: sf.photo_url ? `url(${sf.photo_url})` : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                    <div className="space-y-1.5 p-2.5">
+                      <div className="font-display text-sm uppercase tracking-wide truncate">{sf.name}</div>
+                      <div className="flex flex-wrap gap-1">
+                        <Badge variant="outline" className="text-[10px]">{TYPE_LABEL[sf.field_type]}</Badge>
+                        {sf.available_days.length > 0 && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {sf.available_days.length} dias
+                          </Badge>
+                        )}
                       </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-xs text-muted-foreground">R$/h</span>
+                        <span className="font-display text-base text-primary">
+                          {Number(sf.price_per_hour).toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Painel de seleção de data/horário */}
+            {selected && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <div className="mb-3 font-display text-sm uppercase tracking-wide text-foreground">
+                  {selected.name} — Escolha data e horário
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label className="text-xs">Data</Label>
+                    <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">
+                      <Clock className="mr-1 inline h-3 w-3" /> Horário
+                    </Label>
+                    {selected.available_times.length > 0 ? (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {selected.available_times.map((t) => {
+                          const on = time === t;
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setTime(on ? "" : t)}
+                              disabled={!date}
+                              className={`rounded-md border px-2.5 py-1 font-mono text-xs transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                                on
+                                  ? "border-primary bg-primary/15 text-primary"
+                                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                              }`}
+                            >
+                              {t}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
                     )}
                   </div>
-                )}
-              </button>
-            );
-          })
+                  {date && time && (
+                    <div className="sm:col-span-2">
+                      <SlotAvailabilityBadge state={availability} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
