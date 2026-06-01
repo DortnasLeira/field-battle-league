@@ -108,7 +108,7 @@ function EditRefereePage() {
       }
       setLoadingData(false);
     })();
-  }, [session, profiles]);
+  }, [access.status, session, profiles]);
 
   const toggleDay = (d: string) => {
     setRef((s) => s ? {
