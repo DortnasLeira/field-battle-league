@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard,
@@ -93,7 +93,7 @@ function OwnerPanel() {
     deniedMessage: "Apenas contas Business têm acesso ao Painel.",
   });
   const { session } = useAuth();
-  void useNavigate;
+  
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [venueId, setVenueId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
