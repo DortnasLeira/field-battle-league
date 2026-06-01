@@ -39,7 +39,8 @@ type SubField = {
 
 function FieldEditPage() {
   const { id } = Route.useParams();
-  const { session, loading: authLoading } = useAuth();
+  const access = useProtectedAccess("auth", { redirectBack: `/campo/${id}/editar` });
+  const { session } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -48,10 +49,7 @@ function FieldEditPage() {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !session) navigate({ to: "/auth", search: { redirect: `/campo/${id}/editar` } });
-  }, [authLoading, session, navigate, id]);
-
-  useEffect(() => {
+    if (access.status !== "ready") return;
     let cancel = false;
     (async () => {
       const { data: f } = await supabase
