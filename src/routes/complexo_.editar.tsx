@@ -91,6 +91,10 @@ function EditVenuePage() {
     navigate({ to: "/perfil" });
   };
 
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando estabelecimento" />;
+  }
+
   if (loadingData) {
     return (
       <Card className="flex items-center justify-center p-10 text-muted-foreground">
