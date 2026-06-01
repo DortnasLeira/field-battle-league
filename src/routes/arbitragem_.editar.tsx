@@ -171,6 +171,10 @@ function EditRefereePage() {
     navigate({ to: "/arbitragem" });
   };
 
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando perfil de árbitro" />;
+  }
+
   if (loadingData || !ref) {
     return (
       <Card className="flex items-center justify-center p-10 text-muted-foreground">
