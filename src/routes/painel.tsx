@@ -20,7 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, isBusinessAccount } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 
 export const Route = createFileRoute("/painel")({
   head: () => ({
@@ -86,33 +88,17 @@ const TYPE_LABEL: Record<SubFieldType, string> = {
 };
 
 function OwnerPanel() {
-  const { session, accountType, loading, profilesLoaded, profiles, activeProfile } = useAuth();
+  const access = useProtectedAccess("business", {
+    redirectBack: "/painel",
+    deniedMessage: "Apenas contas Business têm acesso ao Painel.",
+  });
+  const { session } = useAuth();
   const navigate = useNavigate();
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [venueId, setVenueId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("");
-
-  useEffect(() => {
-    if (loading) return;
-    if (!session) {
-      navigate({ to: "/auth", search: { redirect: "/painel" } });
-      return;
-    }
-    // Aguarda perfis carregarem antes de avaliar o tipo de conta para evitar
-    // bloqueio prematuro com accountType=null durante o refresh.
-    if (!profilesLoaded) return;
-    const isBusiness =
-      isBusinessAccount(accountType) ||
-      profiles.some((p) => p.type === "field" || p.type === "referee") ||
-      activeProfile?.type === "field" ||
-      activeProfile?.type === "referee";
-    if (!isBusiness) {
-      toast.error("Apenas contas Business têm acesso ao Painel.");
-      navigate({ to: "/buscar" });
-    }
-  }, [session, accountType, loading, profilesLoaded, profiles, activeProfile, navigate]);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
