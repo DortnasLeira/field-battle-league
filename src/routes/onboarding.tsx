@@ -187,6 +187,10 @@ function OnboardingPage() {
     }
   };
 
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando onboarding" />;
+  }
+
   return (
     <div className="mx-auto max-w-3xl py-6">
       <div className="mb-6 text-center">
