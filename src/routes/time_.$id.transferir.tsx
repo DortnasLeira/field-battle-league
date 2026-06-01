@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { transferTeamOwnershipFn } from "@/lib/teams.functions";
 import { cn } from "@/lib/utils";
