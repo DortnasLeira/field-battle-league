@@ -24,7 +24,8 @@ type ProfileRow = { id: string; display_name: string | null };
 
 function TransferPage() {
   const { id: teamId } = Route.useParams();
-  const { session, loading } = useAuth();
+  const access = useProtectedAccess("auth", { redirectBack: `/time/${teamId}/transferir` });
+  const { session } = useAuth();
   const navigate = useNavigate();
   const transferFn = useServerFn(transferTeamOwnershipFn);
 
@@ -41,9 +42,6 @@ function TransferPage() {
   const [submitting, setSubmitting] = useState(false);
   const [transferred, setTransferred] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth", search: { redirect: `/time/${teamId}/transferir` } });
-  }, [loading, session, teamId, navigate]);
 
   const loadOwner = async () => {
     const { data: ownerRow } = await supabase
