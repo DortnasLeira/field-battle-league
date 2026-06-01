@@ -146,7 +146,10 @@ function OwnerPanel() {
     load();
   }, [load]);
 
-  if (loading || loadingData) {
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando painel" />;
+  }
+  if (loadingData) {
     return (
       <div className="mx-auto max-w-6xl py-10">
         <Card className="flex items-center justify-center p-10 text-muted-foreground">
