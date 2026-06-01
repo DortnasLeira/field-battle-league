@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { transferTeamOwnershipFn } from "@/lib/teams.functions";
 import { cn } from "@/lib/utils";
@@ -22,7 +24,8 @@ type ProfileRow = { id: string; display_name: string | null };
 
 function TransferPage() {
   const { id: teamId } = Route.useParams();
-  const { session, loading } = useAuth();
+  const access = useProtectedAccess("auth", { redirectBack: `/time/${teamId}/transferir` });
+  const { session } = useAuth();
   const navigate = useNavigate();
   const transferFn = useServerFn(transferTeamOwnershipFn);
 
@@ -39,9 +42,6 @@ function TransferPage() {
   const [submitting, setSubmitting] = useState(false);
   const [transferred, setTransferred] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth", search: { redirect: `/time/${teamId}/transferir` } });
-  }, [loading, session, teamId, navigate]);
 
   const loadOwner = async () => {
     const { data: ownerRow } = await supabase
@@ -148,7 +148,11 @@ function TransferPage() {
     }
   };
 
-  if (loading || checking) {
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando transferência" />;
+  }
+
+  if (checking) {
     return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
   }
 

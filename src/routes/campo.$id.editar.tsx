@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/campo/$id/editar")({
@@ -37,7 +39,8 @@ type SubField = {
 
 function FieldEditPage() {
   const { id } = Route.useParams();
-  const { session, loading: authLoading } = useAuth();
+  const access = useProtectedAccess("auth", { redirectBack: `/campo/${id}/editar` });
+  const { session } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -46,10 +49,7 @@ function FieldEditPage() {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !session) navigate({ to: "/auth", search: { redirect: `/campo/${id}/editar` } });
-  }, [authLoading, session, navigate, id]);
-
-  useEffect(() => {
+    if (access.status !== "ready") return;
     let cancel = false;
     (async () => {
       const { data: f } = await supabase
@@ -72,7 +72,7 @@ function FieldEditPage() {
       setLoading(false);
     })();
     return () => { cancel = true; };
-  }, [id, session]);
+  }, [access.status, id, session]);
 
   const toggleDay = (d: string) =>
     setSf((s) => s ? { ...s, available_days: s.available_days.includes(d)
@@ -110,7 +110,11 @@ function FieldEditPage() {
     navigate({ to: "/campo/$id", params: { id: sf.id } });
   };
 
-  if (loading || authLoading) {
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando campo" />;
+  }
+
+  if (loading) {
     return (
       <Card className="flex items-center justify-center p-10 text-muted-foreground">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando…

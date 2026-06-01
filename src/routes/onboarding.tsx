@@ -18,6 +18,8 @@ import {
   type ProfileType,
   type AccountType,
 } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { CityCombobox } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/onboarding")({
@@ -43,7 +45,8 @@ const OPTIONS: Option[] = [
 ];
 
 function OnboardingPage() {
-  const { session, profiles, loading, upsertProfile, accountType, setAccountType } = useAuth();
+  const access = useProtectedAccess("auth", { authRedirect: "/auth" });
+  const { session, profiles, upsertProfile, accountType, setAccountType } = useAuth();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<ProfileType | null>(null);
   const [step, setStep] = useState<"choose" | "fill">("choose");
@@ -51,13 +54,9 @@ function OnboardingPage() {
   const [form, setForm] = useState({ name: "", nickname: "", city: "", avatar: "⚽", color: "#F59E0B" });
   const [venueForm, setVenueForm] = useState({ address: "", phone: "", bio: "" });
 
-  useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth" });
-  }, [loading, session, navigate]);
-
   // Retomar onboarding: se já tem ao menos um perfil dos permitidos, considera concluído.
   useEffect(() => {
-    if (loading || !session || !accountType) return;
+    if (access.status !== "ready" || !accountType) return;
     const allowed = ALLOWED_PROFILE_TYPES[accountType];
     const hasAny = allowed.some((t) => profiles.some((p) => p.type === t));
     if (hasAny) {
@@ -69,8 +68,8 @@ function OnboardingPage() {
           : "/perfil";
       navigate({ to: dest });
     }
+  }, [access.status, accountType, profiles, navigate]);
 
-  }, [loading, session, accountType, profiles, navigate]);
 
   const existingTypes = new Set(profiles.map((p) => p.type));
 
@@ -187,6 +186,10 @@ function OnboardingPage() {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar perfil");
     }
   };
+
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando onboarding" />;
+  }
 
   return (
     <div className="mx-auto max-w-3xl py-6">

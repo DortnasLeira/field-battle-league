@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, isBusinessAccount } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { CityCombobox } from "@/components/CityCombobox";
 import { cn } from "@/lib/utils";
 
@@ -54,28 +56,19 @@ type Referee = {
 };
 
 function EditRefereePage() {
-  const { session, accountType, profiles, loading } = useAuth();
+  const access = useProtectedAccess("referee", {
+    redirectBack: "/arbitragem/editar",
+    deniedMessage: "Apenas árbitros podem acessar esta página.",
+  });
+  const { session, profiles } = useAuth();
   const navigate = useNavigate();
   const [ref, setRef] = useState<Referee | null>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newCert, setNewCert] = useState("");
 
-  const isReferee = isBusinessAccount(accountType) && profiles.some((p) => p.type === "referee");
-
   useEffect(() => {
-    if (loading) return;
-    if (!session) {
-      navigate({ to: "/auth", search: { redirect: "/arbitragem/editar" } });
-      return;
-    }
-    if (!isReferee) {
-      toast.error("Apenas árbitros podem acessar esta página.");
-      navigate({ to: "/" });
-    }
-  }, [session, loading, isReferee, navigate]);
-
-  useEffect(() => {
+    if (access.status !== "ready") return;
     (async () => {
       if (!session?.user) return;
       const { data, error } = await supabase
@@ -115,7 +108,7 @@ function EditRefereePage() {
       }
       setLoadingData(false);
     })();
-  }, [session, profiles]);
+  }, [access.status, session, profiles]);
 
   const toggleDay = (d: string) => {
     setRef((s) => s ? {
@@ -177,6 +170,10 @@ function EditRefereePage() {
     toast.success("Perfil de árbitro atualizado.");
     navigate({ to: "/arbitragem" });
   };
+
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando perfil de árbitro" />;
+  }
 
   if (loadingData || !ref) {
     return (
