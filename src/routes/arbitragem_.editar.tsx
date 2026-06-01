@@ -68,6 +68,7 @@ function EditRefereePage() {
   const [newCert, setNewCert] = useState("");
 
   useEffect(() => {
+    if (access.status !== "ready") return;
     (async () => {
       if (!session?.user) return;
       const { data, error } = await supabase
