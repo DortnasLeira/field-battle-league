@@ -1,9 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trophy, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useAuth, PROFILE_TYPE_EMOJI, PROFILE_TYPE_LABEL, type ProfileType } from "@/lib/auth";
+import { PROFILE_TYPE_EMOJI, PROFILE_TYPE_LABEL, type ProfileType } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { PlayerDashboard } from "@/components/PlayerDashboard";
 import { TeamDashboard } from "@/components/TeamDashboard";
 import { FieldDashboard } from "@/components/FieldDashboard";
@@ -21,14 +22,9 @@ export const Route = createFileRoute("/perfil")({
 });
 
 function PerfilPage() {
-  const { session, loading, activeProfile } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth", search: { redirect: "/perfil" } });
-  }, [loading, session, navigate]);
-
-  if (loading || !session) return null;
+  const access = useProtectedAccess("auth", { redirectBack: "/perfil" });
+  if (access.status === "loading") return <RouteLoadingSkeleton label="Carregando perfil" />;
+  const { activeProfile } = access;
 
   if (!activeProfile) {
     return (
