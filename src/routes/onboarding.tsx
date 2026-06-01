@@ -18,6 +18,8 @@ import {
   type ProfileType,
   type AccountType,
 } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { CityCombobox } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/onboarding")({
