@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useStore } from "@/lib/store";
 import { useAuth, isBusinessAccount } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { REFEREE_ACHIEVEMENTS } from "@/lib/refereeAchievements";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,11 +48,19 @@ export const Route = createFileRoute("/arbitragem")({
 });
 
 function ArbitragemPage() {
+  const access = useProtectedAccess("referee", {
+    redirectBack: "/arbitragem",
+    deniedMessage: "Esta área é exclusiva para árbitros.",
+  });
   const { activeProfile, accountType, profiles } = useAuth();
   const { challenges, matches, referees, currentRefereeId } = useStore();
 
   const isReferee =
     isBusinessAccount(accountType) && profiles.some((p) => p.type === "referee");
+
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando arbitragem" />;
+  }
 
   // O guard global já redireciona quem não é árbitro. Este fallback evita flash de conteúdo.
   if (!isReferee) {
