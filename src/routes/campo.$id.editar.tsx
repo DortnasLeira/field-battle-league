@@ -72,7 +72,7 @@ function FieldEditPage() {
       setLoading(false);
     })();
     return () => { cancel = true; };
-  }, [id, session]);
+  }, [access.status, id, session]);
 
   const toggleDay = (d: string) =>
     setSf((s) => s ? { ...s, available_days: s.available_days.includes(d)
