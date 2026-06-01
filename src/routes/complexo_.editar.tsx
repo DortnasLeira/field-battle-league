@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { CityCombobox } from "@/components/CityCombobox";
 
 export const Route = createFileRoute("/complexo_/editar")({
@@ -26,7 +28,11 @@ type Venue = {
 };
 
 function EditVenuePage() {
-  const { session, accountType, loading } = useAuth();
+  const access = useProtectedAccess("field", {
+    redirectBack: "/complexo/editar",
+    deniedMessage: "Apenas contas Campo podem editar o estabelecimento.",
+  });
+  const { session } = useAuth();
   const navigate = useNavigate();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [form, setForm] = useState({ name: "", city: "", address: "", phone: "", bio: "" });
@@ -34,18 +40,7 @@ function EditVenuePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
-    if (!session) {
-      navigate({ to: "/auth", search: { redirect: "/complexo/editar" } });
-      return;
-    }
-    if (accountType !== "business_field") {
-      toast.error("Apenas contas Business podem editar o estabelecimento.");
-      navigate({ to: "/" });
-    }
-  }, [session, accountType, loading, navigate]);
-
-  useEffect(() => {
+    if (access.status !== "ready") return;
     (async () => {
       if (!session?.user) return;
       const { data } = await supabase
@@ -68,7 +63,7 @@ function EditVenuePage() {
       }
       setLoadingData(false);
     })();
-  }, [session]);
+  }, [access.status, session]);
 
   const save = async () => {
     if (!venue) return;
