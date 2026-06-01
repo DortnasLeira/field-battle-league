@@ -93,7 +93,7 @@ function OwnerPanel() {
     deniedMessage: "Apenas contas Business têm acesso ao Painel.",
   });
   const { session } = useAuth();
-  const navigate = useNavigate();
+  void useNavigate;
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [venueId, setVenueId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
