@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, isBusinessAccount } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { CityCombobox } from "@/components/CityCombobox";
 import { cn } from "@/lib/utils";
 
