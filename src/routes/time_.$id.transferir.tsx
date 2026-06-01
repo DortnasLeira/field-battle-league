@@ -148,7 +148,11 @@ function TransferPage() {
     }
   };
 
-  if (loading || checking) {
+  if (access.status === "loading") {
+    return <RouteLoadingSkeleton label="Carregando transferência" />;
+  }
+
+  if (checking) {
     return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
   }
 
