@@ -17,8 +17,9 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useProtectedAccess } from "@/lib/useProtectedAccess";
+import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import type { PricingRule } from "@/lib/pricing";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/complexo")({
   head: () => ({
@@ -76,28 +77,19 @@ type SubField = {
 };
 
 function ComplexoPage() {
-  const { session, accountType, loading, activeProfile, profilesLoaded, profiles } = useAuth();
+  const access = useProtectedAccess("field", {
+    redirectBack: "/complexo",
+    deniedMessage: "Esta área é exclusiva para complexos esportivos (contas Campo).",
+  });
+  const { session, activeProfile } = useAuth();
   const navigate = useNavigate();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const hasFieldProfile = profiles.some((p) => p.type === "field");
-  const canAccessComplexo = accountType === "business_field" || activeProfile?.type === "field" || hasFieldProfile;
-
-  useEffect(() => {
-    if (loading || !profilesLoaded) return;
-    if (!session) {
-      navigate({ to: "/auth", search: { redirect: "/complexo" } });
-      return;
-    }
-    if (!canAccessComplexo) {
-      toast.error("Esta área é exclusiva para complexos esportivos (contas Campo).");
-      navigate({ to: "/buscar" });
-    }
-  }, [session, loading, profilesLoaded, navigate, canAccessComplexo]);
+  const ready = access.status === "ready";
 
   const load = useCallback(async () => {
-    if (!session?.user || !canAccessComplexo) {
+    if (!session?.user || !ready) {
       setLoadingData(false);
       return;
     }
