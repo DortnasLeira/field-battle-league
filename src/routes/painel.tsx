@@ -208,8 +208,6 @@ function OwnerPanel() {
         price_per_hour: 0,
         available_days: [],
         available_times: [],
-        rental_interval: 1,
-        time_offset: ":00",
       } as never);
     if (error) {
       toast.error(error.message);
