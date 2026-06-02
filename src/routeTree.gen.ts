@@ -30,6 +30,7 @@ import { Route as SumulaMatchIdRouteImport } from './routes/sumula.$matchId'
 import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 import { Route as ComplexoEditarRouteImport } from './routes/complexo_.editar'
+import { Route as ComplexoIdRouteImport } from './routes/complexo.$id'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as CampoIdRouteImport } from './routes/campo.$id'
 import { Route as ArbitroIdRouteImport } from './routes/arbitro.$id'
@@ -143,6 +144,11 @@ const ComplexoEditarRoute = ComplexoEditarRouteImport.update({
   path: '/complexo/editar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComplexoIdRoute = ComplexoIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ComplexoRoute,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
@@ -186,7 +192,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
-  '/complexo': typeof ComplexoRoute
+  '/complexo': typeof ComplexoRouteWithChildren
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/arbitro/$id': typeof ArbitroIdRoute
   '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
+  '/complexo/$id': typeof ComplexoIdRoute
   '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
@@ -216,7 +223,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
-  '/complexo': typeof ComplexoRoute
+  '/complexo': typeof ComplexoRouteWithChildren
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/arbitro/$id': typeof ArbitroIdRoute
   '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
+  '/complexo/$id': typeof ComplexoIdRoute
   '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
@@ -247,7 +255,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
-  '/complexo': typeof ComplexoRoute
+  '/complexo': typeof ComplexoRouteWithChildren
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/arbitro/$id': typeof ArbitroIdRoute
   '/campo/$id': typeof CampoIdRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
+  '/complexo/$id': typeof ComplexoIdRoute
   '/complexo_/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
   '/perfil_/editar': typeof PerfilEditarRoute
@@ -294,6 +303,7 @@ export interface FileRouteTypes {
     | '/arbitro/$id'
     | '/campo/$id'
     | '/checkout/return'
+    | '/complexo/$id'
     | '/complexo/editar'
     | '/jogador/$id'
     | '/perfil/editar'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/arbitro/$id'
     | '/campo/$id'
     | '/checkout/return'
+    | '/complexo/$id'
     | '/complexo/editar'
     | '/jogador/$id'
     | '/perfil/editar'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/arbitro/$id'
     | '/campo/$id'
     | '/checkout/return'
+    | '/complexo/$id'
     | '/complexo_/editar'
     | '/jogador/$id'
     | '/perfil_/editar'
@@ -370,7 +382,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   CamposRoute: typeof CamposRoute
-  ComplexoRoute: typeof ComplexoRoute
+  ComplexoRoute: typeof ComplexoRouteWithChildren
   DesafiosRoute: typeof DesafiosRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LigasRoute: typeof LigasRoute
@@ -543,6 +555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComplexoEditarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/complexo/$id': {
+      id: '/complexo/$id'
+      path: '/$id'
+      fullPath: '/complexo/$id'
+      preLoaderRoute: typeof ComplexoIdRouteImport
+      parentRoute: typeof ComplexoRoute
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/checkout/return'
@@ -595,6 +614,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ComplexoRouteChildren {
+  ComplexoIdRoute: typeof ComplexoIdRoute
+}
+
+const ComplexoRouteChildren: ComplexoRouteChildren = {
+  ComplexoIdRoute: ComplexoIdRoute,
+}
+
+const ComplexoRouteWithChildren = ComplexoRoute._addFileChildren(
+  ComplexoRouteChildren,
+)
+
 interface CampoIdRouteChildren {
   CampoIdEditarRoute: typeof CampoIdEditarRoute
 }
@@ -612,7 +643,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   CamposRoute: CamposRoute,
-  ComplexoRoute: ComplexoRoute,
+  ComplexoRoute: ComplexoRouteWithChildren,
   DesafiosRoute: DesafiosRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LigasRoute: LigasRoute,
