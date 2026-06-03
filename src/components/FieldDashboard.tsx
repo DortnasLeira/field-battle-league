@@ -216,7 +216,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
               </Link>
             </Button>
             <Button asChild size="sm" className="bg-gradient-primary text-primary-foreground">
-              <Link to="/complexo">
+              <Link to="/painel">
                 <Plus className="mr-1 h-4 w-4" /> Adicionar campos
               </Link>
             </Button>
@@ -254,7 +254,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
             </h2>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link to="/complexo">
+            <Link to="/painel">
               <Edit className="mr-1 h-4 w-4" /> Gerenciar
             </Link>
           </Button>
@@ -268,7 +268,7 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
           <div className="rounded-md border border-dashed border-border p-6 text-center">
             <p className="text-sm text-muted-foreground">Nenhum campo cadastrado ainda.</p>
             <Button asChild className="mt-3 bg-gradient-primary text-primary-foreground">
-              <Link to="/complexo">
+              <Link to="/painel">
                 <Plus className="mr-1 h-4 w-4" /> Adicionar campos
               </Link>
             </Button>

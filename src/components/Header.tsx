@@ -53,7 +53,7 @@ const businessFallbackLinks = [
   { to: "/campos", label: "Campos", icon: MapPin },
 ] as const;
 
-const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/complexo", "/painel", "/ligas", "/ranking", "/pro"]);
+const PROTECTED = new Set<string>(["/perfil", "/vagas", "/desafios", "/arbitragem", "/painel", "/ligas", "/ranking", "/pro"]);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -206,8 +206,8 @@ function ProfileSwitcher() {
                 <LayoutDashboard className="mr-2 h-4 w-4" /> Painel
               </DropdownMenuItem>
               {hasFieldProfile && (
-                <DropdownMenuItem onClick={() => navigate({ to: "/complexo" })}>
-                  <Building2 className="mr-2 h-4 w-4" /> Meu complexo
+                <DropdownMenuItem onClick={() => navigate({ to: "/painel" })}>
+                  <Building2 className="mr-2 h-4 w-4" /> Gerenciar Campos
                 </DropdownMenuItem>
               )}
               {hasRefereeProfile && (

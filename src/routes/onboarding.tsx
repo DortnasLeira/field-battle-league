@@ -62,7 +62,7 @@ function OnboardingPage() {
     if (hasAny) {
       const dest =
         accountType === "business_field"
-          ? "/complexo"
+          ? "/painel"
           : accountType === "business_referee"
           ? "/arbitragem"
           : "/perfil";
@@ -180,7 +180,7 @@ function OnboardingPage() {
 
       toast.success("Perfil criado!");
       const dest =
-        selected === "field" ? "/complexo" : selected === "referee" ? "/arbitragem" : "/perfil";
+        selected === "field" ? "/painel" : selected === "referee" ? "/arbitragem" : "/perfil";
       navigate({ to: dest });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar perfil");

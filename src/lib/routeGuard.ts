@@ -67,7 +67,7 @@ const REQUIRES_OWNER_PATTERNS = [
 ];
 
 // Rotas exclusivas por tipo de perfil.
-const REQUIRES_FIELD_PATTERNS = ["/complexo", "/complexo/editar"];
+const REQUIRES_FIELD_PATTERNS = [] as string[];
 const REQUIRES_REFEREE_PATTERNS = ["/arbitragem"];
 const REQUIRES_BUSINESS_PATTERNS = ["/painel"];
 

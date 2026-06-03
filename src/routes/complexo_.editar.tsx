@@ -29,7 +29,7 @@ type Venue = {
 
 function EditVenuePage() {
   const access = useProtectedAccess("field", {
-    redirectBack: "/complexo/editar",
+    redirectBack: "/perfil",
     deniedMessage: "Apenas contas Campo podem editar o estabelecimento.",
   });
   const { session } = useAuth();
