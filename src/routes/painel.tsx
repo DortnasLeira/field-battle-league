@@ -371,26 +371,55 @@ function FieldManagementTab({
   const save = async () => {
     setSaving(true);
     try {
+      // Montamos o objeto de atualização
+      const updateData: any = {
+        name: local.name,
+        field_type: local.field_type,
+        photo_url: local.photo_url,
+        active: local.active,
+        price_per_hour: Number(local.price_per_hour) || 0,
+        available_days: local.available_days,
+        available_times: local.available_times,
+        pricing_rules: local.pricing_rules ?? [],
+      };
+
+      // Só incluímos as novas colunas se elas tiverem valores definidos
+      // Isso ajuda a evitar erros se as colunas ainda não existirem no banco
+      if (local.rental_interval !== undefined) updateData.rental_interval = local.rental_interval;
+      if (local.time_offset !== undefined) updateData.time_offset = local.time_offset;
+
       const { error } = await supabase
-        .from("sub_fields" as never)
-        .update({
-          name: local.name,
-          field_type: local.field_type,
-          photo_url: local.photo_url,
-          active: local.active,
-          price_per_hour: Number(local.price_per_hour) || 0,
-          available_days: local.available_days,
-          available_times: local.available_times,
-          pricing_rules: local.pricing_rules ?? [],
-          rental_interval: local.rental_interval ?? 1,
-          time_offset: local.time_offset ?? ":00",
-        } as never)
+        .from("sub_fields")
+        .update(updateData)
         .eq("id", local.id);
-      if (error) throw error;
-      toast.success("Campo atualizado.");
+
+      if (error) {
+        console.error("Erro ao salvar campo:", error);
+        
+        // Se o erro for de coluna inexistente, tentamos salvar sem as novas colunas
+        if (error.code === "42703") { // undefined_column
+          toast.info("Atualizando sem opções de intervalo (colunas faltando no banco)...");
+          delete updateData.rental_interval;
+          delete updateData.time_offset;
+          
+          const { error: retryError } = await supabase
+            .from("sub_fields")
+            .update(updateData)
+            .eq("id", local.id);
+            
+          if (retryError) throw retryError;
+        } else {
+          throw error;
+        }
+      }
+
+      toast.success("Campo atualizado com sucesso.");
       await onSaved();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar");
+    } catch (e: any) {
+      console.error("Erro fatal no salvamento:", e);
+      toast.error("Erro ao salvar alterações", {
+        description: e.message || "Verifique sua conexão ou se o banco está atualizado.",
+      });
     } finally {
       setSaving(false);
     }
