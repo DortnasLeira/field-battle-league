@@ -894,11 +894,13 @@ export type Database = {
           capacity: number | null
           city: string | null
           color: string
+          cover_url: string | null
           created_at: string
           field_type: string | null
           field_types: string[] | null
           founded: number | null
           frame: string
+          gallery: string[]
           gender: string | null
           id: string
           level: string | null
@@ -921,11 +923,13 @@ export type Database = {
           capacity?: number | null
           city?: string | null
           color?: string
+          cover_url?: string | null
           created_at?: string
           field_type?: string | null
           field_types?: string[] | null
           founded?: number | null
           frame?: string
+          gallery?: string[]
           gender?: string | null
           id?: string
           level?: string | null
@@ -948,11 +952,13 @@ export type Database = {
           capacity?: number | null
           city?: string | null
           color?: string
+          cover_url?: string | null
           created_at?: string
           field_type?: string | null
           field_types?: string[] | null
           founded?: number | null
           frame?: string
+          gallery?: string[]
           gender?: string | null
           id?: string
           level?: string | null

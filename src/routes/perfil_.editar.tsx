@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Save, Trash2, Upload, ArrowLeft } from "lucide-react";
+import { Save, Trash2, Upload, ArrowLeft, ImagePlus, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,26 +12,21 @@ import {
   useAuth,
   PROFILE_TYPE_LABEL,
   PROFILE_TYPE_EMOJI,
-  PRESET_AVATARS_BY_TYPE,
-  PRESET_COLORS,
-  FRAMES,
-  frameClass,
   type ProfileType,
   type UserProfile,
 } from "@/lib/auth";
 import { useProtectedAccess } from "@/lib/useProtectedAccess";
 import { RouteLoadingSkeleton } from "@/components/RouteLoadingSkeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FRAME_UNLOCK, isFrameUnlocked } from "@/lib/achievements";
 import { CityCombobox } from "@/components/CityCombobox";
-import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/perfil_/editar")({
   head: () => ({ meta: [{ title: "Editar perfil — PeladaPro" }] }),
   component: PerfilPage,
 });
+
+const MAX_GALLERY = 10;
 
 function PerfilPage() {
   const access = useProtectedAccess("auth", { redirectBack: "/perfil/editar" });
@@ -122,196 +117,271 @@ function ProfileEditor({
     nickname: p.nickname ?? "",
     bio: p.bio ?? "",
     city: p.city ?? "",
-    avatar: p.avatar ?? PRESET_AVATARS_BY_TYPE[type][0],
-    color: p.color ?? PRESET_COLORS[0],
-    frame: p.frame ?? "classic",
+    address: p.address ?? "",
+    photo_url: p.photo_url ?? "",
+    cover_url: p.cover_url ?? "",
+    gallery: (p.gallery ?? []) as string[],
     position: p.position ?? "",
     level: p.level ?? "",
     founded: p.founded?.toString() ?? "",
     capacity: p.capacity?.toString() ?? "",
     field_type: p.field_type ?? "",
     price_per_hour: p.price_per_hour?.toString() ?? "",
-    address: p.address ?? "",
     age: p.age?.toString() ?? "",
     gender: p.gender ?? "",
     preferred_foot: p.preferred_foot ?? "",
     field_types: (p.field_types ?? []) as string[],
-    photo_url: p.photo_url ?? "",
     preferred_field: p.preferred_field ?? "",
   });
   const [form, setForm] = useState(() => initial(profile));
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState<null | "photo" | "cover" | "gallery">(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setForm(initial(profile));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.id]);
 
-  const handleUpload = async (file: File) => {
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Arquivo muito grande (máx 5MB).");
-      return;
-    }
-    setUploading(true);
+  const uploadFile = async (file: File, prefix: string): Promise<string> => {
+    if (file.size > 5 * 1024 * 1024) throw new Error("Arquivo muito grande (máx 5MB).");
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${profile.user_id}/${profile.id}-${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (upErr) throw upErr;
+    return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+  };
+
+  const handlePhoto = async (file: File) => {
+    setUploading("photo");
     try {
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${profile.user_id}/${profile.id}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      const url = data.publicUrl;
+      const url = await uploadFile(file, "photo");
       setForm((f) => ({ ...f, photo_url: url }));
-      // Persist immediately so the perfil home reflects the new photo
       await onSave({ photo_url: url });
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setUploading(false);
-    }
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setUploading(null); }
+  };
+
+  const handleCover = async (file: File) => {
+    setUploading("cover");
+    try {
+      const url = await uploadFile(file, "cover");
+      setForm((f) => ({ ...f, cover_url: url }));
+      await onSave({ cover_url: url });
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setUploading(null); }
+  };
+
+  const handleGallery = async (files: FileList) => {
+    const slots = MAX_GALLERY - form.gallery.length;
+    if (slots <= 0) { toast.error(`Galeria cheia (máx ${MAX_GALLERY} fotos).`); return; }
+    const list = Array.from(files).slice(0, slots);
+    setUploading("gallery");
+    try {
+      const urls: string[] = [];
+      for (const f of list) urls.push(await uploadFile(f, "gallery"));
+      const next = [...form.gallery, ...urls];
+      setForm((f) => ({ ...f, gallery: next }));
+      await onSave({ gallery: next });
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setUploading(null); }
+  };
+
+  const removeGalleryAt = async (idx: number) => {
+    const next = form.gallery.filter((_, i) => i !== idx);
+    setForm((f) => ({ ...f, gallery: next }));
+    await onSave({ gallery: next });
   };
 
   const submit = async () => {
-    if (!form.name) {
-      toast.error("Informe o nome.");
-      return;
-    }
+    if (!form.name.trim()) { toast.error("Nome é obrigatório."); return; }
     await onSave({
-      name: form.name,
-      nickname: form.nickname || null,
-      bio: form.bio || null,
-      city: form.city || null,
-      avatar: form.avatar,
-      color: form.color,
-      frame: form.frame,
+      name: form.name.trim(),
+      nickname: form.nickname.trim() || null,
+      bio: form.bio.trim() || null,
+      city: form.city.trim() || null,
+      address: form.address.trim() || null,
       position: type === "player" ? form.position || null : null,
       level: type === "player" || type === "team" ? form.level || null : null,
       founded: type === "team" && form.founded ? Number(form.founded) : null,
       capacity: type === "field" && form.capacity ? Number(form.capacity) : null,
       field_type: type === "field" ? form.field_type || null : null,
       price_per_hour: type === "field" && form.price_per_hour ? Number(form.price_per_hour) : null,
-      address: type === "field" ? form.address || null : null,
       age: type === "player" && form.age ? Number(form.age) : null,
       gender: type === "player" ? form.gender || null : null,
       preferred_foot: type === "player" ? form.preferred_foot || null : null,
       field_types: type === "player" ? (form.field_types.length ? form.field_types : null) : null,
-      photo_url: form.photo_url || null,
       preferred_field: type === "team" ? (form.preferred_field || null) : null,
     });
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      {/* Preview */}
-      <Card className="border-border bg-card p-5 text-center">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Pré-visualização</div>
-        <div className="mt-4 flex flex-col items-center gap-3">
-          <div
-            className={cn(
-              "flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl text-5xl",
-              frameClass(form.frame),
-            )}
-            style={{ background: form.color + "22", color: form.color }}
-          >
-            {form.photo_url ? (
-              <img src={form.photo_url} alt={form.name} className="h-full w-full object-cover" />
+    <div className="space-y-6">
+      {/* Bloco 1: Imagens */}
+      <Card className="border-border bg-card p-5 space-y-5">
+        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          Imagens do perfil
+        </div>
+
+        {/* Capa + Foto sobreposta */}
+        <div className="relative">
+          <div className="relative h-40 w-full overflow-hidden rounded-xl border border-border bg-surface/60 sm:h-56">
+            {form.cover_url ? (
+              <img src={form.cover_url} alt="Capa" className="h-full w-full object-cover" />
             ) : (
-              form.avatar
+              <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                Sem foto de capa
+              </div>
             )}
+            <div className="absolute right-3 top-3 flex gap-2">
+              <input
+                ref={coverRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCover(f); e.target.value = ""; }}
+              />
+              <Button size="sm" variant="secondary" onClick={() => coverRef.current?.click()} disabled={uploading === "cover"}>
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                {uploading === "cover" ? "Enviando..." : form.cover_url ? "Substituir capa" : "Adicionar capa"}
+              </Button>
+              {form.cover_url && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    setForm((f) => ({ ...f, cover_url: "" }));
+                    await onSave({ cover_url: null });
+                    toast.success("Capa removida.");
+                  }}
+                >
+                  Remover
+                </Button>
+              )}
+            </div>
           </div>
-          <div>
-            <div className="font-display text-xl uppercase tracking-wide">{form.name || "Sem nome"}</div>
-            {form.nickname && <div className="text-sm text-muted-foreground">"{form.nickname}"</div>}
-            {form.city && <div className="mt-2 text-xs text-muted-foreground">{form.city}</div>}
+
+          {/* Foto perfil */}
+          <div className="-mt-12 flex items-end gap-4 pl-4 sm:-mt-14">
+            <div className="h-24 w-24 overflow-hidden rounded-2xl border-4 border-card bg-surface sm:h-28 sm:w-28">
+              {form.photo_url ? (
+                <img src={form.photo_url} alt="Foto" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-3xl">
+                  {PROFILE_TYPE_EMOJI[type]}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 pb-2">
+              <input
+                ref={photoRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = ""; }}
+              />
+              <Button size="sm" onClick={() => photoRef.current?.click()} disabled={uploading === "photo"}>
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                {uploading === "photo" ? "Enviando..." : form.photo_url ? "Substituir foto" : "Adicionar foto"}
+              </Button>
+              {form.photo_url && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    setForm((f) => ({ ...f, photo_url: "" }));
+                    await onSave({ photo_url: null });
+                    toast.success("Foto removida.");
+                  }}
+                >
+                  Remover
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-        <div className="mt-4 space-y-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="mr-2 h-3 w-3" /> Excluir este perfil
-          </Button>
+
+        {/* Galeria */}
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+              Galeria ({form.gallery.length}/{MAX_GALLERY})
+            </Label>
+            <input
+              ref={galleryRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => { const fs = e.target.files; if (fs && fs.length) handleGallery(fs); e.target.value = ""; }}
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => galleryRef.current?.click()}
+              disabled={uploading === "gallery" || form.gallery.length >= MAX_GALLERY}
+            >
+              <ImagePlus className="mr-1.5 h-3.5 w-3.5" />
+              {uploading === "gallery" ? "Enviando..." : "Adicionar fotos"}
+            </Button>
+          </div>
+          {form.gallery.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+              Nenhuma foto adicionada ainda. Envie até {MAX_GALLERY} fotos do complexo.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {form.gallery.map((url, i) => (
+                <div key={url + i} className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-surface">
+                  <img src={url} alt={`Galeria ${i + 1}`} className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryAt(i)}
+                    className="absolute right-1 top-1 rounded-full bg-background/80 p-1 opacity-0 transition group-hover:opacity-100"
+                    aria-label="Remover foto"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Card>
 
-      {/* Form */}
-      <Card className="border-border bg-card p-5 space-y-5">
-        {/* Photo upload (player) */}
-        {true && (
-          <div className="rounded-lg border border-border bg-surface/60 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Foto do perfil</div>
-            <div className="mt-3 flex items-center gap-4">
-              <div
-                className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-border"
-                style={{ background: form.color + "22" }}
-              >
-                {form.photo_url ? (
-                  <img src={form.photo_url} alt="foto" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-3xl">{form.avatar}</span>
-                )}
-              </div>
-              <div className="flex-1 space-y-2">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleUpload(f);
-                    e.target.value = "";
-                  }}
-                />
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    {uploading ? "Enviando..." : form.photo_url ? "Substituir foto" : "Enviar foto"}
-                  </Button>
-                  {form.photo_url && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={async () => {
-                        setForm((f) => ({ ...f, photo_url: "" }));
-                        await onSave({ photo_url: null });
-                        toast.success("Foto removida.");
-                      }}
-                    >
-                      Remover
-                    </Button>
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">JPG/PNG até 5MB. Atualiza imediatamente seu perfil.</p>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Bloco 2: Dados */}
+      <Card className="border-border bg-card p-5 space-y-4">
+        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          Informações
+        </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <Label>Nome {type === "team" ? "do time" : type === "field" ? "do campo" : "completo"}</Label>
+            <Label>Nome do estabelecimento *</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <Label>Apelido / Tag</Label>
+            <Label>Apelido / TAG</Label>
             <Input value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} placeholder="Opcional" />
           </div>
-          <div className="sm:col-span-2">
+
+          <div>
             <Label>Cidade</Label>
             <CityCombobox value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
           </div>
+          <div>
+            <Label>Endereço</Label>
+            <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro" />
+          </div>
+
           <div className="sm:col-span-2">
-            <Label>Bio</Label>
+            <Label>Bio / Descrição</Label>
             <Textarea
-              rows={2}
+              rows={4}
               value={form.bio}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              placeholder="Conte algo sobre você/seu time/seu campo."
+              placeholder="Conte sobre o estabelecimento."
             />
           </div>
 
@@ -344,32 +414,6 @@ function ProfileEditor({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="sm:col-span-2">
-                <Label>Tipos de campo</Label>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {["Society", "Areia", "Sintético", "Campo"].map((ft) => {
-                    const on = form.field_types.includes(ft);
-                    return (
-                      <button
-                        key={ft}
-                        type="button"
-                        onClick={() =>
-                          setForm({
-                            ...form,
-                            field_types: on ? form.field_types.filter((x) => x !== ft) : [...form.field_types, ft],
-                          })
-                        }
-                        className={cn(
-                          "rounded-md border px-3 py-1 text-xs transition",
-                          on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
-                        )}
-                      >
-                        {ft}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </>
           )}
           {type === "team" && (
@@ -385,7 +429,6 @@ function ProfileEditor({
               <div className="sm:col-span-2">
                 <Label>Campo preferido</Label>
                 <Input value={form.preferred_field} onChange={(e) => setForm({ ...form, preferred_field: e.target.value })} placeholder="Ex: Arena Central (deixe vazio se for visitante)" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Se não informar, seu time aparecerá como <strong>VISITANTE</strong> na busca.</p>
               </div>
             </>
           )}
@@ -403,88 +446,19 @@ function ProfileEditor({
                 <Label>Preço/hora (R$)</Label>
                 <Input type="number" value={form.price_per_hour} onChange={(e) => setForm({ ...form, price_per_hour: e.target.value })} placeholder="280" />
               </div>
-              <div>
-                <Label>Endereço</Label>
-                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua..." />
-              </div>
             </>
           )}
         </div>
 
-        {/* Customização visual */}
-        <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
-          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Customização visual</div>
-          <div>
-            <Label className="mb-2 block">Avatar (usado quando não há foto)</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_AVATARS_BY_TYPE[type].map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setForm({ ...form, avatar: a })}
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-md border text-lg transition",
-                    form.avatar === a ? "border-primary bg-primary/10" : "border-border bg-card",
-                  )}
-                >
-                  {a}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <Label className="mb-2 block">Cor do perfil</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setForm({ ...form, color: c })}
-                  className={cn(
-                    "h-8 w-8 rounded-md transition",
-                    form.color === c ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : "",
-                  )}
-                  style={{ background: c }}
-                  aria-label={c}
-                />
-              ))}
-            </div>
-          </div>
-          <div>
-            <Label className="mb-2 block">Moldura</Label>
-            <div className="flex flex-wrap gap-2">
-              {FRAMES.map((f) => {
-                const unlocked = type === "player" ? isFrameUnlocked(f.id) : true;
-                const reqLabel = FRAME_UNLOCK[f.id]?.label;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    disabled={!unlocked}
-                    onClick={() => setForm({ ...form, frame: f.id })}
-                    title={unlocked ? f.label : reqLabel}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs transition",
-                      form.frame === f.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-card",
-                      !unlocked && "cursor-not-allowed opacity-50",
-                    )}
-                  >
-                    <span className={cn("inline-block h-5 w-5 rounded-full", f.ring)} style={{ background: form.color + "44" }} />
-                    {f.label}
-                    {!unlocked && <Lock className="ml-1 h-3 w-3" />}
-                  </button>
-                );
-              })}
-            </div>
-            {type === "player" && (
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Molduras são desbloqueadas conforme suas conquistas.
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="mr-2 h-3 w-3" /> Excluir este perfil
+          </Button>
           <Button onClick={submit} className="bg-gradient-primary text-primary-foreground">
             <Save className="mr-2 h-4 w-4" /> Salvar alterações
           </Button>

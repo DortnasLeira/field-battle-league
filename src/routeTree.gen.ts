@@ -19,7 +19,6 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DesafiosRouteImport } from './routes/desafios'
-import { Route as ComplexoRouteImport } from './routes/complexo'
 import { Route as CamposRouteImport } from './routes/campos'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -89,11 +88,6 @@ const DesafiosRoute = DesafiosRouteImport.update({
   path: '/desafios',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ComplexoRoute = ComplexoRouteImport.update({
-  id: '/complexo',
-  path: '/complexo',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CamposRoute = CamposRouteImport.update({
   id: '/campos',
   path: '/campos',
@@ -145,9 +139,9 @@ const ComplexoEditarRoute = ComplexoEditarRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComplexoIdRoute = ComplexoIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ComplexoRoute,
+  id: '/complexo/$id',
+  path: '/complexo/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
@@ -192,7 +186,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
-  '/complexo': typeof ComplexoRouteWithChildren
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -223,7 +216,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
-  '/complexo': typeof ComplexoRouteWithChildren
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -255,7 +247,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/campos': typeof CamposRoute
-  '/complexo': typeof ComplexoRouteWithChildren
   '/desafios': typeof DesafiosRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/ligas': typeof LigasRoute
@@ -288,7 +279,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/campos'
-    | '/complexo'
     | '/desafios'
     | '/forgot-password'
     | '/ligas'
@@ -319,7 +309,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/campos'
-    | '/complexo'
     | '/desafios'
     | '/forgot-password'
     | '/ligas'
@@ -350,7 +339,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/campos'
-    | '/complexo'
     | '/desafios'
     | '/forgot-password'
     | '/ligas'
@@ -382,7 +370,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   CamposRoute: typeof CamposRoute
-  ComplexoRoute: typeof ComplexoRouteWithChildren
   DesafiosRoute: typeof DesafiosRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LigasRoute: typeof LigasRoute
@@ -397,6 +384,7 @@ export interface RootRouteChildren {
   ArbitroIdRoute: typeof ArbitroIdRoute
   CampoIdRoute: typeof CampoIdRouteWithChildren
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ComplexoIdRoute: typeof ComplexoIdRoute
   ComplexoEditarRoute: typeof ComplexoEditarRoute
   JogadorIdRoute: typeof JogadorIdRoute
   PerfilEditarRoute: typeof PerfilEditarRoute
@@ -478,13 +466,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesafiosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/complexo': {
-      id: '/complexo'
-      path: '/complexo'
-      fullPath: '/complexo'
-      preLoaderRoute: typeof ComplexoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/campos': {
       id: '/campos'
       path: '/campos'
@@ -557,10 +538,10 @@ declare module '@tanstack/react-router' {
     }
     '/complexo/$id': {
       id: '/complexo/$id'
-      path: '/$id'
+      path: '/complexo/$id'
       fullPath: '/complexo/$id'
       preLoaderRoute: typeof ComplexoIdRouteImport
-      parentRoute: typeof ComplexoRoute
+      parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
       id: '/checkout/return'
@@ -614,18 +595,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ComplexoRouteChildren {
-  ComplexoIdRoute: typeof ComplexoIdRoute
-}
-
-const ComplexoRouteChildren: ComplexoRouteChildren = {
-  ComplexoIdRoute: ComplexoIdRoute,
-}
-
-const ComplexoRouteWithChildren = ComplexoRoute._addFileChildren(
-  ComplexoRouteChildren,
-)
-
 interface CampoIdRouteChildren {
   CampoIdEditarRoute: typeof CampoIdEditarRoute
 }
@@ -643,7 +612,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   CamposRoute: CamposRoute,
-  ComplexoRoute: ComplexoRouteWithChildren,
   DesafiosRoute: DesafiosRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LigasRoute: LigasRoute,
@@ -658,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArbitroIdRoute: ArbitroIdRoute,
   CampoIdRoute: CampoIdRouteWithChildren,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  ComplexoIdRoute: ComplexoIdRoute,
   ComplexoEditarRoute: ComplexoEditarRoute,
   JogadorIdRoute: JogadorIdRoute,
   PerfilEditarRoute: PerfilEditarRoute,
