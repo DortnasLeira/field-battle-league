@@ -46,6 +46,8 @@ export type UserProfile = {
   field_types: string[] | null;
   photo_url?: string | null;
   preferred_field?: string | null;
+  cover_url?: string | null;
+  gallery?: string[] | null;
 };
 
 type AuthContextValue = {
