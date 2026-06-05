@@ -165,8 +165,8 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
         <div
           className="relative h-56 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent sm:h-72"
           style={
-            venue?.photo_url
-              ? { backgroundImage: `url(${venue.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+            profile.cover_url || venue?.photo_url
+              ? { backgroundImage: `url(${profile.cover_url || venue?.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
               : undefined
           }
         >
@@ -175,12 +175,20 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
           <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 p-5">
             <div
               className={cn(
-                "flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-4xl shadow-glow ring-2 ring-card/80 sm:h-24 sm:w-24 sm:text-5xl",
+                "flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-4xl shadow-glow ring-2 ring-card/80 sm:h-24 sm:w-24 sm:text-5xl",
                 frameClass(profile.frame),
               )}
-              style={{ background: profile.color + "22", color: profile.color }}
+              style={
+                profile.photo_url
+                  ? undefined
+                  : { background: profile.color + "22", color: profile.color }
+              }
             >
-              {profile.avatar ?? "🏟️"}
+              {profile.photo_url ? (
+                <img src={profile.photo_url} alt={profile.name} className="h-full w-full object-cover" />
+              ) : (
+                profile.avatar ?? "🏟️"
+              )}
             </div>
             <div className="min-w-0 flex-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
               <div className="flex items-center gap-2 text-foreground/80">
@@ -241,6 +249,38 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
           highlight={bookingsPending > 0}
         />
       </div>
+
+      {/* Galeria */}
+      {profile.gallery && profile.gallery.length > 0 && (
+        <Card className="border-border bg-card p-5">
+          <div className="mb-3">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              Galeria
+            </div>
+            <h2 className="font-display text-xl uppercase tracking-wide">
+              {profile.gallery.length} foto{profile.gallery.length === 1 ? "" : "s"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {profile.gallery.map((url, i) => (
+              <a
+                key={url + i}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+              >
+                <img
+                  src={url}
+                  alt={`Foto ${i + 1}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition group-hover:scale-105"
+                />
+              </a>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Campos */}
       <Card className="border-border bg-card p-5">
