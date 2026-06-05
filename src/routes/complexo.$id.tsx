@@ -40,6 +40,12 @@ type Venue = {
   owner_user_id: string;
 };
 
+type OwnerProfile = {
+  photo_url: string | null;
+  cover_url: string | null;
+  gallery: string[] | null;
+};
+
 type SubField = {
   id: string;
   venue_id: string;
@@ -72,6 +78,8 @@ function PublicVenueProfilePage() {
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
+
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -86,15 +94,23 @@ function PublicVenueProfilePage() {
       setVenue(venue);
 
       if (venue) {
-        // Busca os campos ativos do estabelecimento
-        const { data: sfs } = await supabase
-          .from("sub_fields")
-          .select("*")
-          .eq("venue_id", venue.id)
-          .eq("active", true)
-          .order("name");
+        const [{ data: sfs }, { data: op }] = await Promise.all([
+          supabase
+            .from("sub_fields")
+            .select("*")
+            .eq("venue_id", venue.id)
+            .eq("active", true)
+            .order("name"),
+          supabase
+            .from("user_profiles")
+            .select("photo_url,cover_url,gallery")
+            .eq("user_id", venue.owner_user_id)
+            .eq("type", "field")
+            .maybeSingle(),
+        ]);
         if (!cancel) {
           setSubFields((sfs as SubField[] | null) ?? []);
+          setOwnerProfile((op as OwnerProfile | null) ?? null);
         }
       }
       setLoading(false);
@@ -171,14 +187,19 @@ function PublicVenueProfilePage() {
         <div
           className="relative h-56 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent sm:h-72"
           style={
-            venue.photo_url
-              ? { backgroundImage: `url(${venue.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+            ownerProfile?.cover_url || venue.photo_url
+              ? { backgroundImage: `url(${ownerProfile?.cover_url || venue.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
               : undefined
           }
         >
           <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/10" />
-          <div className="absolute inset-x-0 bottom-0 p-5">
-            <div className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+          <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 p-5">
+            {ownerProfile?.photo_url && (
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-glow ring-2 ring-card/80 sm:h-24 sm:w-24">
+                <img src={ownerProfile.photo_url} alt={venue.name} className="h-full w-full object-cover" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
               <div className="flex items-center gap-2 text-foreground/80">
                 <Building2 className="h-4 w-4 text-primary" />
                 <span className="font-mono text-[10px] uppercase tracking-wider">Estabelecimento</span>
@@ -224,6 +245,38 @@ function PublicVenueProfilePage() {
           value={subFields.length > 0 ? "Variável" : "—"}
         />
       </div>
+
+      {/* Galeria */}
+      {ownerProfile?.gallery && ownerProfile.gallery.length > 0 && (
+        <Card className="border-border bg-card p-5">
+          <div className="mb-3">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              Galeria
+            </div>
+            <h2 className="font-display text-xl uppercase tracking-wide">
+              {ownerProfile.gallery.length} foto{ownerProfile.gallery.length === 1 ? "" : "s"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {ownerProfile.gallery.map((url, i) => (
+              <a
+                key={url + i}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+              >
+                <img
+                  src={url}
+                  alt={`Foto ${i + 1}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition group-hover:scale-105"
+                />
+              </a>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Campos */}
       <Card className="border-border bg-card p-5">
