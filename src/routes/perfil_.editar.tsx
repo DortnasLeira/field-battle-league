@@ -366,6 +366,9 @@ function ProfileEditor({
               {uploading === "gallery" ? "Enviando..." : "Adicionar fotos"}
             </Button>
           </div>
+          <p className="text-[10px] text-muted-foreground">
+            {ACCEPTED_EXT_LABEL} • máx 5MB por foto • até {MAX_GALLERY} no total
+          </p>
           {form.gallery.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
               Nenhuma foto adicionada ainda. Envie até {MAX_GALLERY} fotos do complexo.
