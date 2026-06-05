@@ -165,8 +165,8 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
         <div
           className="relative h-56 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent sm:h-72"
           style={
-            venue?.photo_url
-              ? { backgroundImage: `url(${venue.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+            profile.cover_url || venue?.photo_url
+              ? { backgroundImage: `url(${profile.cover_url || venue?.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
               : undefined
           }
         >
@@ -175,12 +175,20 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
           <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 p-5">
             <div
               className={cn(
-                "flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-4xl shadow-glow ring-2 ring-card/80 sm:h-24 sm:w-24 sm:text-5xl",
+                "flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-4xl shadow-glow ring-2 ring-card/80 sm:h-24 sm:w-24 sm:text-5xl",
                 frameClass(profile.frame),
               )}
-              style={{ background: profile.color + "22", color: profile.color }}
+              style={
+                profile.photo_url
+                  ? undefined
+                  : { background: profile.color + "22", color: profile.color }
+              }
             >
-              {profile.avatar ?? "🏟️"}
+              {profile.photo_url ? (
+                <img src={profile.photo_url} alt={profile.name} className="h-full w-full object-cover" />
+              ) : (
+                profile.avatar ?? "🏟️"
+              )}
             </div>
             <div className="min-w-0 flex-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
               <div className="flex items-center gap-2 text-foreground/80">
