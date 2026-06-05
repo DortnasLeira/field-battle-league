@@ -162,11 +162,15 @@ function ProfileEditor({
   }, [profile.id]);
 
   const uploadFile = async (file: File, prefix: string): Promise<string> => {
-    if (file.size > 5 * 1024 * 1024) throw new Error("Arquivo muito grande (máx 5MB).");
-    const ext = file.name.split(".").pop() ?? "jpg";
+    const err = validateImage(file);
+    if (err) throw new Error(err);
+    const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `${profile.user_id}/${profile.id}-${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (upErr) throw upErr;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+    if (upErr) throw new Error(upErr.message || "Falha ao enviar imagem.");
     return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
   };
 
@@ -176,6 +180,7 @@ function ProfileEditor({
       const url = await uploadFile(file, "photo");
       setForm((f) => ({ ...f, photo_url: url }));
       await onSave({ photo_url: url });
+      toast.success("Foto de perfil atualizada.");
     } catch (e) { toast.error((e as Error).message); }
     finally { setUploading(null); }
   };
@@ -186,6 +191,7 @@ function ProfileEditor({
       const url = await uploadFile(file, "cover");
       setForm((f) => ({ ...f, cover_url: url }));
       await onSave({ cover_url: url });
+      toast.success("Foto de capa atualizada.");
     } catch (e) { toast.error((e as Error).message); }
     finally { setUploading(null); }
   };
@@ -193,16 +199,33 @@ function ProfileEditor({
   const handleGallery = async (files: FileList) => {
     const slots = MAX_GALLERY - form.gallery.length;
     if (slots <= 0) { toast.error(`Galeria cheia (máx ${MAX_GALLERY} fotos).`); return; }
-    const list = Array.from(files).slice(0, slots);
+    const all = Array.from(files);
+    if (all.length > slots) {
+      toast.warning(`Apenas ${slots} foto(s) serão enviadas (limite de ${MAX_GALLERY}).`);
+    }
+    const list = all.slice(0, slots);
+
+    // Pré-valida antes de iniciar uploads
+    for (const f of list) {
+      const err = validateImage(f);
+      if (err) { toast.error(`${f.name}: ${err}`); return; }
+    }
+
     setUploading("gallery");
+    const urls: string[] = [];
+    let failed = 0;
     try {
-      const urls: string[] = [];
-      for (const f of list) urls.push(await uploadFile(f, "gallery"));
-      const next = [...form.gallery, ...urls];
-      setForm((f) => ({ ...f, gallery: next }));
-      await onSave({ gallery: next });
-    } catch (e) { toast.error((e as Error).message); }
-    finally { setUploading(null); }
+      for (const f of list) {
+        try { urls.push(await uploadFile(f, "gallery")); }
+        catch (e) { failed++; toast.error(`${f.name}: ${(e as Error).message}`); }
+      }
+      if (urls.length) {
+        const next = [...form.gallery, ...urls];
+        setForm((f) => ({ ...f, gallery: next }));
+        await onSave({ gallery: next });
+        toast.success(`${urls.length} foto(s) adicionada(s)${failed ? `, ${failed} falhou(aram)` : ""}.`);
+      }
+    } finally { setUploading(null); }
   };
 
   const removeGalleryAt = async (idx: number) => {
