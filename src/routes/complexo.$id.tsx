@@ -187,14 +187,19 @@ function PublicVenueProfilePage() {
         <div
           className="relative h-56 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent sm:h-72"
           style={
-            venue.photo_url
-              ? { backgroundImage: `url(${venue.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+            ownerProfile?.cover_url || venue.photo_url
+              ? { backgroundImage: `url(${ownerProfile?.cover_url || venue.photo_url})`, backgroundSize: "cover", backgroundPosition: "center" }
               : undefined
           }
         >
           <div className="absolute inset-0 bg-gradient-to-t from-card via-card/70 to-card/10" />
-          <div className="absolute inset-x-0 bottom-0 p-5">
-            <div className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+          <div className="absolute inset-x-0 bottom-0 flex items-end gap-4 p-5">
+            {ownerProfile?.photo_url && (
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-glow ring-2 ring-card/80 sm:h-24 sm:w-24">
+                <img src={ownerProfile.photo_url} alt={venue.name} className="h-full w-full object-cover" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
               <div className="flex items-center gap-2 text-foreground/80">
                 <Building2 className="h-4 w-4 text-primary" />
                 <span className="font-mono text-[10px] uppercase tracking-wider">Estabelecimento</span>
