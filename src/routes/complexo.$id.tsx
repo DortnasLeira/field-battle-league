@@ -246,6 +246,38 @@ function PublicVenueProfilePage() {
         />
       </div>
 
+      {/* Galeria */}
+      {ownerProfile?.gallery && ownerProfile.gallery.length > 0 && (
+        <Card className="border-border bg-card p-5">
+          <div className="mb-3">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              Galeria
+            </div>
+            <h2 className="font-display text-xl uppercase tracking-wide">
+              {ownerProfile.gallery.length} foto{ownerProfile.gallery.length === 1 ? "" : "s"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {ownerProfile.gallery.map((url, i) => (
+              <a
+                key={url + i}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+              >
+                <img
+                  src={url}
+                  alt={`Foto ${i + 1}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition group-hover:scale-105"
+                />
+              </a>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Campos */}
       <Card className="border-border bg-card p-5">
         <div className="mb-3">
