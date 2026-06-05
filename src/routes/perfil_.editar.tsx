@@ -278,7 +278,7 @@ function ProfileEditor({
               <input
                 ref={coverRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
                 hidden
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCover(f); e.target.value = ""; }}
               />
@@ -317,7 +317,7 @@ function ProfileEditor({
               <input
                 ref={photoRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
                 hidden
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = ""; }}
               />
@@ -351,7 +351,7 @@ function ProfileEditor({
             <input
               ref={galleryRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
               multiple
               hidden
               onChange={(e) => { const fs = e.target.files; if (fs && fs.length) handleGallery(fs); e.target.value = ""; }}
