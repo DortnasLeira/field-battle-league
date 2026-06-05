@@ -78,6 +78,8 @@ function PublicVenueProfilePage() {
   const [subFields, setSubFields] = useState<SubField[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
+
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -92,15 +94,23 @@ function PublicVenueProfilePage() {
       setVenue(venue);
 
       if (venue) {
-        // Busca os campos ativos do estabelecimento
-        const { data: sfs } = await supabase
-          .from("sub_fields")
-          .select("*")
-          .eq("venue_id", venue.id)
-          .eq("active", true)
-          .order("name");
+        const [{ data: sfs }, { data: op }] = await Promise.all([
+          supabase
+            .from("sub_fields")
+            .select("*")
+            .eq("venue_id", venue.id)
+            .eq("active", true)
+            .order("name"),
+          supabase
+            .from("user_profiles")
+            .select("photo_url,cover_url,gallery")
+            .eq("user_id", venue.owner_user_id)
+            .eq("type", "field")
+            .maybeSingle(),
+        ]);
         if (!cancel) {
           setSubFields((sfs as SubField[] | null) ?? []);
+          setOwnerProfile((op as OwnerProfile | null) ?? null);
         }
       }
       setLoading(false);
