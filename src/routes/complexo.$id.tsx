@@ -40,6 +40,12 @@ type Venue = {
   owner_user_id: string;
 };
 
+type OwnerProfile = {
+  photo_url: string | null;
+  cover_url: string | null;
+  gallery: string[] | null;
+};
+
 type SubField = {
   id: string;
   venue_id: string;
