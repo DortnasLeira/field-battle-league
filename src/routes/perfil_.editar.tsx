@@ -27,6 +27,23 @@ export const Route = createFileRoute("/perfil_/editar")({
 });
 
 const MAX_GALLERY = 10;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+const ACCEPTED_EXT_LABEL = "JPG, PNG, WEBP ou GIF";
+
+function validateImage(file: File): string | null {
+  if (!ACCEPTED_TYPES.includes(file.type)) {
+    return `Formato não suportado: use ${ACCEPTED_EXT_LABEL}.`;
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    const mb = (file.size / (1024 * 1024)).toFixed(1);
+    return `Arquivo muito grande (${mb}MB). Máximo 5MB.`;
+  }
+  if (file.size === 0) {
+    return "Arquivo vazio ou inválido.";
+  }
+  return null;
+}
 
 function PerfilPage() {
   const access = useProtectedAccess("auth", { redirectBack: "/perfil/editar" });
