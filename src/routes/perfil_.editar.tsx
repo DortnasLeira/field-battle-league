@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Save, Trash2, Upload, ArrowLeft, Image as ImageIcon, X, Plus } from "lucide-react";
+import { Save, Trash2, Upload, ArrowLeft, Image as ImageIcon, X, Plus, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +83,7 @@ function ProfileEditor({
   onSave: (patch: Partial<UserProfile>) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
+  const type: ProfileType = profile.type;
   const [form, setForm] = useState<any>(() => ({
     name: profile.name ?? "",
     nickname: profile.nickname ?? "",
@@ -92,6 +93,17 @@ function ProfileEditor({
     photo_url: profile.photo_url ?? "",
     cover_url: profile.cover_url ?? "",
     gallery_urls: profile.gallery_urls ?? [],
+    position: profile.position ?? "",
+    level: profile.level ?? "",
+    founded: profile.founded?.toString() ?? "",
+    capacity: profile.capacity?.toString() ?? "",
+    field_type: profile.field_type ?? "",
+    price_per_hour: profile.price_per_hour?.toString() ?? "",
+    age: profile.age?.toString() ?? "",
+    gender: profile.gender ?? "",
+    preferred_foot: profile.preferred_foot ?? "",
+    field_types: (profile.field_types ?? []) as string[],
+    preferred_field: profile.preferred_field ?? "",
   }));
   
   const [uploading, setUploading] = useState<string | null>(null);
@@ -138,7 +150,7 @@ function ProfileEditor({
 
   const submit = async () => {
     if (!form.name) {
-      toast.error("Informe o nome do estabelecimento.");
+      toast.error("Informe o nome.");
       return;
     }
     await onSave({
@@ -150,6 +162,17 @@ function ProfileEditor({
       photo_url: form.photo_url || null,
       cover_url: form.cover_url || null,
       gallery_urls: form.gallery_urls || [],
+      position: type === "player" ? form.position || null : null,
+      level: type === "player" || type === "team" ? form.level || null : null,
+      founded: type === "team" && form.founded ? Number(form.founded) : null,
+      capacity: type === "field" && form.capacity ? Number(form.capacity) : null,
+      field_type: type === "field" ? form.field_type || null : null,
+      price_per_hour: type === "field" && form.price_per_hour ? Number(form.price_per_hour) : null,
+      age: type === "player" && form.age ? Number(form.age) : null,
+      gender: type === "player" ? form.gender || null : null,
+      preferred_foot: type === "player" ? form.preferred_foot || null : null,
+      field_types: type === "player" ? (form.field_types.length ? form.field_types : null) : null,
+      preferred_field: type === "team" ? (form.preferred_field || null) : null,
     });
   };
 
@@ -262,14 +285,14 @@ function ProfileEditor({
       <Card className="border-border bg-card p-6 space-y-6">
         <div className="flex items-center gap-2 mb-2">
            <ImageIcon className="h-5 w-5 text-primary" />
-           <h2 className="font-display text-lg uppercase tracking-wide">Informações do Estabelecimento</h2>
+           <h2 className="font-display text-lg uppercase tracking-wide">Informações Gerais</h2>
         </div>
 
         <div className="grid gap-4">
           {/* Linha 1 */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Nome do Estabelecimento <span className="text-destructive">*</span></Label>
+              <Label>Nome {type === 'team' ? 'do Time' : type === 'field' ? 'do Estabelecimento' : 'Completo'} <span className="text-destructive">*</span></Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Arena Central" />
             </div>
             <div className="space-y-2">
@@ -297,7 +320,7 @@ function ProfileEditor({
               rows={4}
               value={form.bio}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              placeholder="Conte a história do seu complexo, diferenciais, etc."
+              placeholder="Conte um pouco sobre você, seu time ou seu complexo."
               className="resize-none"
             />
           </div>
