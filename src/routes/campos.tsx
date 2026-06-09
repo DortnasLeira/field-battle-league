@@ -372,7 +372,7 @@ function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: () => void }) {
           <Button onClick={onOpen} variant="default" size="sm" className="w-full bg-gradient-primary text-primary-foreground">
             <ChevronRight className="mr-1 h-3.5 w-3.5" /> Alugar
           </Button>
-          <Button onClick={() => navigate({ to="/perfil/$id", params: { id: venue.id } })} variant="outline" size="sm" className="w-full">
+          <Button onClick={() => navigate({ to: "/perfil/$id", params: { id: venue.id } })} variant="outline" size="sm" className="w-full">
             Ver perfil
           </Button>
         </div>

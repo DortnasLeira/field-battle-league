@@ -251,18 +251,18 @@ export function FieldDashboard({ profile }: { profile: UserProfile }) {
       </div>
 
       {/* Galeria */}
-      {profile.gallery && profile.gallery.length > 0 && (
+      {profile.gallery_urls && profile.gallery_urls.length > 0 && (
         <Card className="border-border bg-card p-5">
           <div className="mb-3">
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               Galeria
             </div>
             <h2 className="font-display text-xl uppercase tracking-wide">
-              {profile.gallery.length} foto{profile.gallery.length === 1 ? "" : "s"}
+              {profile.gallery_urls.length} foto{profile.gallery_urls.length === 1 ? "" : "s"}
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            {profile.gallery.map((url, i) => (
+            {profile.gallery_urls.map((url: string, i: number) => (
               <a
                 key={url + i}
                 href={url}

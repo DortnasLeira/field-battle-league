@@ -12,6 +12,7 @@ import {
   Award,
   Calendar,
   MessageSquare,
+  DollarSign,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -155,7 +156,7 @@ function PublicProfilePage() {
               {profile.photo_url ? (
                 <img src={profile.photo_url} alt={profile.name} className="h-full w-full object-cover" />
               ) : (
-                <span className="text-6xl">{profile.avatar || PROFILE_TYPE_EMOJI[profile.type]}</span>
+                <span className="text-6xl">{profile.avatar || PROFILE_TYPE_EMOJI[profile.type as keyof typeof PROFILE_TYPE_EMOJI]}</span>
               )}
             </div>
             
@@ -165,7 +166,7 @@ function PublicProfilePage() {
                   {profile.name}
                 </h1>
                 <Badge className="bg-primary/15 text-primary border-primary/20 uppercase tracking-tighter">
-                  {PROFILE_TYPE_LABEL[profile.type]}
+                  {PROFILE_TYPE_LABEL[profile.type as keyof typeof PROFILE_TYPE_LABEL]}
                 </Badge>
               </div>
               {profile.nickname && (
