@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   Building2,
@@ -43,7 +43,7 @@ type Venue = {
 type OwnerProfile = {
   photo_url: string | null;
   cover_url: string | null;
-  gallery: string[] | null;
+  gallery_urls: string[] | null;
 };
 
 type SubField = {
@@ -72,7 +72,7 @@ const DAY_LABEL: Record<string, string> = {
 
 function PublicVenueProfilePage() {
   const { id } = Route.useParams();
-  const { session } = useAuth();
+  const { session, activeProfile } = useAuth();
   const navigate = useNavigate();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [subFields, setSubFields] = useState<SubField[]>([]);
@@ -80,48 +80,68 @@ function PublicVenueProfilePage() {
 
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
 
-  useEffect(() => {
-    let cancel = false;
-    (async () => {
-      // Busca o estabelecimento
-      const { data: v } = await supabase
-        .from("venues")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      if (cancel) return;
-      const venue = (v as Venue | null) ?? null;
-      setVenue(venue);
+  const loadVenue = useCallback(async (signal?: { cancelled: boolean }) => {
+    const { data: v } = await supabase
+      .from("venues")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (signal?.cancelled) return;
+    const venue = (v as Venue | null) ?? null;
+    setVenue(venue);
 
-      if (venue) {
-        const [{ data: sfs }, { data: op }] = await Promise.all([
-          supabase
-            .from("sub_fields")
-            .select("*")
-            .eq("venue_id", venue.id)
-            .eq("active", true)
-            .order("name"),
-          supabase
-            .from("user_profiles")
-            .select("photo_url,cover_url,gallery")
-            .eq("user_id", venue.owner_user_id)
-            .eq("type", "field")
-            .maybeSingle(),
-        ]);
-        if (!cancel) {
-          setSubFields((sfs as SubField[] | null) ?? []);
-          setOwnerProfile((op as OwnerProfile | null) ?? null);
-        }
+    if (venue) {
+      const [{ data: sfs }, { data: op }] = await Promise.all([
+        supabase
+          .from("sub_fields")
+          .select("*")
+          .eq("venue_id", venue.id)
+          .eq("active", true)
+          .order("name"),
+        supabase
+          .from("user_profiles")
+          .select("photo_url,cover_url,gallery_urls")
+          .eq("user_id", venue.owner_user_id)
+          .eq("type", "field")
+          .maybeSingle(),
+      ]);
+      if (!signal?.cancelled) {
+        setSubFields((sfs as SubField[] | null) ?? []);
+        setOwnerProfile((op as OwnerProfile | null) ?? null);
       }
-      setLoading(false);
-    })();
-    return () => { cancel = true; };
+    }
+    setLoading(false);
   }, [id]);
+
+  useEffect(() => {
+    const signal = { cancelled: false };
+    loadVenue(signal);
+    return () => { signal.cancelled = true; };
+  }, [loadVenue]);
+
+  // If viewer is the owner and just saved their profile, sync from auth context
+  useEffect(() => {
+    if (!venue || !session?.user || venue.owner_user_id !== session.user.id) return;
+    if (!activeProfile || activeProfile.type !== "field") return;
+    setOwnerProfile({
+      photo_url: activeProfile.photo_url ?? null,
+      cover_url: activeProfile.cover_url ?? null,
+      gallery_urls: (activeProfile.gallery_urls ?? null) as string[] | null,
+    });
+  }, [activeProfile, session, venue]);
+
+  // Refetch on tab focus so non-owner viewers also see updates without reload
+  useEffect(() => {
+    const onFocus = () => loadVenue();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadVenue]);
 
   const isOwner = useMemo(
     () => !!(session?.user && venue && venue.owner_user_id === session.user.id),
     [session, venue],
   );
+
 
   const cheapest = useMemo(() => {
     const prices = subFields.map((s) => Number(s.price_per_hour) || 0).filter((p) => p > 0);
@@ -247,18 +267,18 @@ function PublicVenueProfilePage() {
       </div>
 
       {/* Galeria */}
-      {ownerProfile?.gallery && ownerProfile.gallery.length > 0 && (
+      {ownerProfile?.gallery_urls && ownerProfile.gallery_urls.length > 0 && (
         <Card className="border-border bg-card p-5">
           <div className="mb-3">
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               Galeria
             </div>
             <h2 className="font-display text-xl uppercase tracking-wide">
-              {ownerProfile.gallery.length} foto{ownerProfile.gallery.length === 1 ? "" : "s"}
+              {ownerProfile.gallery_urls.length} foto{ownerProfile.gallery_urls.length === 1 ? "" : "s"}
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            {ownerProfile.gallery.map((url, i) => (
+            {ownerProfile.gallery_urls.map((url, i) => (
               <a
                 key={url + i}
                 href={url}

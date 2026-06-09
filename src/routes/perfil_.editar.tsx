@@ -231,11 +231,11 @@ function ProfileEditor({
               )}
               <div className="absolute bottom-2 right-2 flex gap-1">
                 <input ref={coverRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'cover_url')} />
-                <Button size="xs" variant="secondary" className="h-7 w-7 p-0 rounded-full" onClick={() => coverRef.current?.click()} disabled={!!uploading}>
+                <Button size="sm" variant="secondary" className="h-7 w-7 p-0 rounded-full" onClick={() => coverRef.current?.click()} disabled={!!uploading}>
                   <Upload className="h-3.5 w-3.5" />
                 </Button>
                 {form.cover_url && (
-                  <Button size="xs" variant="destructive" className="h-7 w-7 p-0 rounded-full" onClick={() => setForm({...form, cover_url: ""})}>
+                  <Button size="sm" variant="destructive" className="h-7 w-7 p-0 rounded-full" onClick={() => setForm({...form, cover_url: ""})}>
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 )}

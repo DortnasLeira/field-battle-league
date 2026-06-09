@@ -27,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimeIdRouteImport } from './routes/time.$id'
 import { Route as SumulaMatchIdRouteImport } from './routes/sumula.$matchId'
 import { Route as PerfilEditarRouteImport } from './routes/perfil_.editar'
+import { Route as PerfilIdRouteImport } from './routes/perfil.$id'
 import { Route as JogadorIdRouteImport } from './routes/jogador.$id'
 import { Route as ComplexoEditarRouteImport } from './routes/complexo_.editar'
 import { Route as ComplexoIdRouteImport } from './routes/complexo.$id'
@@ -128,6 +129,11 @@ const PerfilEditarRoute = PerfilEditarRouteImport.update({
   path: '/perfil/editar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilIdRoute = PerfilIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => PerfilRoute,
+} as any)
 const JogadorIdRoute = JogadorIdRouteImport.update({
   id: '/jogador/$id',
   path: '/jogador/$id',
@@ -191,7 +197,7 @@ export interface FileRoutesByFullPath {
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
   '/painel': typeof PainelRoute
-  '/perfil': typeof PerfilRoute
+  '/perfil': typeof PerfilRouteWithChildren
   '/pro': typeof ProRoute
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/complexo/$id': typeof ComplexoIdRoute
   '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil/$id': typeof PerfilIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
@@ -221,7 +228,7 @@ export interface FileRoutesByTo {
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
   '/painel': typeof PainelRoute
-  '/perfil': typeof PerfilRoute
+  '/perfil': typeof PerfilRouteWithChildren
   '/pro': typeof ProRoute
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/complexo/$id': typeof ComplexoIdRoute
   '/complexo/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil/$id': typeof PerfilIdRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
@@ -252,7 +260,7 @@ export interface FileRoutesById {
   '/ligas': typeof LigasRoute
   '/onboarding': typeof OnboardingRoute
   '/painel': typeof PainelRoute
-  '/perfil': typeof PerfilRoute
+  '/perfil': typeof PerfilRouteWithChildren
   '/pro': typeof ProRoute
   '/ranking': typeof RankingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/complexo/$id': typeof ComplexoIdRoute
   '/complexo_/editar': typeof ComplexoEditarRoute
   '/jogador/$id': typeof JogadorIdRoute
+  '/perfil/$id': typeof PerfilIdRoute
   '/perfil_/editar': typeof PerfilEditarRoute
   '/sumula/$matchId': typeof SumulaMatchIdRoute
   '/time/$id': typeof TimeIdRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/complexo/$id'
     | '/complexo/editar'
     | '/jogador/$id'
+    | '/perfil/$id'
     | '/perfil/editar'
     | '/sumula/$matchId'
     | '/time/$id'
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/complexo/$id'
     | '/complexo/editar'
     | '/jogador/$id'
+    | '/perfil/$id'
     | '/perfil/editar'
     | '/sumula/$matchId'
     | '/time/$id'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/complexo/$id'
     | '/complexo_/editar'
     | '/jogador/$id'
+    | '/perfil/$id'
     | '/perfil_/editar'
     | '/sumula/$matchId'
     | '/time/$id'
@@ -375,7 +387,7 @@ export interface RootRouteChildren {
   LigasRoute: typeof LigasRoute
   OnboardingRoute: typeof OnboardingRoute
   PainelRoute: typeof PainelRoute
-  PerfilRoute: typeof PerfilRoute
+  PerfilRoute: typeof PerfilRouteWithChildren
   ProRoute: typeof ProRoute
   RankingRoute: typeof RankingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -522,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilEditarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil/$id': {
+      id: '/perfil/$id'
+      path: '/$id'
+      fullPath: '/perfil/$id'
+      preLoaderRoute: typeof PerfilIdRouteImport
+      parentRoute: typeof PerfilRoute
+    }
     '/jogador/$id': {
       id: '/jogador/$id'
       path: '/jogador/$id'
@@ -595,6 +614,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PerfilRouteChildren {
+  PerfilIdRoute: typeof PerfilIdRoute
+}
+
+const PerfilRouteChildren: PerfilRouteChildren = {
+  PerfilIdRoute: PerfilIdRoute,
+}
+
+const PerfilRouteWithChildren =
+  PerfilRoute._addFileChildren(PerfilRouteChildren)
+
 interface CampoIdRouteChildren {
   CampoIdEditarRoute: typeof CampoIdEditarRoute
 }
@@ -617,7 +647,7 @@ const rootRouteChildren: RootRouteChildren = {
   LigasRoute: LigasRoute,
   OnboardingRoute: OnboardingRoute,
   PainelRoute: PainelRoute,
-  PerfilRoute: PerfilRoute,
+  PerfilRoute: PerfilRouteWithChildren,
   ProRoute: ProRoute,
   RankingRoute: RankingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -638,3 +668,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
